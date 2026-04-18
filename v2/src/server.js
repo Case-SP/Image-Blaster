@@ -88,8 +88,14 @@ app.get('/api/images/:slug/:filename', async (req, res) => {
 });
 
 app.get('/api/events', (req, res) => {
-  res.set({ 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' });
+  res.set({
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache, no-transform',
+    'Connection': 'keep-alive',
+    'X-Accel-Buffering': 'no'
+  });
   res.flushHeaders();
+  res.write(': connected\n\n');
   const runFilter = req.query.run || null;
   const send = (event, data) => {
     if (runFilter && data.id && data.id !== runFilter) return;
@@ -100,8 +106,15 @@ app.get('/api/events', (req, res) => {
     handlers[v] = (data) => send(v, data);
     bus.on(v, handlers[v]);
   }
-  req.on('close', () => { for (const [v, h] of Object.entries(handlers)) bus.off(v, h); });
+  const ping = setInterval(() => { try { res.write(': ping\n\n'); } catch {} }, 15000);
+  req.on('close', () => {
+    clearInterval(ping);
+    for (const [v, h] of Object.entries(handlers)) bus.off(v, h);
+  });
 });
+
+// Silence browser favicon requests
+app.get('/favicon.ico', (req, res) => res.status(204).end());
 
 // ---- Root redirect ----
 app.get('/', (req, res) => res.redirect('/client'));

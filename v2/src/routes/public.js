@@ -91,8 +91,14 @@ router.get('/runs/:id/zip', async (req, res) => {
 
 // GET /api/public/events?run=<id> — SSE scoped to this client's runs
 router.get('/events', (req, res) => {
-  res.set({ 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' });
+  res.set({
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache, no-transform',
+    'Connection': 'keep-alive',
+    'X-Accel-Buffering': 'no'
+  });
   res.flushHeaders();
+  res.write(': connected\n\n');
   const runFilter = req.query.run || null;
   const clientTraceIds = new Set();
 
@@ -110,7 +116,11 @@ router.get('/events', (req, res) => {
     handlers[v] = (data) => send(v, data).catch(() => {});
     bus.on(v, handlers[v]);
   }
-  req.on('close', () => { for (const [v, h] of Object.entries(handlers)) bus.off(v, h); });
+  const ping = setInterval(() => { try { res.write(': ping\n\n'); } catch {} }, 15000);
+  req.on('close', () => {
+    clearInterval(ping);
+    for (const [v, h] of Object.entries(handlers)) bus.off(v, h);
+  });
 });
 
 // GET /api/public/me — client metadata
