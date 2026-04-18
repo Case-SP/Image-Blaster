@@ -67,9 +67,19 @@ router.post('/verify-code', async (req, res) => {
     const code = String(req.body?.code || '').trim();
     if (!email || !code) return res.status(400).json({ error: 'email and code required' });
 
-    const { data, error } = await supabaseAnon().auth.verifyOtp({ email, token: code, type: 'email' });
-    if (error) return res.status(401).json({ error: 'invalid or expired code' });
-    if (!data?.user) return res.status(401).json({ error: 'verification failed' });
+    // Try 'email' first (returning user), fall back to 'signup' (first-time)
+    // and 'magiclink' (if Supabase classified it that way).
+    let verified = null;
+    let lastError = null;
+    for (const type of ['email', 'signup', 'magiclink']) {
+      const { data, error } = await supabaseAnon().auth.verifyOtp({ email, token: code, type });
+      if (!error && data?.user) { verified = data; break; }
+      lastError = error;
+    }
+    if (!verified) {
+      console.log('[auth verify-code] OTP rejected for', email, '-', lastError?.message);
+      return res.status(401).json({ error: 'invalid or expired code' });
+    }
 
     // Look up our client record by email
     const { data: client } = await sb()
