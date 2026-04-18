@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Nolla Image</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <h1>NOLLA IMAGE</h1>
+      <div class="header-center">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="selects">Selects</button>
+      </div>
+      <div class="header-right">
+        <span id="progressCount" class="progress">–</span>
+      </div>
+    </header>
+
+    <!-- API Credit Warning Banner -->
+    <div id="apiWarning" class="api-warning hidden">
+      <span id="apiWarningText"></span>
+      <button id="apiWarningClose" class="api-warning-close">×</button>
+    </div>
+
+    <div class="main-layout">
+      <main class="content">
+        <div id="titleGrid" class="title-list"></div>
+      </main>
+    </div>
+
+    <!-- Fullscreen Image Viewer -->
+    <div id="imageViewer" class="image-viewer hidden">
+      <button id="viewerClose" class="viewer-close" title="Close">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+      <span id="viewerCounter" class="viewer-counter"></span>
+      <button id="viewerPrev" class="viewer-nav prev" title="Previous">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      </button>
+      <div class="viewer-container">
+        <img id="viewerImage" src="" alt="">
+        <button id="viewerHeart" class="viewer-heart" title="Save">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          </svg>
+        </button>
+      </div>
+      <button id="viewerNext" class="viewer-nav next" title="Next">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay hidden">
+      <div class="loading-spinner"></div>
+      <p id="loadingText">Generating...</p>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast"></div>
+
+    <!-- Prompt Bar (Simplified) -->
+    <div class="prompt-bar">
+      <div class="prompt-bar-inner">
+        <div class="prompt-input-row">
+          <input type="text" id="promptInput" class="prompt-input" placeholder="Enter titles separated by commas...">
+          <button id="promptSubmit" class="prompt-submit" title="Generate">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+            </svg>
+          </button>
+        </div>
+        <div class="prompt-options">
+          <span class="option-label">Images per title:</span>
+          <div class="option-group">
+            <button class="option-pill" data-count="1">1</button>
+            <button class="option-pill" data-count="2">2</button>
+            <button class="option-pill active" data-count="3">3</button>
+            <button class="option-pill" data-count="4">4</button>
+            <button class="option-pill" data-count="5">5</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js?v=6"></script>
+</body>
+</html>

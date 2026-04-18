@@ -1,0 +1,23 @@
+{
+  "name": "Science of Skin",
+  "slug": "science-of-skin",
+  "description": "Technical, detailed, educational focus on skin science",
+
+  "visual_dna": {
+    "palette": "cool neutrals, soft blues, clean whites, clinical tones",
+    "lighting": "precise controlled lighting, macro detail lighting, even illumination",
+    "mood": "scientific, precise, educational, trustworthy",
+    "skin_tones": "detailed texture visible, pores and structure, diverse representation",
+    "backgrounds": ["neutral gray", "deep black", "clinical white", "subtle texture", "abstract dark"]
+  },
+
+  "archetype_weights": {
+    "product": 0.20,
+    "skin": 0.45,
+    "food": 0.05,
+    "lifestyle": 0.15,
+    "abstract": 0.15
+  },
+
+  "suffix": "precise macro detail, visible skin texture and pores, controlled even lighting, scientific photography aesthetic, clinical precision, no labels, no text, no product branding, abstract evocative"
+}

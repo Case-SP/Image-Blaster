@@ -1,0 +1,65 @@
+{
+  "subjects": {
+    "powder": {
+      "triggers": ["creatine", "whey", "protein powder", "collagen", "matcha", "turmeric", "ashwagandha", "maca", "spirulina", "greens powder", "pre-workout", "bcaa"],
+      "fill_template": "{extracted} powder",
+      "compositions": ["cloud", "overhead-scatter", "scoop", "pour", "macro-texture", "jar-peek", "spill-artistic", "gradient-fade"]
+    },
+    "liquid": {
+      "triggers": ["coffee", "caffeine", "milk", "water", "tea", "juice", "alcohol", "wine", "beer", "smoothie", "drink"],
+      "fill_template": "{extracted}",
+      "compositions": ["pour-stream", "splash-frozen", "surface-ripple", "glass-vessel", "drip-single", "swirl-motion", "steam-rising", "backlit-glow"]
+    },
+    "food": {
+      "triggers": ["chocolate", "eggs", "egg", "peanut butter", "nuts", "sugar", "dairy", "cheese", "fruit", "vegetable", "meat", "fish", "bread", "carbs"],
+      "fill_template": "{extracted}",
+      "compositions": ["hero-floating", "cut-cross-section", "overhead-arrange", "macro-texture", "bite-taken", "ingredient-scatter", "stack-tower", "drizzle-action"]
+    },
+    "device": {
+      "triggers": ["vape", "vaping", "ozempic", "injection", "inhaler", "nebulizer", "birth control", "pill pack", "blister pack"],
+      "fill_template": "{extracted} device",
+      "compositions": ["hero-floating", "hand-hold", "macro-detail", "clinical-clean", "angle-dramatic", "silhouette-backlit"]
+    },
+    "supplement-pill": {
+      "triggers": ["vitamin supplement", "multivitamin", "fish oil capsule", "omega capsule"],
+      "fill_template": "{extracted}",
+      "compositions": ["jar-open", "hand-hold", "single-macro", "scatter-minimal"]
+    },
+    "skincare-bottle": {
+      "triggers": ["serum", "retinol", "niacinamide", "vitamin c serum", "hyaluronic", "toner", "essence", "oil", "cleanser"],
+      "fill_template": "{extracted} serum",
+      "compositions": ["bottle-elegant", "pipette-drop", "pump-dispense", "pour-golden", "backlit-glow", "hand-hold", "texture-swatch"]
+    },
+    "skincare-cream": {
+      "triggers": ["moisturizer", "cream", "lotion", "balm", "ointment", "sunscreen", "spf"],
+      "fill_template": "{extracted} cream",
+      "compositions": ["jar-overhead", "jar-angle", "dollop-finger", "swirl-texture", "smear-swatch", "dip-scoop", "macro-peaks"]
+    },
+    "skincare-tube": {
+      "triggers": ["cleanser", "face wash", "mask", "peel", "exfoliant", "benzoyl peroxide", "adapalene", "treatment"],
+      "fill_template": "{extracted} treatment",
+      "compositions": ["tube-squeeze", "tube-flat", "product-emerging", "dollop-surface", "hand-apply"]
+    },
+    "person-beauty": {
+      "triggers": null,
+      "fill_template": "{skin_context}",
+      "compositions": ["portrait-direct", "portrait-profile", "gaze-intense", "applying-touch", "mirror-reflection", "fragment-crop", "serene-eyes-closed", "natural-candid"]
+    },
+    "person-lifestyle": {
+      "triggers": null,
+      "fill_template": "{activity_context}",
+      "compositions": ["duo-intimate", "duo-parallel", "trio-candid", "solo-contemplative", "hands-activity", "environmental-wide"]
+    },
+    "skin-close": {
+      "triggers": ["acne", "skin", "pores", "texture", "wrinkles", "fine lines", "dark spots", "hyperpigmentation", "redness", "inflammation"],
+      "fill_template": "{skin_area} skin",
+      "compositions": ["macro-pores", "fragment-cheek", "fragment-forehead", "texture-dewy", "before-after-hint", "clinical-close"]
+    }
+  },
+
+  "defaults": {
+    "no_object_detected": "person-beauty",
+    "skin_topic": "skin-close",
+    "wellness_general": "person-beauty"
+  }
+}

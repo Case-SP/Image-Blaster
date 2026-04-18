@@ -1,0 +1,314 @@
+{
+  "compositions": {
+    "overhead-scatter": {
+      "category": "product",
+      "skeleton": "{subject} scattered overhead bird's eye view, {surface}, {density}, {light}, flat lay",
+      "slots": {
+        "surface": ["raw linen cloth", "polished marble slab", "matte paper", "warm plaster", "aged parchment", "brushed wood grain", "cold stone"],
+        "density": ["sparse with vast negative space", "overlapping abundance", "single row precise", "clustered in corner with empty right third"],
+        "light": ["hard raking side light", "soft diffused overhead", "warm golden rim", "cool clinical even"]
+      },
+      "cameras": ["MS", "WS"],
+      "lenses": ["35mm", "50mm"],
+      "mood": "organized, editorial"
+    },
+    "cloud": {
+      "category": "product",
+      "skeleton": "{subject} suspended mid-air, frozen particles, {light}, {background}",
+      "slots": {
+        "light": ["dramatic spotlight", "raking side beam", "warm golden rim", "cold top-down beam"],
+        "background": ["deep charcoal", "soft cream fade", "dark sage void", "warm terracotta gradient"]
+      },
+      "cameras": ["ECU", "CU"], "lenses": ["100mm macro", "85mm"], "mood": "dramatic, dynamic"
+    },
+    "scoop": {
+      "category": "product",
+      "skeleton": "{subject} in {vessel}, {pose}, {light}",
+      "slots": {
+        "vessel": ["wooden scoop heaping over rim", "ceramic bowl with mound", "paper cup overflowing slightly", "metal measuring scoop"],
+        "pose": ["product spilling onto surface", "single spill line", "clean filled rim", "tipped on its side"],
+        "light": ["warm side light", "soft overhead", "golden rim", "cool clinical"]
+      },
+      "cameras": ["CU", "MCU"], "lenses": ["50mm", "85mm"], "mood": "abundant, appetizing"
+    },
+    "pour": {
+      "category": "product",
+      "skeleton": "{subject} poured in {stream}, {motion}, {light}",
+      "slots": {
+        "stream": ["smooth cascading stream", "gentle arc", "thin precise line", "splashing ribbon"],
+        "motion": ["motion blur on falling particles", "frozen mid-fall", "slow-shutter trail", "splash droplets frozen"],
+        "light": ["backlit glow", "side-lit rim", "soft warm wash", "hard clinical"]
+      },
+      "cameras": ["MCU", "MS"], "lenses": ["50mm", "85mm"], "mood": "dynamic, action"
+    },
+    "macro-texture": {
+      "category": "product",
+      "skeleton": "extreme macro of {subject} surface, {feature}, abstract surface landscape",
+      "slots": { "feature": ["granular detail", "peaks and ridges", "wet gleam", "matte dust", "refractive crystal facets"] },
+      "cameras": ["ECU"], "lenses": ["100mm macro"], "mood": "abstract, detailed"
+    },
+    "jar-overhead": {
+      "category": "product",
+      "skeleton": "open jar of {subject} directly overhead, {marking}, {surface}, {light}",
+      "slots": {
+        "marking": ["finger swipe mark in product", "clean untouched top", "shallow divot near rim", "small dollop lifted out"],
+        "surface": ["linen cloth", "pale marble", "raw plaster", "aged parchment"],
+        "light": ["soft diffused overhead", "warm side light", "cool clinical even", "golden rim"]
+      },
+      "cameras": ["overhead"], "lenses": ["50mm"], "mood": "editorial, used"
+    },
+    "jar-angle": {
+      "category": "product",
+      "skeleton": "open jar of {subject} at 45-degree angle, texture visible, {light}, {background}",
+      "slots": {
+        "light": ["dramatic side lighting", "warm rim light", "soft window light", "cool top-down"],
+        "background": ["charcoal fade", "cream backdrop", "sage seamless", "terracotta gradient"]
+      },
+      "cameras": ["CU"], "lenses": ["50mm", "85mm"], "mood": "dramatic, textural"
+    },
+    "dollop-finger": {
+      "category": "product",
+      "skeleton": "{subject} pearl on {digit}, {light}, {background}",
+      "slots": {
+        "digit": ["fingertip", "knuckle", "side of hand", "two fingertips"],
+        "light": ["delicate macro soft", "warm golden side", "cool clinical even", "backlit halo"],
+        "background": ["soft out-of-focus cream", "dark blur", "warm bokeh", "pale sage blur"]
+      },
+      "cameras": ["ECU", "CU"], "lenses": ["100mm macro", "85mm"], "mood": "delicate, intimate"
+    },
+    "swirl-texture": {
+      "category": "product",
+      "skeleton": "{subject} in {stroke}, macro {detail}, abstract",
+      "slots": {
+        "stroke": ["artistic swirl", "long smooth arc", "spiral inward", "figure-eight"],
+        "detail": ["peaks and valleys", "glossy sheen", "matte surface", "visible brush marks"]
+      },
+      "cameras": ["ECU"], "lenses": ["100mm macro"], "mood": "abstract, textural"
+    },
+    "smear-swatch": {
+      "category": "product",
+      "skeleton": "{subject} {stroke} on {surface}, {view}",
+      "slots": {
+        "stroke": ["elegant swatch", "long confident stroke", "pulled thin", "layered double stroke"],
+        "surface": ["clean glass", "marble slab", "plaster panel", "warm paper"],
+        "view": ["overhead direct", "raking side", "subtle shadow"]
+      },
+      "cameras": ["CU", "MCU"], "lenses": ["50mm", "85mm"], "mood": "artistic, demonstrative"
+    },
+    "tube-squeeze": {
+      "category": "product",
+      "skeleton": "tube being squeezed, {subject} emerging, {pose}, {light}",
+      "slots": {
+        "pose": ["ribbon of cream emerging", "single dollop forming", "motion frozen mid-squeeze", "long fresh line on surface"],
+        "light": ["warm studio", "cool clinical", "golden side", "dramatic rim"]
+      },
+      "cameras": ["CU"], "lenses": ["50mm", "85mm"], "mood": "active, product-focused"
+    },
+    "tube-flat": {
+      "category": "product",
+      "skeleton": "flat tube of {subject} laying on surface, {surface}, {extras}",
+      "slots": {
+        "surface": ["linen cloth", "pale marble", "warm paper", "sage backdrop"],
+        "extras": ["small product ribbon beside", "tube alone minimal", "cap off lying beside", "paired with small dish"]
+      },
+      "cameras": ["CU", "MCU"], "lenses": ["50mm"], "mood": "minimal"
+    },
+    "hand-apply": {
+      "category": "product",
+      "skeleton": "hand applying {subject} to {area}, {light}, {crop}",
+      "slots": {
+        "area": ["cheek", "forearm back", "jawline", "back of hand"],
+        "light": ["soft warm", "cool clinical", "golden side", "dramatic rim"],
+        "crop": ["tight on hand only", "face and hand", "partial arm", "shoulder angle"]
+      },
+      "cameras": ["CU"], "lenses": ["50mm", "85mm"], "mood": "demonstrative"
+    },
+    "bottle-elegant": {
+      "category": "product",
+      "skeleton": "elegant bottle of {subject}, {light}, {background}",
+      "slots": {
+        "light": ["light passing through liquid", "backlit glow", "side rim light", "soft diffused overhead"],
+        "background": ["minimal cream", "dark sage", "warm terracotta fade", "cool white"]
+      },
+      "cameras": ["CU"], "lenses": ["50mm", "85mm"], "mood": "elegant, luxe"
+    },
+    "pipette-drop": {
+      "category": "product",
+      "skeleton": "glass pipette releasing drop of {subject}, {droplet}, {background}",
+      "slots": {
+        "droplet": ["single golden drop forming", "drop mid-fall", "surface tension on glass", "series of three drops"],
+        "background": ["dark blur", "warm bokeh", "cool studio", "sage seamless"]
+      },
+      "cameras": ["ECU", "CU"], "lenses": ["100mm macro", "85mm"], "mood": "precise"
+    },
+    "portrait-direct": {
+      "category": "beauty",
+      "skeleton": "editorial beauty portrait, {subject}, direct gaze, {makeup}, {hair}, {wardrobe}, {light}",
+      "slots": {
+        "makeup": ["minimal natural", "bare-faced visible skin texture", "subtle luminous", "glossy lip only"],
+        "hair": ["slicked back", "natural loose", "pulled tight bun", "side part fallen"],
+        "wardrobe": ["bare shoulders", "white cotton tank", "soft linen", "cream knit collar"],
+        "light": ["soft window side", "warm golden hour", "cool even studio", "dramatic single-source"]
+      },
+      "cameras": ["CU", "MCU"], "lenses": ["85mm", "50mm"], "mood": "confident, editorial"
+    },
+    "portrait-profile": {
+      "category": "beauty",
+      "skeleton": "profile portrait of {subject}, {pose}, {light}, elegant neck line",
+      "slots": {
+        "pose": ["chin slightly lifted", "eyes closed", "head tilted back", "gaze forward"],
+        "light": ["warm side window", "golden rim", "cool soft even", "dramatic single beam"]
+      },
+      "cameras": ["CU", "MCU"], "lenses": ["85mm"], "mood": "elegant, sculptural"
+    },
+    "gaze-intense": {
+      "category": "beauty",
+      "skeleton": "intense direct gaze close-up, {subject}, {expression}, {light}",
+      "slots": {
+        "expression": ["calm neutral", "faint smile", "serious", "contemplative"],
+        "light": ["soft warm window", "clinical even", "dramatic side", "golden hour amber"]
+      },
+      "cameras": ["CU"], "lenses": ["85mm"], "mood": "intense, intimate"
+    },
+    "applying-touch": {
+      "category": "beauty",
+      "skeleton": "{subject} gently touching face with {digit}, {area}, {light}",
+      "slots": {
+        "digit": ["fingertips", "ring finger", "two fingers flat", "knuckle"],
+        "area": ["cheekbone", "under eye", "jawline", "forehead"],
+        "light": ["soft natural window", "warm golden", "cool even", "dramatic rim"]
+      },
+      "cameras": ["CU", "MCU"], "lenses": ["85mm", "50mm"], "mood": "soft, ritualistic"
+    },
+    "mirror-reflection": {
+      "category": "beauty",
+      "skeleton": "{subject} in mirror reflection, {setting}, {light}",
+      "slots": {
+        "setting": ["intimate bathroom vanity", "morning dresser", "softly-lit hallway mirror", "handheld compact"],
+        "light": ["warm morning window", "cool overhead bathroom", "golden hour side", "soft diffused cloudy"]
+      },
+      "cameras": ["MCU", "MS"], "lenses": ["50mm", "35mm"], "mood": "intimate, real"
+    },
+    "fragment-crop": {
+      "category": "beauty",
+      "skeleton": "cropped fragment of {area} of {subject}, {feature}, {light}",
+      "slots": {
+        "area": ["lips and chin", "cheekbone only", "eye and brow", "collarbone and neck"],
+        "feature": ["visible pores", "faint freckles", "dewy glow", "matte smooth"],
+        "light": ["soft side", "warm golden", "cool clinical", "dramatic rim"]
+      },
+      "cameras": ["ECU", "CU"], "lenses": ["85mm", "100mm macro"], "mood": "abstract, editorial"
+    },
+    "serene-eyes-closed": {
+      "category": "beauty",
+      "skeleton": "{subject} with eyes closed, {pose}, {light}",
+      "slots": {
+        "pose": ["head tilted back slightly", "chin down", "face up to light", "side turn"],
+        "light": ["soft warm window", "golden hour", "cool even", "dramatic rim"]
+      },
+      "cameras": ["CU", "MCU"], "lenses": ["85mm"], "mood": "peaceful, meditative"
+    },
+    "natural-candid": {
+      "category": "beauty",
+      "skeleton": "natural candid of {subject}, {action}, {setting}, {light}",
+      "slots": {
+        "action": ["mid-laugh", "looking away", "about to speak", "hand brushing hair back"],
+        "setting": ["soft indoor blur", "outdoor afternoon", "window bokeh", "minimal backdrop"],
+        "light": ["soft warm", "golden hour", "overcast soft", "side window"]
+      },
+      "cameras": ["MCU", "MS"], "lenses": ["50mm", "35mm"], "mood": "authentic, lifestyle"
+    },
+    "macro-pores": {
+      "category": "skin",
+      "skeleton": "extreme macro of {area} skin of {subject}, {feature}, {light}",
+      "slots": {
+        "area": ["cheek", "nose side", "forehead", "under-eye"],
+        "feature": ["pores and texture clinical", "dewy droplets", "faint fine lines", "soft fuzz visible"],
+        "light": ["clinical even", "warm side", "cool top-down", "soft diffused"]
+      },
+      "cameras": ["ECU"], "lenses": ["100mm macro"], "mood": "clinical, detailed"
+    },
+    "texture-dewy": {
+      "category": "skin",
+      "skeleton": "{subject} skin with {feature}, {area}, {light}",
+      "slots": {
+        "feature": ["moisture droplets", "luminous highlight", "glossy sheen", "fine dew mist"],
+        "area": ["cheekbone", "décolletage", "forehead", "neck side"],
+        "light": ["warm rim", "cool top-down", "soft overhead", "golden side"]
+      },
+      "cameras": ["ECU", "CU"], "lenses": ["100mm macro", "85mm"], "mood": "fresh, healthy"
+    },
+    "duo-intimate": {
+      "category": "lifestyle",
+      "skeleton": "two people in {relation}, {subject}, {setting}, {light}",
+      "slots": {
+        "relation": ["intimate close moment", "supportive side-by-side", "forehead touch", "quiet parallel"],
+        "setting": ["warm indoor", "morning window", "soft outdoor shade", "neutral studio"],
+        "light": ["golden hour", "soft diffused", "warm window side", "cool natural"]
+      },
+      "cameras": ["MCU", "MS"], "lenses": ["50mm", "35mm"], "mood": "intimate, connected"
+    },
+    "solo-contemplative": {
+      "category": "lifestyle",
+      "skeleton": "single person in {moment} of {subject}, {crop}, {light}",
+      "slots": {
+        "moment": ["quiet introspection", "morning pause", "post-activity rest", "preparing to act"],
+        "crop": ["shoulder-up", "hands-and-face", "environmental wide", "fragment face"],
+        "light": ["warm window", "golden hour", "cool overcast", "soft indoor"]
+      },
+      "cameras": ["CU", "MCU"], "lenses": ["85mm", "50mm"], "mood": "introspective, quiet"
+    },
+
+    "apply-product-visible": {
+      "category": "beauty",
+      "skeleton": "extreme close-up of {subject} with visible {product_form} on {area}, {fingers}, {light}, editorial beauty, visible skin texture",
+      "slots": {
+        "product_form": ["creamy white streak", "glossy serum sheen", "clear oil droplet glow", "matte balm smear", "pearly sunscreen swipe", "hydrating gel gleam"],
+        "area": ["cheekbone", "under-eye", "forehead", "across nose bridge", "jawline", "temple"],
+        "fingers": ["ring finger pressing gently", "two fingers flat sweeping", "fingertips patting", "back of knuckle smoothing"],
+        "light": ["warm golden side light", "soft window glow", "cool clinical even", "dramatic single-source"]
+      },
+      "cameras": ["ECU", "CU"], "lenses": ["85mm", "100mm macro"], "mood": "intimate, ritual, hybrid person+product"
+    },
+
+    "studio-floating": {
+      "category": "product",
+      "skeleton": "{subject} floating isolated center-frame, {shadow}, {backdrop}, studio lighting, clean dramatic minimal",
+      "slots": {
+        "shadow": ["hard defined shadow beneath", "soft diffused shadow", "long raking shadow", "floating shadowless"],
+        "backdrop": ["seamless cream paper", "sage green seamless", "charcoal gradient", "pale pink seamless", "warm terracotta wash"]
+      },
+      "cameras": ["MCU", "CU"], "lenses": ["85mm", "50mm"], "mood": "dramatic, product hero"
+    },
+
+    "editorial-negative": {
+      "category": "product",
+      "skeleton": "small {subject} positioned in {corner}, vast negative space, {light}, minimal editorial",
+      "slots": {
+        "corner": ["bottom-right with empty upper half", "upper-left with empty lower two-thirds", "lower-left offset", "dead center with breathing room all around"],
+        "light": ["soft diffused overhead", "warm side rim", "cool clinical wash", "golden corner light"]
+      },
+      "cameras": ["MS", "WS"], "lenses": ["35mm", "50mm"], "mood": "minimal, breathing, editorial"
+    },
+
+    "macro-surface": {
+      "category": "product",
+      "skeleton": "extreme macro of {subject} surface, {detail}, fills frame, abstract landscape, shallow depth",
+      "slots": {
+        "detail": ["crystalline grain detail", "wet gleaming droplets", "matte powder dust", "liquid meniscus curve", "peaks and ridges", "bubble structure"]
+      },
+      "cameras": ["ECU"], "lenses": ["100mm macro"], "mood": "abstract, clinical, detail"
+    },
+
+    "overhead-minimal": {
+      "category": "product",
+      "skeleton": "single {subject} overhead bird's eye, {placement}, {surface}, {light}, flat lay minimal",
+      "slots": {
+        "placement": ["off-center with ample empty space", "small in lower third", "centered but dwarfed by frame", "corner composition with void"],
+        "surface": ["smooth linen cloth", "pale marble", "warm plaster", "raw paper", "brushed sage backdrop"],
+        "light": ["soft diffused overhead", "raking side shadow", "warm golden wash", "cool clinical even"]
+      },
+      "cameras": ["overhead"], "lenses": ["35mm", "50mm"], "mood": "minimal flat lay, breathing"
+    }
+  }
+}

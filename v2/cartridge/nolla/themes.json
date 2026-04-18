@@ -1,0 +1,64 @@
+{
+  "themes": {
+    "pastel-blue": {
+      "name": "Pastel Blue",
+      "background": "soft pastel blue background",
+      "color_grade": "cool blue undertones, airy feel",
+      "mood": "calm, clinical, fresh"
+    },
+    "pastel-pink": {
+      "name": "Pastel Pink",
+      "background": "soft blush pink background",
+      "color_grade": "warm pink undertones, soft feminine",
+      "mood": "gentle, nurturing, soft"
+    },
+    "warm-cream": {
+      "name": "Warm Cream",
+      "background": "warm cream linen background",
+      "color_grade": "golden warm tones, natural warmth",
+      "mood": "intimate, cozy, natural"
+    },
+    "cool-white": {
+      "name": "Cool White",
+      "background": "clean bright white background",
+      "color_grade": "neutral to cool, crisp clean",
+      "mood": "clinical, modern, editorial"
+    },
+    "sage-green": {
+      "name": "Sage Green",
+      "background": "solid muted sage green seamless backdrop",
+      "color_grade": "soft green undertones, clean",
+      "mood": "calm, wellness, minimal"
+    },
+    "terracotta": {
+      "name": "Terracotta",
+      "background": "warm terracotta clay background",
+      "color_grade": "warm earth tones, rustic warmth",
+      "mood": "earthy, warm, natural"
+    },
+    "charcoal": {
+      "name": "Charcoal",
+      "background": "deep charcoal gray background",
+      "color_grade": "moody contrast, dramatic shadows",
+      "mood": "dramatic, sophisticated, bold"
+    },
+    "lavender": {
+      "name": "Lavender",
+      "background": "soft lavender purple background",
+      "color_grade": "cool purple undertones, dreamy",
+      "mood": "calming, sleep, relaxation"
+    },
+    "golden-hour": {
+      "name": "Golden Hour",
+      "background": "warm amber studio backdrop",
+      "color_grade": "golden amber light, warm glow",
+      "mood": "warm, glowing, intimate"
+    },
+    "studio-neutral": {
+      "name": "Studio Neutral",
+      "background": "neutral gray studio backdrop",
+      "color_grade": "balanced neutral, true colors",
+      "mood": "professional, versatile, clean"
+    }
+  }
+}

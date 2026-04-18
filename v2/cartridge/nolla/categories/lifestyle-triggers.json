@@ -1,0 +1,22 @@
+{
+  "name": "Lifestyle & Skin Triggers",
+  "slug": "lifestyle-triggers",
+  "description": "Warm, organic, lifestyle-focused with earth tones and candid feel",
+
+  "visual_dna": {
+    "palette": "warm earth tones, sage green, terracotta, cream, muted blush, soft amber",
+    "lighting": "soft natural window light, golden hour warmth, gentle shadows",
+    "mood": "calm, contemplative, organic, intimate, serene",
+    "skin_tones": "warm undertones, natural healthy glow, sun-kissed",
+    "backgrounds": ["warm linen", "natural wood", "soft sage", "blurred natural", "warm neutral"]
+  },
+
+  "archetype_weights": {
+    "product": 0.20,
+    "skin": 0.30,
+    "food": 0.30,
+    "lifestyle": 0.20
+  },
+
+  "suffix": "soft natural window light, warm muted earth tones, organic texture, intimate candid feel, gentle film grain, serene mood, no labels, no text, no product branding, cinematic composition"
+}

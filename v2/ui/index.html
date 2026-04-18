@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Brand Image Blaster — Runs</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>Brand Image Blaster <span class="version">v2</span></h1>
+    <nav><a href="/" class="active">Runs</a></nav>
+  </header>
+
+  <main>
+    <section class="new-run">
+      <h2>New Run</h2>
+      <form id="new-run-form">
+        <label>Cartridge <select id="cartridge" name="cartridge"></select></label>
+        <label>N per title <input type="number" id="N" name="N" value="10" min="1" max="30"></label>
+        <label><input type="checkbox" id="critic" name="critic" checked> Run critic pass</label>
+        <label>Model
+          <select id="model" name="model">
+            <option value="fal-ai/nano-banana-pro">nano-banana-pro (fast, refs)</option>
+            <option value="fal-ai/flux-pro/v1.1-ultra">flux-1.1-ultra</option>
+            <option value="fal-ai/flux-2-pro">flux-2-pro</option>
+            <option value="fal-ai/flux-pro/kontext">flux-kontext (refs)</option>
+          </select>
+        </label>
+        <label>Titles (one per line — plain title, or <code>category|title</code>; plain defaults to <code>general</code>)
+          <textarea id="titles" rows="8" placeholder="Does Creatine Cause Hair Loss?&#10;Can Coffee Cause Acne?&#10;lifestyle-triggers|Does Humidity Cause Acne"></textarea>
+        </label>
+        <button type="submit">Start Run</button>
+      </form>
+    </section>
+
+    <section class="runs">
+      <h2>Runs</h2>
+      <table id="runs-table">
+        <thead><tr><th>ID</th><th>Cartridge</th><th>Status</th><th>Progress</th><th>Titles</th><th>N</th><th>Hit Rate</th><th>Started</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+  <script>BrandImageBlaster.initRunsPage();</script>
+</body>
+</html>

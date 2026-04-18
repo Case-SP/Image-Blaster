@@ -1,0 +1,88 @@
+{
+  "generation": {
+    "imagesPerBatch": 3,
+    "defaultModel": "fal-ai/nano-banana-pro",
+    "availableModels": [
+      {
+        "id": "fal-ai/flux-2-pro",
+        "name": "FLUX 2 Pro",
+        "category": "flux2"
+      },
+      {
+        "id": "fal-ai/nano-banana-pro",
+        "name": "Nano Banana (fast)",
+        "category": "fast",
+        "supportsReferences": true
+      },
+      {
+        "id": "fal-ai/flux-pro/v1.1-ultra",
+        "name": "FLUX 1.1 Ultra",
+        "category": "flux"
+      },
+      {
+        "id": "fal-ai/flux-pro/kontext",
+        "name": "FLUX Kontext",
+        "category": "flux",
+        "supportsReferences": true
+      },
+      {
+        "id": "fal-ai/flux/dev",
+        "name": "FLUX Dev",
+        "category": "flux"
+      },
+      {
+        "id": "fal-ai/flux/schnell",
+        "name": "FLUX Schnell",
+        "category": "flux"
+      },
+      {
+        "id": "fal-ai/bytedance/seedream/v4.5/text-to-image",
+        "name": "Seedream 4.5",
+        "category": "specialized"
+      },
+      {
+        "id": "fal-ai/ideogram/v2",
+        "name": "Ideogram V2",
+        "category": "specialized"
+      },
+      {
+        "id": "fal-ai/omnigen-v1",
+        "name": "OmniGen V1",
+        "category": "utility"
+      },
+      {
+        "id": "fal-ai/aura-flow",
+        "name": "AuraFlow",
+        "category": "specialized"
+      },
+      {
+        "id": "fal-ai/stable-diffusion-v3-medium",
+        "name": "SD3 Medium",
+        "category": "specialized"
+      },
+      {
+        "id": "fal-ai/kolors",
+        "name": "Kolors",
+        "category": "specialized"
+      }
+    ]
+  },
+  "aspectRatios": [
+    { "value": "16:9", "label": "16:9", "width": 1920, "height": 1080 },
+    { "value": "4:3", "label": "4:3", "width": 1600, "height": 1200 },
+    { "value": "1:1", "label": "1:1", "width": 1024, "height": 1024 },
+    { "value": "3:4", "label": "3:4", "width": 1200, "height": 1600 },
+    { "value": "9:16", "label": "9:16", "width": 1080, "height": 1920 },
+    { "value": "21:9", "label": "21:9", "width": 2560, "height": 1080 }
+  ],
+  "defaultAspectRatio": "16:9",
+  "openrouter": {
+    "model": "anthropic/claude-3.5-sonnet",
+    "cheapModel": "anthropic/claude-3-haiku",
+    "maxTokens": 2000
+  },
+  "masterSuffixes": {
+    "person": "Soft diffused natural light, warm muted earth tones, dewy skin texture, shallow depth of field, intimate editorial photography, subtle film grain, gentle shadows, serene mood",
+    "product": "Soft natural window light, warm muted color grading, earth tones (sage, terracotta, cream), organic textures, gentle shadows, editorial still life aesthetic, subtle film grain, not clinical"
+  }
+}

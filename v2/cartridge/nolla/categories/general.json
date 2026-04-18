@@ -1,0 +1,23 @@
+{
+  "name": "General",
+  "slug": "general",
+  "description": "Default balanced aesthetic mixing warm and clinical",
+
+  "visual_dna": {
+    "palette": "balanced warm and neutral, soft earth tones, clean accents",
+    "lighting": "soft natural-feeling light, gentle shadows, flattering",
+    "mood": "professional yet approachable, trustworthy, clean",
+    "skin_tones": "diverse representation, healthy natural glow",
+    "backgrounds": ["soft neutral", "warm white", "natural texture", "abstract blur"]
+  },
+
+  "archetype_weights": {
+    "product": 0.30,
+    "skin": 0.25,
+    "food": 0.15,
+    "lifestyle": 0.15,
+    "abstract": 0.15
+  },
+
+  "suffix": "soft studio lighting, professional editorial aesthetic, gentle film grain, no labels, no text, no product branding, no plants, no foliage, no greenery"
+}

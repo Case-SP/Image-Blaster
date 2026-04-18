@@ -1,0 +1,134 @@
+{
+  "subjects": {
+    "powder": {
+      "triggers": ["creatine", "whey", "protein powder", "collagen", "matcha", "turmeric", "ashwagandha", "maca", "spirulina", "greens", "pre-workout", "bcaa"],
+      "phrase_banks": {
+        "default": ["fine loose powder", "compact powder mound", "powder in unmarked scoop", "crystalline dust"],
+        "creatine": ["white crystalline powder", "fine clinical powder heap", "unmarked scoop of white powder", "single capsule beside powder mound"],
+        "whey": ["pale cream powder", "fine protein powder", "wooden scoop of off-white powder", "dust cloud of pale powder"],
+        "matcha": ["vivid green powder", "ceremonial matcha heap", "bamboo whisk beside green powder", "fine sifted green dust"],
+        "turmeric": ["warm golden powder", "orange-gold dust", "wooden scoop of saffron powder"],
+        "ashwagandha": ["warm earth-brown powder", "tan herbal dust", "unmarked scoop of brown powder"],
+        "collagen": ["fine pale powder", "near-translucent dust", "unmarked container of pale powder"]
+      }
+    },
+    "liquid": {
+      "triggers": ["coffee", "caffeine", "milk", "water", "tea", "juice", "alcohol", "wine", "beer", "smoothie"],
+      "phrase_banks": {
+        "default": ["pale liquid in glass", "dark liquid mid-pour", "liquid surface with ripples"],
+        "coffee": ["dark espresso in small glass", "long black pour", "cream swirling into coffee", "crema-topped espresso"],
+        "water": ["clear water in tall glass", "condensation-beaded glass", "water droplet forming", "still water surface"],
+        "milk": ["white milk pouring", "cream swirling into liquid", "tall glass of cold milk"],
+        "tea": ["steeping tea in clear cup", "amber tea in glass", "tea bag suspended in water"],
+        "alcohol": ["amber liquid in tumbler", "wine-dark liquid", "clear spirit in short glass"]
+      }
+    },
+    "food": {
+      "triggers": ["chocolate", "eggs", "egg", "peanut butter", "nuts", "sugar", "dairy", "cheese", "fruit", "vegetable", "bread"],
+      "phrase_banks": {
+        "default": ["single ingredient hero", "cross-section revealing interior"],
+        "chocolate": ["broken dark chocolate squares", "chocolate shavings heap", "melted chocolate pour", "cross-section of chocolate bar"],
+        "eggs": ["single brown egg", "cracked egg with yolk intact", "three eggs in ceramic bowl", "eggshell fragments"],
+        "peanut butter": ["scoop of peanut butter", "peanut butter jar overhead", "peanut butter stirred with knife"],
+        "nuts": ["handful of mixed nuts", "almonds scattered", "cashews in small dish"],
+        "sugar": ["sugar crystals heap", "sugar cubes stack", "sugar pouring from spoon"],
+        "dairy": ["cheese block cross-section", "milk poured into bowl", "yogurt in ceramic cup"]
+      }
+    },
+    "device": {
+      "triggers": ["vape", "vaping", "ozempic", "injection", "inhaler", "nebulizer", "birth control", "pill pack"],
+      "phrase_banks": {
+        "default": ["anonymous device on clean surface"],
+        "vape": ["sleek unmarked vape pen", "vape device on marble", "tangled vape cord", "vape with faint mist"],
+        "ozempic": ["anonymous injection pen", "injection pen laying flat", "injection pen beside cap"],
+        "inhaler": ["unmarked inhaler on paper", "inhaler held in palm"],
+        "birth control": ["blister pack of pills unmarked", "open pill pack overhead", "single pill beside pack"]
+      }
+    },
+    "skincare-bottle": {
+      "triggers": ["serum", "retinol", "niacinamide", "vitamin c serum", "hyaluronic", "toner", "essence", "oil", "cleanser"],
+      "phrase_banks": {
+        "default": ["unmarked serum bottle", "amber glass dropper bottle", "frosted glass bottle with pipette"],
+        "serum": ["amber dropper bottle", "clear pipette bottle", "frosted serum bottle"],
+        "oil": ["golden oil in clear bottle", "pipette bottle with warm oil", "amber facial oil"]
+      }
+    },
+    "skincare-cream": {
+      "triggers": ["moisturizer", "cream", "lotion", "balm", "ointment", "sunscreen", "spf"],
+      "phrase_banks": {
+        "default": ["unmarked cream jar", "ceramic pot of cream", "white unmarked jar"],
+        "moisturizer": ["minimal ceramic cream jar", "white unmarked cream pot", "glass jar of thick cream"],
+        "balm": ["amber balm in small tin", "wax-textured balm", "golden balm in glass jar"],
+        "sunscreen": ["unmarked sunscreen bottle", "pale SPF cream jar"]
+      }
+    },
+    "skincare-tube": {
+      "triggers": ["cleanser", "face wash", "mask", "peel", "exfoliant", "benzoyl peroxide", "adapalene", "treatment"],
+      "phrase_banks": {
+        "default": ["unmarked white tube", "metal-finish squeeze tube", "minimal tube flat"],
+        "cleanser": ["white unmarked cleanser tube", "foaming cleanser tube"],
+        "treatment": ["small spot-treatment tube", "clinical unmarked tube"]
+      }
+    },
+    "supplement-pill": {
+      "triggers": ["vitamin supplement", "multivitamin", "fish oil capsule", "omega capsule", "capsule"],
+      "phrase_banks": {
+        "default": ["single capsule macro", "handful of capsules", "capsule split open"],
+        "capsule": ["translucent capsule with visible powder", "two-tone capsule macro", "capsule cross-section"]
+      }
+    },
+    "person-beauty": {
+      "triggers": null,
+      "phrase_banks": {
+        "default": [
+          "Black woman with healthy skin",
+          "East Asian woman with luminous skin",
+          "South Asian woman with warm glow",
+          "Latina woman with natural beauty",
+          "White woman with visible freckles",
+          "Black man with clean skin",
+          "Latino man with healthy complexion",
+          "East Asian man with calm expression",
+          "mixed-race woman with dewy skin",
+          "middle-aged Black woman with grace",
+          "older Asian woman with serene presence",
+          "young Latina with natural beauty"
+        ]
+      }
+    },
+    "person-lifestyle": {
+      "triggers": null,
+      "phrase_banks": {
+        "default": [
+          "Black woman in soft lifestyle moment",
+          "East Asian couple in candid moment",
+          "South Asian man in morning routine",
+          "Latina woman with friend laughing",
+          "group of diverse friends",
+          "older White man reading",
+          "mother and daughter connection",
+          "Black man mid-stretch",
+          "mixed-race trio candid"
+        ]
+      }
+    },
+    "skin-close": {
+      "triggers": ["acne", "skin", "pores", "texture", "wrinkles", "fine lines", "dark spots", "hyperpigmentation", "redness", "inflammation"],
+      "phrase_banks": {
+        "default": [
+          "dark brown skin with visible pores",
+          "olive skin with fine texture",
+          "pale skin with subtle freckles",
+          "medium skin with dewy finish",
+          "deep brown skin with healthy glow",
+          "light skin with visible capillaries"
+        ]
+      }
+    }
+  },
+  "defaults": {
+    "no_object_detected": "person-beauty",
+    "skin_topic": "skin-close",
+    "wellness_general": "person-beauty"
+  }
+}

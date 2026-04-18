@@ -1,0 +1,55 @@
+* { box-sizing: border-box; }
+body { font-family: -apple-system, system-ui, sans-serif; margin: 0; background: #f6f4ef; color: #2b2a27; }
+header { padding: 1rem 1.5rem; background: #2b2a27; color: #f6f4ef; display: flex; align-items: center; gap: 2rem; }
+header h1 { margin: 0; font-size: 1.1rem; font-weight: 600; }
+header .version { opacity: 0.6; font-size: 0.8rem; }
+header nav a { color: #d4c5a9; text-decoration: none; margin-right: 1rem; }
+header nav a.active { color: #fff; }
+main { padding: 1.5rem; max-width: 1400px; margin: 0 auto; }
+h2 { font-size: 1rem; margin-top: 2rem; }
+form label { display: block; margin-bottom: 0.5rem; font-size: 0.9rem; }
+form input, form select, form textarea { padding: 0.4rem; font-family: inherit; }
+form textarea { width: 100%; font-family: monospace; font-size: 0.85rem; }
+form button { padding: 0.5rem 1rem; background: #2b2a27; color: #fff; border: 0; cursor: pointer; }
+.new-run { background: #fff; padding: 1rem; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+table { width: 100%; border-collapse: collapse; background: #fff; margin-top: 0.5rem; }
+th, td { padding: 0.5rem; text-align: left; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+.status-running { color: #c4917a; }
+.status-done { color: #9aaa91; }
+.status-failed { color: #c46b6b; }
+.overview { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; background: #fff; padding: 1rem; border-radius: 6px; }
+.stages { display: flex; gap: 0.5rem; margin: 0.5rem 0 1.5rem; }
+.stage { flex: 1; padding: 0.75rem; background: #fff; border-left: 4px solid #ddd; font-size: 0.85rem; }
+.stage-running { border-left-color: #c4917a; }
+.stage-done { border-left-color: #9aaa91; }
+.stage-failed { border-left-color: #c46b6b; }
+.stage-pending { border-left-color: #ddd; opacity: 0.6; }
+.stage .name { font-weight: 600; margin-right: 0.5rem; }
+.stage .meta { color: #888; }
+.title-card { background: #fff; margin-bottom: 1.5rem; padding: 1rem; border-radius: 6px; }
+.title-card header { background: none; color: inherit; padding: 0; display: block; margin-bottom: 0.5rem; }
+.title-card h3 { margin: 0; font-size: 1rem; }
+.variance { font-size: 0.85rem; color: #555; margin-top: 0.25rem; }
+.progressing { color: #c4917a; font-weight: 500; }
+details { margin-top: 0.75rem; }
+details summary { cursor: pointer; font-weight: 600; font-size: 0.9rem; }
+.shots, .diff { font-size: 0.8rem; margin-top: 0.5rem; }
+.shots th, .diff th { background: #f6f4ef; }
+.resolved { list-style: decimal; padding-left: 1.5rem; }
+.resolved li { margin-bottom: 0.75rem; font-size: 0.85rem; }
+.resolved .prompt { line-height: 1.4; }
+.resolved .meta { color: #888; font-size: 0.75rem; margin-top: 0.25rem; }
+mark.subj { background: #ffe8d6; padding: 0 2px; }
+mark.slot { background: #e6f0e1; padding: 0 2px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0.75rem; margin-top: 0.5rem; }
+.tile { background: #fafafa; border: 2px solid transparent; border-radius: 4px; overflow: hidden; }
+.tile img { width: 100%; display: block; aspect-ratio: 16/9; object-fit: cover; }
+.tile-prompt { padding: 0.4rem; font-size: 0.75rem; color: #666; min-height: 3em; }
+.verdict-buttons { display: flex; padding: 0.25rem; gap: 0.25rem; }
+.verdict-buttons button { flex: 1; font-size: 0.75rem; padding: 0.25rem; cursor: pointer; background: #eee; border: 0; }
+.tile.verdict-usable { border-color: #9aaa91; }
+.tile.verdict-not-usable { border-color: #c46b6b; opacity: 0.5; }
+.tile.verdict-winner { border-color: #c4917a; box-shadow: 0 0 0 2px #c4917a33; }
+.tile.failed { padding: 0.5rem; color: #c46b6b; font-size: 0.8rem; }
+.empty { color: #999; font-style: italic; font-size: 0.85rem; }
+code { background: #f0ece2; padding: 1px 4px; border-radius: 2px; font-size: 0.8em; }

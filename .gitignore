@@ -1,0 +1,42 @@
+# Secrets — NEVER commit
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Generated / runtime output (ephemeral, stored in Supabase in prod)
+output/
+v2/output/
+v2/data/
+
+# v1 local session state (not needed for deploy)
+data/
+
+# Claude Code local settings
+.claude/
+
+# Temp / OS
+.DS_Store
+/tmp
+*.log
+*.tmp
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build
+dist/
+build/
+
+# Reference image source library (personal, not needed in repo — cartridge refs are tracked)
+# v2/cartridge/<name>/references/ stays tracked for repeatable deploys

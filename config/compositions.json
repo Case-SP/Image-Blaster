@@ -1,0 +1,417 @@
+{
+  "compositions": {
+
+    "cloud": {
+      "template": "{subject} suspended mid-air, frozen particles, dramatic spotlight, dark background",
+      "cameras": ["ECU", "CU"],
+      "lenses": ["100mm macro", "85mm"],
+      "mood": "dramatic, dynamic"
+    },
+    "overhead-scatter": {
+      "template": "{subject} scattered artfully, directly overhead bird's eye view, flat lay composition",
+      "cameras": ["MS", "WS"],
+      "lenses": ["35mm", "50mm"],
+      "mood": "organized, editorial"
+    },
+    "scoop": {
+      "template": "{subject} scoop emerging from container, heaping full, product spilling slightly over edge",
+      "cameras": ["CU", "MCU"],
+      "lenses": ["50mm", "85mm"],
+      "mood": "abundant, appetizing"
+    },
+    "pour": {
+      "template": "{subject} being poured in cascading stream, motion blur on falling particles, dynamic flow",
+      "cameras": ["MCU", "MS"],
+      "lenses": ["50mm", "85mm"],
+      "mood": "dynamic, action"
+    },
+    "macro-texture": {
+      "template": "extreme macro of {subject} texture, granular detail visible, abstract surface landscape fills frame",
+      "cameras": ["ECU"],
+      "lenses": ["100mm macro"],
+      "mood": "abstract, detailed"
+    },
+    "jar-peek": {
+      "template": "open jar revealing {subject} inside, product visible from above angle, container context",
+      "cameras": ["CU", "MCU"],
+      "lenses": ["50mm", "85mm"],
+      "mood": "product-focused, clean"
+    },
+    "spill-artistic": {
+      "template": "{subject} artistic spill from container, controlled overflow, product cascading onto surface",
+      "cameras": ["CU", "MCU"],
+      "lenses": ["50mm", "85mm"],
+      "mood": "dynamic, abundant"
+    },
+    "gradient-fade": {
+      "template": "{subject} gradient from dense to sparse, fading dispersion, abstract density study",
+      "cameras": ["MS", "WS"],
+      "lenses": ["35mm", "50mm"],
+      "mood": "abstract, artistic"
+    },
+
+    "pour-stream": {
+      "template": "{subject} being poured in smooth stream, motion blur on liquid, elegant flow",
+      "cameras": ["CU", "MCU"],
+      "lenses": ["50mm", "85mm"],
+      "mood": "elegant, flowing"
+    },
+    "splash-frozen": {
+      "template": "{subject} splash frozen in time, dynamic droplets suspended, high-speed capture moment",
+      "cameras": ["CU", "MCU"],
+      "lenses": ["85mm", "100mm macro"],
+      "mood": "dynamic, dramatic"
+    },
+    "surface-ripple": {
+      "template": "{subject} surface extreme close, ripples or bubbles visible, abstract liquid texture",
+      "cameras": ["ECU"],
+      "lenses": ["100mm macro"],
+      "mood": "abstract, meditative"
+    },
+    "glass-vessel": {
+      "template": "glass vessel containing {subject}, light passing through liquid, elegant transparency",
+      "cameras": ["CU", "MCU"],
+      "lenses": ["50mm", "85mm"],
+      "mood": "elegant, clean"
+    },
+    "drip-single": {
+      "template": "single drop of {subject} forming or falling, extreme macro on droplet, time frozen",
+      "cameras": ["ECU"],
+      "lenses": ["100mm macro"],
+      "mood": "precise, delicate"
+    },
+    "swirl-motion": {
+      "template": "{subject} swirling motion in glass, cream mixing pattern, dynamic spiral",
+      "cameras": ["CU"],
+      "lenses": ["50mm", "85mm"],
+      "mood": "dynamic, artistic"
+    },
+    "steam-rising": {
+      "template": "steam rising from hot {subject}, wispy vapor trails, atmospheric warmth",
+      "cameras": ["CU", "MCU"],
+      "lenses": ["85mm", "50mm"],
+      "mood": "warm, inviting"
+    },
+    "backlit-glow": {
+      "template": "{subject} backlit creating glow, silhouette with light halo, dramatic rim lighting",
+      "cameras": ["CU", "MCU"],
+      "lenses": ["85mm", "50mm"],
+      "mood": "dramatic, atmospheric"
+    },
+
+    "hero-floating": {
+      "template": "single {subject} floating or suspended, dramatic side lighting, deep shadow, isolated subject",
+      "cameras": ["CU", "MCU"],
+      "lenses": ["50mm", "85mm"],
+      "mood": "dramatic, focused"
+    },
+    "cut-cross-section": {
+      "template": "{subject} cut in half revealing cross-section, interior texture visible, clean cut",
+      "cameras": ["CU"],
+      "lenses": ["50mm", "85mm"],
+      "mood": "revealing, detailed"
+    },
+    "overhead-arrange": {
+      "template": "{subject} arranged overhead flat lay, artful composition, bird's eye perspective",
+      "cameras": ["MS", "WS"],
+      "lenses": ["35mm", "50mm"],
+      "mood": "organized, editorial"
+    },
+    "bite-taken": {
+      "template": "{subject} with bite taken, texture revealed, appetizing imperfection",
+      "cameras": ["CU"],
+      "lenses": ["50mm", "85mm"],
+      "mood": "appetizing, real"
+    },
+    "ingredient-scatter": {
+      "template": "{subject} ingredients scattered artfully, deconstructed arrangement, culinary flat lay",
+      "cameras": ["MS"],
+      "lenses": ["35mm", "50mm"],
+      "mood": "editorial, culinary"
+    },
+    "stack-tower": {
+      "template": "{subject} stacked vertically, tower composition, height emphasis",
+      "cameras": ["CU", "MCU"],
+      "lenses": ["50mm", "85mm"],
+      "mood": "architectural, bold"
+    },
+    "drizzle-action": {
+      "template": "{subject} with drizzle action, sauce or liquid being poured over, dynamic topping",
+      "cameras": ["CU"],
+      "lenses": ["50mm", "85mm"],
+      "mood": "dynamic, appetizing"
+    },
+
+    "hand-hold": {
+      "template": "hand elegantly holding {subject}, fingers visible, human interaction context",
+      "cameras": ["CU", "MCU"],
+      "lenses": ["50mm", "85mm"],
+      "mood": "human, relatable"
+    },
+    "macro-detail": {
+      "template": "extreme macro of {subject} detail, surface texture and mechanism visible",
+      "cameras": ["ECU"],
+      "lenses": ["100mm macro"],
+      "mood": "technical, detailed"
+    },
+    "clinical-clean": {
+      "template": "{subject} on clean clinical surface, medical aesthetic, precise placement",
+      "cameras": ["CU", "MCU"],
+      "lenses": ["50mm", "85mm"],
+      "mood": "clinical, professional"
+    },
+    "angle-dramatic": {
+      "template": "{subject} at dramatic angle, strong diagonal composition, dynamic perspective",
+      "cameras": ["CU"],
+      "lenses": ["35mm", "50mm"],
+      "mood": "dramatic, modern"
+    },
+    "silhouette-backlit": {
+      "template": "{subject} silhouette against bright background, rim lighting, form emphasis",
+      "cameras": ["CU", "MCU"],
+      "lenses": ["50mm", "85mm"],
+      "mood": "dramatic, abstract"
+    },
+
+    "jar-open": {
+      "template": "open jar of {subject}, product visible inside, clean label-free container",
+      "cameras": ["CU"],
+      "lenses": ["50mm"],
+      "mood": "product-focused"
+    },
+    "single-macro": {
+      "template": "single {subject} extreme macro, surface texture visible, isolated specimen",
+      "cameras": ["ECU"],
+      "lenses": ["100mm macro"],
+      "mood": "detailed, clinical"
+    },
+    "scatter-minimal": {
+      "template": "{subject} minimal scatter, few pieces artfully placed, negative space emphasis",
+      "cameras": ["MS"],
+      "lenses": ["50mm"],
+      "mood": "minimal, elegant"
+    },
+
+    "bottle-elegant": {
+      "template": "elegant bottle of {subject}, light passing through liquid, glass reflections, minimal",
+      "cameras": ["CU"],
+      "lenses": ["50mm", "85mm"],
+      "mood": "elegant, luxe"
+    },
+    "pipette-drop": {
+      "template": "glass pipette releasing drop of {subject}, golden liquid forming droplet",
+      "cameras": ["ECU", "CU"],
+      "lenses": ["100mm macro", "85mm"],
+      "mood": "precise, luxe"
+    },
+    "pump-dispense": {
+      "template": "pump bottle dispensing {subject}, product emerging from nozzle, action moment",
+      "cameras": ["CU"],
+      "lenses": ["50mm", "85mm"],
+      "mood": "active, product-focused"
+    },
+    "pour-golden": {
+      "template": "{subject} being poured, golden liquid stream, luxurious flow",
+      "cameras": ["CU"],
+      "lenses": ["50mm", "85mm"],
+      "mood": "luxe, flowing"
+    },
+    "texture-swatch": {
+      "template": "{subject} texture swatch on skin or surface, product consistency visible",
+      "cameras": ["ECU", "CU"],
+      "lenses": ["100mm macro", "85mm"],
+      "mood": "textural, demonstrative"
+    },
+
+    "jar-overhead": {
+      "template": "open cream jar directly overhead, {subject} visible, finger swipe mark in product",
+      "cameras": ["overhead"],
+      "lenses": ["50mm"],
+      "mood": "editorial, used"
+    },
+    "jar-angle": {
+      "template": "open cream jar at 45-degree angle, {subject} texture visible, dramatic side lighting",
+      "cameras": ["CU"],
+      "lenses": ["50mm", "85mm"],
+      "mood": "dramatic, textural"
+    },
+    "dollop-finger": {
+      "template": "small pearl of {subject} on fingertip, delicate macro detail, soft background",
+      "cameras": ["ECU", "CU"],
+      "lenses": ["100mm macro", "85mm"],
+      "mood": "delicate, intimate"
+    },
+    "swirl-texture": {
+      "template": "{subject} texture in artistic swirl, macro peaks and valleys, abstract",
+      "cameras": ["ECU"],
+      "lenses": ["100mm macro"],
+      "mood": "abstract, textural"
+    },
+    "smear-swatch": {
+      "template": "{subject} smeared in artistic swatch, texture stroke on surface",
+      "cameras": ["CU", "MCU"],
+      "lenses": ["50mm", "85mm"],
+      "mood": "artistic, demonstrative"
+    },
+    "dip-scoop": {
+      "template": "finger dipping into {subject}, scooping motion, product displacement visible",
+      "cameras": ["CU"],
+      "lenses": ["50mm", "85mm"],
+      "mood": "active, tactile"
+    },
+    "macro-peaks": {
+      "template": "extreme macro of {subject} surface, peaks and ridges, abstract landscape",
+      "cameras": ["ECU"],
+      "lenses": ["100mm macro"],
+      "mood": "abstract, detailed"
+    },
+
+    "tube-squeeze": {
+      "template": "tube being squeezed, {subject} emerging from opening, product flow",
+      "cameras": ["CU"],
+      "lenses": ["50mm", "85mm"],
+      "mood": "active, product-focused"
+    },
+    "tube-flat": {
+      "template": "tube laying flat on surface, {subject} tube with clean design, minimal",
+      "cameras": ["CU", "MCU"],
+      "lenses": ["50mm"],
+      "mood": "minimal, product-focused"
+    },
+    "product-emerging": {
+      "template": "{subject} product emerging from tube, fresh dispensed dollop",
+      "cameras": ["CU"],
+      "lenses": ["50mm", "85mm"],
+      "mood": "fresh, active"
+    },
+    "dollop-surface": {
+      "template": "dollop of {subject} on clean surface, product blob, texture visible",
+      "cameras": ["CU"],
+      "lenses": ["50mm", "85mm"],
+      "mood": "clean, textural"
+    },
+    "hand-apply": {
+      "template": "hand applying {subject} to skin, product visible on fingers, application moment",
+      "cameras": ["CU"],
+      "lenses": ["50mm", "85mm"],
+      "mood": "active, demonstrative"
+    },
+
+    "portrait-direct": {
+      "template": "editorial beauty portrait, {subject}, natural skin texture, direct gaze, minimal makeup",
+      "cameras": ["CU", "MCU"],
+      "lenses": ["85mm", "50mm"],
+      "mood": "confident, editorial"
+    },
+    "portrait-profile": {
+      "template": "profile portrait, {subject}, side angle, elegant neck line, sculptural",
+      "cameras": ["CU", "MCU"],
+      "lenses": ["85mm"],
+      "mood": "elegant, sculptural"
+    },
+    "gaze-intense": {
+      "template": "intense direct gaze portrait, {subject}, eyes commanding attention, intimate",
+      "cameras": ["CU"],
+      "lenses": ["85mm"],
+      "mood": "intense, intimate"
+    },
+    "applying-touch": {
+      "template": "person gently touching face, {subject}, skincare application moment, soft natural",
+      "cameras": ["CU", "MCU"],
+      "lenses": ["85mm", "50mm"],
+      "mood": "soft, ritualistic"
+    },
+    "mirror-reflection": {
+      "template": "person in mirror reflection, {subject}, skincare moment, intimate bathroom scene",
+      "cameras": ["MCU", "MS"],
+      "lenses": ["50mm", "35mm"],
+      "mood": "intimate, real"
+    },
+    "fragment-crop": {
+      "template": "cropped fragment of face, {subject}, partial features, abstract beauty",
+      "cameras": ["ECU", "CU"],
+      "lenses": ["85mm", "100mm macro"],
+      "mood": "abstract, editorial"
+    },
+    "serene-eyes-closed": {
+      "template": "serene portrait eyes closed, {subject}, peaceful expression, soft lighting",
+      "cameras": ["CU", "MCU"],
+      "lenses": ["85mm"],
+      "mood": "peaceful, meditative"
+    },
+    "natural-candid": {
+      "template": "natural candid moment, {subject}, unposed authentic expression, lifestyle",
+      "cameras": ["MCU", "MS"],
+      "lenses": ["50mm", "35mm"],
+      "mood": "authentic, lifestyle"
+    },
+
+    "duo-intimate": {
+      "template": "two people in intimate moment, {subject}, close connection, editorial",
+      "cameras": ["MCU", "MS"],
+      "lenses": ["50mm", "35mm"],
+      "mood": "intimate, connected"
+    },
+    "duo-parallel": {
+      "template": "two people side by side, {subject}, parallel composition, symmetry",
+      "cameras": ["MS"],
+      "lenses": ["35mm", "50mm"],
+      "mood": "balanced, editorial"
+    },
+    "trio-candid": {
+      "template": "three people candid group, {subject}, natural interaction, lifestyle",
+      "cameras": ["MS", "WS"],
+      "lenses": ["35mm"],
+      "mood": "social, authentic"
+    },
+    "solo-contemplative": {
+      "template": "single person contemplative moment, {subject}, introspective, eyes away or closed",
+      "cameras": ["CU", "MCU"],
+      "lenses": ["85mm", "50mm"],
+      "mood": "introspective, quiet"
+    },
+    "hands-activity": {
+      "template": "hands engaged in activity, {subject}, detail on hands and action",
+      "cameras": ["CU"],
+      "lenses": ["50mm", "85mm"],
+      "mood": "active, focused"
+    },
+    "environmental-wide": {
+      "template": "person in environment, {subject}, wider context visible, lifestyle setting",
+      "cameras": ["MS", "WS"],
+      "lenses": ["35mm"],
+      "mood": "contextual, lifestyle"
+    },
+
+    "macro-pores": {
+      "template": "extreme macro of {subject}, pores and texture visible, clinical detail",
+      "cameras": ["ECU"],
+      "lenses": ["100mm macro"],
+      "mood": "clinical, detailed"
+    },
+    "fragment-cheek": {
+      "template": "cropped fragment of cheek area, {subject}, skin texture emphasis",
+      "cameras": ["ECU", "CU"],
+      "lenses": ["100mm macro", "85mm"],
+      "mood": "abstract, textural"
+    },
+    "fragment-forehead": {
+      "template": "cropped fragment of forehead, {subject}, skin surface detail",
+      "cameras": ["ECU", "CU"],
+      "lenses": ["100mm macro", "85mm"],
+      "mood": "abstract, clinical"
+    },
+    "texture-dewy": {
+      "template": "{subject} with dewy texture, moisture droplets on skin, healthy glow",
+      "cameras": ["ECU", "CU"],
+      "lenses": ["100mm macro", "85mm"],
+      "mood": "fresh, healthy"
+    },
+    "clinical-close": {
+      "template": "clinical close-up of {subject}, medical photography style, neutral lighting",
+      "cameras": ["CU"],
+      "lenses": ["50mm", "85mm"],
+      "mood": "clinical, objective"
+    }
+  }
+}

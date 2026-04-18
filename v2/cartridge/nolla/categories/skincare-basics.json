@@ -1,0 +1,22 @@
+{
+  "name": "Skincare Basics",
+  "slug": "skincare-basics",
+  "description": "Approachable, friendly, educational how-to content",
+
+  "visual_dna": {
+    "palette": "soft pastels, warm whites, gentle pinks, calming neutrals",
+    "lighting": "bright and airy, soft flattering light, welcoming",
+    "mood": "friendly, approachable, helpful, encouraging",
+    "skin_tones": "healthy natural glow, relatable real skin, diverse ages and tones",
+    "backgrounds": ["soft white", "light pastel", "bathroom setting", "vanity context"]
+  },
+
+  "archetype_weights": {
+    "product": 0.40,
+    "skin": 0.30,
+    "food": 0.05,
+    "lifestyle": 0.25
+  },
+
+  "suffix": "bright airy lighting, soft flattering glow, approachable friendly aesthetic, relatable beauty photography, no labels, no text, no product branding"
+}

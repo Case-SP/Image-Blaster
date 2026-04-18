@@ -1,0 +1,405 @@
+{
+  "archetypes": {
+    "supplement-jar": {
+      "category": "product",
+      "shot": "CU",
+      "template": "Anonymous supplement bottle or jar containing {subject}, minimal label-free design, studio lighting",
+      "best_for": ["vitamins", "supplements", "powders"]
+    },
+    "powder-cloud": {
+      "category": "product",
+      "shot": "MS",
+      "template": "{subject} powder suspended mid-air, frozen particles, dramatic spotlight, dark background",
+      "best_for": ["protein", "dramatic effect", "colorful powders"]
+    },
+    "dropper-drip": {
+      "category": "product",
+      "shot": "ECU",
+      "template": "Glass dropper releasing single drop of {subject}, extreme macro on forming droplet, time frozen",
+      "best_for": ["serums", "oils", "tinctures", "liquid supplements"]
+    },
+    "liquid-pour": {
+      "category": "product",
+      "shot": "CU",
+      "template": "{subject} being poured in smooth stream, motion blur on liquid, abstract flow",
+      "best_for": ["oils", "syrups", "liquid supplements", "honey"]
+    },
+    "bottle-anonymous": {
+      "category": "product",
+      "shot": "CU",
+      "template": "Anonymous {subject} bottle, no labels visible, pure form and shape, minimal",
+      "best_for": ["skincare", "supplements", "beverages"]
+    },
+    "cream-swirl": {
+      "category": "product",
+      "shot": "ECU",
+      "template": "{subject} cream texture in artistic swirl, extreme macro peaks and valleys, abstract",
+      "best_for": ["skincare", "moisturizers", "topicals"]
+    },
+    "cream-jar-overhead": {
+      "category": "product",
+      "shot": "overhead",
+      "template": "Open cream jar directly overhead bird's eye, {subject} cream visible, finger swipe mark in product, flat lay",
+      "best_for": ["moisturizers", "skincare", "face cream", "body butter"]
+    },
+    "cream-jar-angle": {
+      "category": "product",
+      "shot": "CU",
+      "template": "Open cream jar at 45-degree angle, {subject} cream texture visible, dramatic side lighting, depth",
+      "best_for": ["moisturizers", "skincare", "face cream"]
+    },
+    "cream-dollop": {
+      "category": "product",
+      "shot": "ECU",
+      "template": "Small pearl of {subject} cream on fingertip, delicate macro detail, refined texture, soft background",
+      "best_for": ["skincare application", "moisturizer", "cream texture"]
+    },
+    "cream-macro": {
+      "category": "product",
+      "shot": "ECU",
+      "template": "Extreme macro of {subject} cream texture, peaks and ridges, abstract landscape, fills entire frame",
+      "best_for": ["cream texture", "moisturizer detail", "abstract skincare"]
+    },
+    "cream-smear": {
+      "category": "product",
+      "shot": "overhead",
+      "template": "Thin elegant stroke of {subject} cream on glass or marble surface, overhead view, minimal refined texture",
+      "best_for": ["skincare", "texture showcase", "cream application"]
+    },
+    "tube-squeeze": {
+      "category": "product",
+      "shot": "CU",
+      "template": "{subject} product being squeezed from tube, ribbon of cream emerging, motion frozen, 45-degree angle",
+      "best_for": ["skincare", "treatments", "topicals", "ointments"]
+    },
+    "serum-bottle": {
+      "category": "product",
+      "shot": "CU",
+      "template": "Elegant serum bottle with {subject}, light passing through liquid, glass reflections, minimal",
+      "best_for": ["serums", "oils", "treatments", "liquids"]
+    },
+    "serum-dropper-macro": {
+      "category": "product",
+      "shot": "ECU",
+      "template": "Extreme macro of dropper tip with {subject} serum drop forming, surface tension visible, abstract",
+      "best_for": ["serums", "oils", "liquid detail"]
+    },
+    "pump-bottle": {
+      "category": "product",
+      "shot": "CU",
+      "template": "Sleek pump dispenser bottle for {subject}, finger pressing pump head, product dispensing, clean minimal background",
+      "best_for": ["cleanser", "lotion", "serum", "liquid skincare"]
+    },
+    "airless-pump": {
+      "category": "product",
+      "shot": "CU",
+      "template": "Modern airless pump container for {subject}, cylindrical minimal design, soft studio lighting, premium feel",
+      "best_for": ["serums", "treatments", "premium skincare", "actives"]
+    },
+    "spray-mist": {
+      "category": "product",
+      "shot": "CU",
+      "template": "Fine mist spraying from bottle, {subject} context, water droplets caught mid-air, refreshing moment frozen",
+      "best_for": ["toner", "facial mist", "setting spray", "hydration"]
+    },
+    "roller-bottle": {
+      "category": "product",
+      "shot": "ECU",
+      "template": "Rollerball applicator gliding on skin, {subject} context, metallic ball visible, cooling application moment",
+      "best_for": ["eye serum", "spot treatment", "oil roller", "targeted application"]
+    },
+    "ampoule-glass": {
+      "category": "product",
+      "shot": "CU",
+      "template": "Delicate glass ampoule with {subject}, light refracting through concentrated liquid, single-dose luxury",
+      "best_for": ["concentrated serum", "treatment", "vitamin shot", "intensive care"]
+    },
+    "tube-flat": {
+      "category": "product",
+      "shot": "overhead",
+      "template": "Flat squeeze tube laying on surface, {subject} context, product ribbon squeezed out beside it, overhead view",
+      "best_for": ["cleanser", "mask", "treatment", "sunscreen"]
+    },
+    "jar-dip": {
+      "category": "product",
+      "shot": "CU",
+      "template": "Finger dipping into open jar of {subject}, cream clinging to fingertip, intimate application moment",
+      "best_for": ["moisturizer", "mask", "balm", "thick cream"]
+    },
+    "bottle-silhouette": {
+      "category": "product",
+      "shot": "MS",
+      "template": "Skincare bottle silhouette backlit, {subject} context, form and shape emphasized, dramatic rim light",
+      "best_for": ["any bottle", "toner", "essence", "liquid product"]
+    },
+    "pipette-drop": {
+      "category": "product",
+      "shot": "ECU",
+      "template": "Glass pipette releasing golden drop of {subject}, macro detail on droplet, luxurious moment",
+      "best_for": ["facial oil", "serum", "treatment oil", "essence"]
+    },
+    "product-hand": {
+      "category": "product",
+      "shot": "CU",
+      "template": "Hand holding {subject} product, anonymous bottle or tube, fingers elegant, soft studio light",
+      "best_for": ["any skincare", "product showcase", "human touch"]
+    },
+    "product-flatlay": {
+      "category": "product",
+      "shot": "overhead",
+      "template": "Multiple {subject} products arranged flat lay, directly overhead, organized grid or artistic scatter",
+      "best_for": ["product collection", "routine", "multiple items"]
+    },
+    "texture-macro": {
+      "category": "product",
+      "shot": "ECU",
+      "template": "Extreme macro of {subject} texture filling entire frame, abstract pattern, unrecognizable scale",
+      "best_for": ["creams", "gels", "powders", "any texture"]
+    },
+
+    "face-macro": {
+      "category": "skin",
+      "shot": "ECU",
+      "template": "Extreme close-up of {subject} skin, every pore visible, dewy texture, cropped tight",
+      "best_for": ["skincare results", "skin texture", "pore detail"]
+    },
+    "face-fragment": {
+      "category": "skin",
+      "shot": "ECU",
+      "template": "Fragment of face showing {subject}, lips and chin only, or cheekbone only, cropped abstract",
+      "best_for": ["skin detail", "abstract beauty", "partial face"]
+    },
+    "eye-cinema": {
+      "category": "skin",
+      "shot": "ECU",
+      "template": "Cinematic close-up of eye area, {subject} context, shallow depth, catchlight visible",
+      "best_for": ["eye area", "expression", "intimate"]
+    },
+    "shoulder-silhouette": {
+      "category": "skin",
+      "shot": "MS",
+      "template": "Bare shoulder silhouette, {subject} implied, backlit rim light, form over detail",
+      "best_for": ["body", "form", "abstract body"]
+    },
+    "hair-backlit": {
+      "category": "skin",
+      "shot": "CU",
+      "template": "Hair strands catching backlight, {subject} context, individual hairs glowing, halo effect",
+      "best_for": ["hair health", "hair care", "hair texture"]
+    },
+    "hands-abstract": {
+      "category": "skin",
+      "shot": "CU",
+      "template": "Hands in abstract pose, {subject} context, intertwined fingers, sculptural",
+      "best_for": ["self-care", "touch", "abstract body"]
+    },
+    "skin-texture": {
+      "category": "skin",
+      "shot": "ECU",
+      "template": "Abstract skin texture, {subject} area, extreme macro, could be any body part",
+      "best_for": ["skin texture", "abstract", "body detail"]
+    },
+
+    "beauty-portrait": {
+      "category": "beauty",
+      "shot": "MCU",
+      "template": "Editorial beauty portrait, {subject} context, natural skin texture visible, minimal makeup, soft even lighting, diverse model",
+      "best_for": ["skincare", "natural beauty", "skin health", "general wellness"]
+    },
+    "beauty-profile": {
+      "category": "beauty",
+      "shot": "MCU",
+      "template": "Elegant profile portrait, chin slightly lifted, {subject} context, neck and jawline visible, eyes closed or looking up, editorial",
+      "best_for": ["neck", "jawline", "meditation", "serene", "elegant"]
+    },
+    "beauty-gaze": {
+      "category": "beauty",
+      "shot": "CU",
+      "template": "Direct gaze beauty portrait, {subject} context, intense eye contact, natural freckles or skin features, slicked hair, bare shoulders",
+      "best_for": ["confidence", "skin features", "direct connection", "empowerment"]
+    },
+    "beauty-duo-faces": {
+      "category": "beauty",
+      "shot": "CU",
+      "template": "Two faces close together, {subject} context, one profile one 3/4 view, diverse skin tones, dewy luminous skin, editorial beauty",
+      "best_for": ["comparison", "diversity", "together", "skin types", "duo"]
+    },
+    "beauty-serene": {
+      "category": "beauty",
+      "shot": "CU",
+      "template": "Serene beauty portrait, eyes closed, {subject} context, peaceful expression, soft natural light, hair falling naturally",
+      "best_for": ["relaxation", "sleep", "calm", "peace", "rest"]
+    },
+    "beauty-dewy": {
+      "category": "beauty",
+      "shot": "CU",
+      "template": "Dewy glass skin portrait, {subject} context, luminous highlight on cheekbones, natural glow, fresh clean skin",
+      "best_for": ["hydration", "glow", "moisture", "healthy skin", "radiance"]
+    },
+    "beauty-bedding": {
+      "category": "beauty",
+      "shot": "MCU",
+      "template": "Intimate portrait with soft linen or bedding framing face, {subject} context, warm natural tones, dreamy soft focus edges",
+      "best_for": ["sleep", "morning", "intimate", "cozy", "rest"]
+    },
+    "beauty-natural": {
+      "category": "beauty",
+      "shot": "MCU",
+      "template": "Natural beauty portrait, visible freckles or moles, {subject} context, imperfect perfect skin, authentic features celebrated",
+      "best_for": ["natural", "authentic", "real skin", "acceptance"]
+    },
+    "beauty-applying": {
+      "category": "beauty",
+      "shot": "CU",
+      "template": "Person gently touching face with fingertips, {subject} context, minimal visible product, soft natural moment, editorial",
+      "best_for": ["skincare routine", "application", "self-care", "treatment"]
+    },
+    "beauty-mirror": {
+      "category": "beauty",
+      "shot": "MS",
+      "template": "Person gazing in mirror, {subject} context, reflection visible, intimate moment, soft natural light, no visible product on face",
+      "best_for": ["routine", "skincare", "self-care", "morning routine"]
+    },
+    "beauty-hands-face": {
+      "category": "beauty",
+      "shot": "CU",
+      "template": "Hands framing face, {subject} context, fingers touching skin, elegant pose, beauty editorial",
+      "best_for": ["skincare", "face touching", "self-care", "skin awareness"]
+    },
+    "beauty-product-cheek": {
+      "category": "beauty",
+      "shot": "ECU",
+      "template": "Subtle hint of product on cheekbone, {subject} context, barely visible sheen, dewy skin, editorial close-up",
+      "best_for": ["skincare application", "before/during", "cream", "treatment"]
+    },
+    "beauty-routine": {
+      "category": "beauty",
+      "shot": "MS",
+      "template": "Person mid-skincare routine, {subject} context, products visible but not branded, candid self-care moment",
+      "best_for": ["routine", "morning", "evening", "skincare steps"]
+    },
+
+    "ingredient-hero": {
+      "category": "food",
+      "shot": "CU",
+      "template": "Single {subject} floating or suspended, dramatic side lighting, deep shadow",
+      "best_for": ["specific ingredients", "superfoods", "single food item"]
+    },
+    "ingredient-cut": {
+      "category": "food",
+      "shot": "ECU",
+      "template": "Cross-section of {subject} revealing interior, macro detail, abstract pattern inside",
+      "best_for": ["fruits", "vegetables", "revealing interior"]
+    },
+    "ingredient-macro": {
+      "category": "food",
+      "shot": "ECU",
+      "template": "Extreme macro of {subject} surface, abstract texture, unrecognizable at this scale",
+      "best_for": ["natural ingredients", "food textures", "abstract food"]
+    },
+    "flat-lay-minimal": {
+      "category": "food",
+      "shot": "overhead",
+      "template": "Overhead flat lay, single {subject} with massive negative space, off-center",
+      "best_for": ["minimal", "single ingredient", "editorial"]
+    },
+    "beverage-abstract": {
+      "category": "food",
+      "shot": "ECU",
+      "template": "Glass of {subject}, extreme close on liquid surface, bubbles or ripples, abstract",
+      "best_for": ["drinks", "hydration", "abstract liquid"]
+    },
+
+    "solo-contemplative": {
+      "category": "lifestyle",
+      "shot": "MCU",
+      "template": "Single person in moment of {subject}, eyes closed or gazing away, serene, cinematic crop",
+      "best_for": ["meditation", "relaxation", "self-care", "mental health"]
+    },
+    "solo-silhouette": {
+      "category": "lifestyle",
+      "shot": "WS",
+      "template": "Person silhouetted against light, {subject} context, form without detail, atmospheric",
+      "best_for": ["morning", "evening", "mood", "abstract lifestyle"]
+    },
+    "solo-motion": {
+      "category": "lifestyle",
+      "shot": "MS",
+      "template": "Person in motion blur, {subject} activity, intentional movement blur, dynamic energy",
+      "best_for": ["exercise", "energy", "movement", "active"]
+    },
+    "duo-intimate": {
+      "category": "lifestyle",
+      "shot": "MCU",
+      "template": "Two people in intimate moment, {subject} context, connection visible, candid",
+      "best_for": ["relationships", "support", "connection", "together"]
+    },
+    "duo-parallel": {
+      "category": "lifestyle",
+      "shot": "MS",
+      "template": "Two people side by side, {subject} activity, symmetrical composition, shared experience",
+      "best_for": ["workout partners", "friends", "shared routine"]
+    },
+    "trio-candid": {
+      "category": "lifestyle",
+      "shot": "MS",
+      "template": "Three people in candid interaction, {subject} context, natural laughter or conversation",
+      "best_for": ["social", "group wellness", "community"]
+    },
+    "group-hands": {
+      "category": "lifestyle",
+      "shot": "CU",
+      "template": "Multiple hands reaching or interacting, {subject} context, no faces, connection implied",
+      "best_for": ["community", "support", "together", "abstract group"]
+    },
+    "lifestyle-sleep": {
+      "category": "lifestyle",
+      "shot": "CU",
+      "template": "Person resting, only partial body visible, {subject} context, intimate crop, soft focus",
+      "best_for": ["sleep", "rest", "nighttime routine", "fatigue"]
+    },
+
+    "abstract-light": {
+      "category": "abstract",
+      "shot": "CU",
+      "template": "Light refracting through {subject}, caustics and color play, pure abstraction",
+      "best_for": ["liquids", "glass", "crystals", "light play"]
+    },
+    "abstract-blur": {
+      "category": "abstract",
+      "shot": "MS",
+      "template": "Intentional blur of {subject}, color fields and soft shapes, painterly effect",
+      "best_for": ["any subject", "mood", "evocative", "color story"]
+    },
+    "abstract-negative": {
+      "category": "abstract",
+      "shot": "WS",
+      "template": "Tiny {subject} element in vast negative space, extreme minimal, breathing room",
+      "best_for": ["minimal", "editorial", "breathing space"]
+    },
+    "abstract-reflection": {
+      "category": "abstract",
+      "shot": "CU",
+      "template": "{subject} reflected in water or mirror, distorted reflection, dreamlike",
+      "best_for": ["reflective surfaces", "dreamlike", "distortion"]
+    },
+    "cinema-wide": {
+      "category": "abstract",
+      "shot": "EWS",
+      "template": "Wide cinematic frame, {subject} small in environment, atmospheric, epic scale",
+      "best_for": ["environmental", "context", "scale", "mood"]
+    },
+    "cinema-shallow": {
+      "category": "abstract",
+      "shot": "CU",
+      "template": "Extreme shallow depth of field, {subject} with heavy bokeh, only sliver in focus",
+      "best_for": ["intimate", "focus", "dreamy", "selective"]
+    },
+    "cinema-split": {
+      "category": "abstract",
+      "shot": "MS",
+      "template": "Split frame composition, {subject} on one side, contrasting element or void on other",
+      "best_for": ["contrast", "duality", "editorial", "tension"]
+    }
+  }
+}

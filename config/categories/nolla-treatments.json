@@ -1,0 +1,23 @@
+{
+  "name": "Nolla Treatments",
+  "slug": "nolla-treatments",
+  "description": "Brand-focused, premium treatment content",
+
+  "visual_dna": {
+    "palette": "brand sage, warm cream, soft terracotta, premium neutrals",
+    "lighting": "elevated studio lighting, subtle rim light, premium feel",
+    "mood": "premium, trustworthy, effective, modern medical",
+    "skin_tones": "healthy results-focused, before/after implied, diverse representation",
+    "backgrounds": ["brand sage green", "soft cream", "deep charcoal", "premium studio"]
+  },
+
+  "archetype_weights": {
+    "product": 0.35,
+    "skin": 0.35,
+    "food": 0.00,
+    "lifestyle": 0.15,
+    "abstract": 0.15
+  },
+
+  "suffix": "premium studio lighting, elevated brand aesthetic, subtle rim light, modern medical spa feel, results-focused, no labels, no text, no product branding, cinematic depth"
+}

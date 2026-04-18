@@ -1,0 +1,23 @@
+{
+  "name": "Products & Ingredients",
+  "slug": "products-ingredients",
+  "description": "Product-focused, clinical, clean aesthetic with diverse representation",
+
+  "visual_dna": {
+    "palette": "clean whites, soft grays, clinical neutrals, occasional soft pink or sage accent",
+    "lighting": "bright even studio lighting, soft diffused, minimal shadows",
+    "mood": "professional, trustworthy, clean, aspirational",
+    "skin_tones": "prominently feature diverse skin - Black, brown, Asian, olive skin tones",
+    "backgrounds": ["pure white", "soft gray", "clean marble", "minimal studio", "abstract blur"]
+  },
+
+  "archetype_weights": {
+    "product": 0.40,
+    "skin": 0.30,
+    "food": 0.10,
+    "lifestyle": 0.10,
+    "abstract": 0.10
+  },
+
+  "suffix": "bright even studio lighting, clean clinical aesthetic, soft diffused shadows, professional beauty photography, diverse skin tones, no labels, no text, no product branding, anonymous products"
+}

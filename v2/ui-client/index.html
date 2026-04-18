@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Image Generator</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>Image Generator</h1>
+    <div id="client-meta"></div>
+  </header>
+
+  <main>
+    <section id="auth-section">
+      <h2>Log in</h2>
+      <p>Paste your access token:</p>
+      <form id="auth-form">
+        <input type="text" id="token" placeholder="token" required>
+        <button type="submit">Continue</button>
+      </form>
+      <p class="hint" id="auth-error"></p>
+    </section>
+
+    <section id="app-section" hidden>
+      <form id="batch-form">
+        <label>Titles (one per line)
+          <textarea id="titles" rows="10" placeholder="Does Creatine Cause Hair Loss?&#10;How to Quit Smoking&#10;..."></textarea>
+        </label>
+        <button type="submit" id="generate-btn">Generate</button>
+      </form>
+
+      <section id="current-run" hidden>
+        <h2>Running <span id="run-id"></span></h2>
+        <div id="progress"></div>
+        <div id="stage-line"></div>
+      </section>
+
+      <section id="past-runs">
+        <h2>Your runs</h2>
+        <table id="runs-table">
+          <thead><tr><th>ID</th><th>Started</th><th>Titles</th><th>Status</th><th>Progress</th><th>Download</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </section>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
