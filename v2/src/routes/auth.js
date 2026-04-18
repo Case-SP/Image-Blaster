@@ -48,9 +48,25 @@ router.post('/request-code', async (req, res) => {
       return res.json({ sent: true });
     }
 
+    // Ensure the Supabase auth.users row exists so the OTP sent is always the
+    // 'email' type (6-digit code), not the 'signup' confirmation flow.
+    // Idempotent: listUsers + createUser if missing. Any error is non-fatal
+    // (signInWithOtp will still work with shouldCreateUser:true as fallback).
+    let shouldCreateUser = false;
+    try {
+      const { data: list } = await sb().auth.admin.listUsers({ page: 1, perPage: 200 });
+      const exists = (list?.users || []).find(u => (u.email || '').toLowerCase() === email);
+      if (!exists) {
+        await sb().auth.admin.createUser({ email, email_confirm: true });
+      }
+    } catch (e) {
+      console.warn('[auth request-code] admin user ensure failed:', e.message);
+      shouldCreateUser = true; // fallback path
+    }
+
     const { error } = await supabaseAnon().auth.signInWithOtp({
       email,
-      options: { shouldCreateUser: true }
+      options: { shouldCreateUser }
     });
     if (error) throw error;
     res.json({ sent: true });
