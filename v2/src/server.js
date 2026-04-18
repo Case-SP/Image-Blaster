@@ -1,5 +1,6 @@
 require('dotenv').config({ path: require('path').join(__dirname, '../../.env') });
 const express = require('express');
+const cookieParser = require('cookie-parser');
 const path = require('path');
 const fs = require('fs');
 const { runBatch } = require('./orchestrator');
@@ -7,12 +8,17 @@ const { loadCartridge } = require('./factory/cartridge');
 const { readTrace, listTraces, bus, EVENTS } = require('./trace/store');
 const publicRoutes = require('./routes/public');
 const adminRoutes = require('./routes/admin');
+const { router: authRoutes } = require('./routes/auth');
 const createStorage = require('./storage');
 
 const app = express();
 app.use(express.json({ limit: '10mb' }));
+app.use(cookieParser());
 const PORT = parseInt(process.env.PORT || '3002', 10);
 const storage = createStorage();
+
+// ---- Auth ----
+app.use('/api/auth', authRoutes);
 
 // ---- Public API ----
 app.use('/api/public', publicRoutes);

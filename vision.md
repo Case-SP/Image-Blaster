@@ -117,5 +117,12 @@ This phase is done when, for Nolla:
 - The same pipeline, pointed at a second brand's cartridge, produces a coherent batch on the first try (even if hit rate is lower initially)
 - Each winning image's prompt metadata is logged so future batches can bias toward what worked
 
+## Future improvements (noted, not scoped)
+
+- **Team access per cartridge.** Today one email = one client = one cartridge. Future: a `client` owns multiple `members` by email, so a team can share access to the same cartridge without passing a single token around. Requires splitting `clients` (cartridge identity) from `members` (access identity). Adds invite/remove flow for the cartridge owner.
+- **Member roles.** Once teams exist, roles matter: owner (can invite, can edit cartridge), generator (can fire runs, download), viewer (can download only, can't fire).
+- **Self-service cartridge upload.** Today cartridges ship in the Docker image and admin edits them. Future: cartridge owners upload their own reference images, palette, and profile via the UI; system re-loads without a deploy.
+
 ## Update log
 - 2026-04-16 — initial vision written alongside prompt-strategy audit
+- 2026-04-18 — added team-access / multi-email as future improvement; v0 ships with one-email-per-client
