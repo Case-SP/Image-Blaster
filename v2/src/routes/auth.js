@@ -80,7 +80,11 @@ router.post('/signup', async (req, res) => {
       console.warn('[auth signup] admin user ensure failed:', e.message);
     }
 
-    const { error } = await supabaseAnon().auth.signInWithOtp({ email, options: { shouldCreateUser: false } });
+    // shouldCreateUser: true ensures Supabase creates the auth.users row inline
+    // if our preemptive admin.createUser failed (race/rate-limit). The verify
+    // endpoint already tries 'email', 'signup', and 'magiclink' OTP types so
+    // first-time codes verify fine.
+    const { error } = await supabaseAnon().auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
     if (error) throw error;
     res.json({ sent: true, new_account: !existing });
   } catch (e) {
