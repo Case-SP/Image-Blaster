@@ -36,7 +36,7 @@ const { sb } = require('../v2/src/db/supabase');
     console.log(`${emoji} ${inv.code.padEnd(12)} ${status.padEnd(10)} cartridge=${inv.cartridge}  n=${inv.n_per_title}  uses-left=${inv.uses_remaining}`);
     if (exp) console.log(`   expires: ${exp.toISOString().slice(0, 16).replace('T', ' ')}`);
     if (inv.note) console.log(`   note:    ${inv.note}`);
-    console.log(`   link:    ${base}/client?invite=${inv.code}`);
+    console.log(`   link:    ${base}/i/${inv.code}`);
     console.log('');
   }
 

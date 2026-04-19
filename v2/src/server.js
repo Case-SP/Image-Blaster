@@ -26,8 +26,15 @@ app.use('/api/public', publicRoutes);
 // ---- Admin API ----
 app.use('/api/admin', adminRoutes);
 
-// ---- Client UI ----
+// ---- Invite shortener: /i/<code> → / with ?invite=<code> ----
+app.get('/i/:code', (req, res) => {
+  const code = encodeURIComponent(req.params.code);
+  res.redirect(302, `/?invite=${code}`);
+});
+
+// ---- Client UI (primary: served at root; /client kept for backward compat) ----
 app.use('/client', express.static(path.join(__dirname, '../ui-client')));
+app.use('/', express.static(path.join(__dirname, '../ui-client')));
 
 // ---- Dogfood UI (dev) ----
 app.use('/admin-ui', express.static(path.join(__dirname, '../ui')));
@@ -122,7 +129,6 @@ app.get('/api/events', (req, res) => {
 // Silence browser favicon requests
 app.get('/favicon.ico', (req, res) => res.status(204).end());
 
-// ---- Root redirect ----
-app.get('/', (req, res) => res.redirect('/client'));
+// Root is served by the static middleware above (ui-client/index.html)
 
 app.listen(PORT, () => console.log(`v2 live at http://localhost:${PORT}  (client UI: /client, admin UI: /admin-ui)`));

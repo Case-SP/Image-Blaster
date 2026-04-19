@@ -36,7 +36,7 @@ function parseArgs() {
   if (error) { console.error(error); process.exit(1); }
 
   const base = process.env.PUBLIC_BASE_URL || 'http://localhost:3002';
-  const url = `${base}/client?invite=${code}`;
+  const url = `${base}/i/${code}`;
   console.log('\n✓ Invite created');
   console.log('  code:      ' + code);
   console.log('  cartridge: ' + cartridge);
