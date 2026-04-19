@@ -64,9 +64,9 @@ async function runBatch({ cartridgeName = 'nolla', titles, N = 10, critic = true
     }
     trace.finishStage('resolved', { prompts: resolved, promptVariance: promptVar, resolveErrors, substitutions });
 
-    // STAGE 4: render (parallel with concurrency limit)
+    // STAGE 4: render (parallel with concurrency limit — tunable via env var)
     trace.startStage('renders');
-    const CONCURRENCY = 5;
+    const CONCURRENCY = Math.max(1, Math.min(20, parseInt(process.env.RENDER_CONCURRENCY || '5', 10)));
     const tasks = [];
     for (const title of titles) {
       const shots = resolved[title.id] || [];

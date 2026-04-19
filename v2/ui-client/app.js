@@ -77,9 +77,28 @@
 
   async function enterApp() {
     show('app');
+    // Initialize N selector from client default
+    try {
+      const me = await json(`${API}/auth/me`);
+      const defN = String(me.n_per_title || 3);
+      const sel = $('#n-per-title');
+      if (sel.querySelector(`option[value="${defN}"]`)) sel.value = defN;
+    } catch {}
+    updateTotals();
     await renderRuns();
     openSSE();
   }
+
+  function countTitles() {
+    return $('#titles').value.trim().split('\n').map(x => x.trim()).filter(Boolean).length;
+  }
+  function updateTotals() {
+    const t = countTitles();
+    const n = parseInt($('#n-per-title').value, 10) || 1;
+    $('#totals').textContent = `${t} title${t === 1 ? '' : 's'} · ${t * n} image${t * n === 1 ? '' : 's'} total`;
+  }
+  $('#titles').addEventListener('input', updateTotals);
+  $('#n-per-title').addEventListener('change', updateTotals);
 
   $('#signout-btn').addEventListener('click', async () => {
     await fetch(`${API}/auth/logout`, { method: 'POST', credentials: 'same-origin' });
@@ -90,10 +109,27 @@
     e.preventDefault();
     const titles = $('#titles').value.trim().split('\n').map(x => x.trim()).filter(Boolean);
     if (!titles.length) return;
+    const N = parseInt($('#n-per-title').value, 10) || 3;
+    const total = titles.length * N;
+
+    // Warning at >50 titles OR >200 total images
+    if (titles.length > 50 || total > 200) {
+      const ok = confirm(
+        `You're about to generate ${total} images (${titles.length} titles × ${N} per title).\n\n` +
+        `At roughly 4 seconds per image, this will take about ${Math.ceil(total * 4 / 60)} minute${Math.ceil(total * 4 / 60) === 1 ? '' : 's'}.\n\n` +
+        `Continue?`
+      );
+      if (!ok) return;
+    }
+
     $('#generate-btn').disabled = true;
     try {
-      await json(`${API}/public/runs`, { method: 'POST', body: JSON.stringify({ titles }) });
+      await json(`${API}/public/runs`, {
+        method: 'POST',
+        body: JSON.stringify({ titles, N })
+      });
       $('#titles').value = '';
+      updateTotals();
     } catch (err) {
       alert('Failed: ' + err.message);
     } finally {

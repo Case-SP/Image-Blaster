@@ -42,6 +42,17 @@
           <label>Titles <span class="muted">(one per line)</span>
             <textarea id="titles" rows="10" placeholder="Does Creatine Cause Hair Loss?&#10;How to Quit Smoking&#10;Can Coffee Cause Acne?"></textarea>
           </label>
+          <div class="controls-row">
+            <label class="inline-label">Images per title
+              <select id="n-per-title">
+                <option value="1">1</option>
+                <option value="3" selected>3</option>
+                <option value="5">5</option>
+                <option value="10">10</option>
+              </select>
+            </label>
+            <div class="totals" id="totals">0 titles · 0 images total</div>
+          </div>
           <div class="row">
             <button type="submit" id="generate-btn">Generate</button>
             <button type="button" id="signout-btn" class="secondary">Sign out</button>

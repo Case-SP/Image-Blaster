@@ -11,13 +11,27 @@ const router = express.Router();
 router.use(requireClient);
 
 // POST /api/public/runs — start a batch for this client
+const MAX_TITLES = 200;
+const MAX_N = 10;
+const MAX_TOTAL_IMAGES = 500;
+
 router.post('/runs', async (req, res) => {
   try {
-    const { titles = [] } = req.body;
+    const { titles = [], N: requestedN } = req.body;
     if (!Array.isArray(titles) || !titles.length) {
       return res.status(400).json({ error: 'titles[] required' });
     }
-    const normalized = titles.slice(0, 50).map((line, i) => {
+    if (titles.length > MAX_TITLES) {
+      return res.status(400).json({ error: `too many titles (${titles.length}); max ${MAX_TITLES} per run` });
+    }
+
+    const N = Math.max(1, Math.min(MAX_N, parseInt(requestedN, 10) || req.client.n_per_title || 3));
+    const total = titles.length * N;
+    if (total > MAX_TOTAL_IMAGES) {
+      return res.status(400).json({ error: `batch too large: ${total} images (max ${MAX_TOTAL_IMAGES}). Reduce titles or N.` });
+    }
+
+    const normalized = titles.map((line, i) => {
       const raw = typeof line === 'string' ? line : (line.title || '');
       if (!raw.trim()) return null;
       const parts = raw.split('|');
@@ -37,12 +51,12 @@ router.post('/runs', async (req, res) => {
     runBatch({
       cartridgeName: req.client.cartridge,
       titles: normalized,
-      N: req.client.n_per_title,
+      N,
       critic: true,
       clientId: req.client.id
     }).catch(e => console.error('[runBatch]', e));
 
-    res.json({ status: 'started', titles: normalized.length, N: req.client.n_per_title });
+    res.json({ status: 'started', titles: normalized.length, N, total: normalized.length * N });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
