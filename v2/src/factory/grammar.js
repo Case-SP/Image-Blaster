@@ -17,7 +17,8 @@ const pick = (arr, rand) => arr[Math.floor(rand() * arr.length)];
  * @param opts.slotOverrides — optional map of slotName → fixed value. Used to force a slot
  *                             (e.g. body region) bypassing the bank's random pick.
  */
-function sampleComposition(composition, { subject, seed = Date.now(), slotOverrides = {} }) {
+function sampleComposition(composition, { subject, seed = Date.now(), slotOverrides } = {}) {
+  const overrides = slotOverrides || {};
   const rand = rng(seed);
   let prompt = composition.skeleton.replace(/\{subject\}/g, subject || 'subject');
 
@@ -29,8 +30,8 @@ function sampleComposition(composition, { subject, seed = Date.now(), slotOverri
   }
   for (const slot of slotNames) {
     let value;
-    if (slotOverrides[slot] !== undefined && slotOverrides[slot] !== null) {
-      value = slotOverrides[slot];
+    if (overrides[slot] !== undefined && overrides[slot] !== null) {
+      value = overrides[slot];
     } else {
       const bank = composition.slots?.[slot];
       if (!bank?.length) continue;

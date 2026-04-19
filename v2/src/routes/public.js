@@ -155,7 +155,11 @@ router.get('/events', (req, res) => {
     handlers[v] = (data) => send(v, data).catch(() => {});
     bus.on(v, handlers[v]);
   }
-  const ping = setInterval(() => { try { res.write(': ping\n\n'); } catch {} }, 15000);
+  // 10s heartbeat as a real event (not a comment) — some HTTP/2 edges strip
+  // comment-only frames, which looks like an idle stream and gets GOAWAY'd.
+  const ping = setInterval(() => {
+    try { res.write(`event: ping\ndata: ${Date.now()}\n\n`); } catch {}
+  }, 10000);
   req.on('close', () => {
     clearInterval(ping);
     for (const [v, h] of Object.entries(handlers)) bus.off(v, h);
