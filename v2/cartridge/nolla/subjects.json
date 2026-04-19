@@ -113,7 +113,7 @@
       }
     },
     "skin-close": {
-      "triggers": ["acne", "skin", "pores", "texture", "wrinkles", "fine lines", "dark spots", "hyperpigmentation", "redness", "inflammation"],
+      "triggers": ["acne", "skin", "pores", "texture", "wrinkles", "fine lines", "dark spots", "hyperpigmentation", "redness", "inflammation", "back", "jawline", "jaw", "forehead", "chin", "cheek", "neck", "chest", "shoulder", "decolletage", "hairline", "temple", "under-eye", "hormonal"],
       "phrase_banks": {
         "default": [
           "dark brown skin with visible pores",
@@ -122,6 +122,75 @@
           "medium skin with dewy finish",
           "deep brown skin with healthy glow",
           "light skin with visible capillaries"
+        ],
+        "back": [
+          "bare upper back with smooth clear skin, shoulder blade visible",
+          "shoulder blade and upper back in soft side light",
+          "back of neck and upper spine, nape visible",
+          "nape and shoulder skin close, hair pulled forward",
+          "bare shoulder and back three-quarter profile"
+        ],
+        "jawline": [
+          "jawline and neck in profile, side light grazing",
+          "chin and jawline three-quarter view, soft shadow under jaw",
+          "jawline close-up, ear to chin, clear skin",
+          "lower face profile — jaw and cheek, skin texture visible",
+          "side of face from ear to chin, sculptural shadow"
+        ],
+        "jaw": [
+          "jaw and chin profile, soft side light",
+          "jawline and cheek close, skin clear"
+        ],
+        "chin": [
+          "chin and lower lip close-up, dewy skin",
+          "underside of chin and front of neck",
+          "chin and jawline fragment, warm soft light"
+        ],
+        "forehead": [
+          "forehead clear and dewy, hairline visible",
+          "forehead and temple crop, soft backlight",
+          "temple to brow close-up, clean skin",
+          "forehead with wisps of hair, soft backlight"
+        ],
+        "cheek": [
+          "cheekbone and under-eye close-up, dewy glow",
+          "cheek with soft side light, fine skin texture",
+          "cheek skin texture macro, pores visible"
+        ],
+        "neck": [
+          "neck and collarbone profile, bare shoulder",
+          "nape of neck soft backlight, hair up",
+          "neck skin clear and smooth, soft shadow"
+        ],
+        "chest": [
+          "décolletage and upper chest, collarbone visible",
+          "collarbone and chest in warm linen, soft glow",
+          "sternum and chest clear skin, natural light"
+        ],
+        "decolletage": [
+          "décolletage bare and dewy, collarbone shadow",
+          "upper chest and shoulder, linen draped"
+        ],
+        "shoulder": [
+          "bare shoulder and collarbone, warm natural light",
+          "shoulder blade silhouette, rim light"
+        ],
+        "temple": [
+          "temple and brow area, hair in soft frame",
+          "temple close with soft light, fine fuzz visible"
+        ],
+        "hairline": [
+          "hairline and forehead, baby hair wisps",
+          "hairline close with edge of scalp, soft light"
+        ],
+        "under-eye": [
+          "under-eye area close-up, fine texture visible",
+          "under-eye and cheekbone, soft shadow"
+        ],
+        "hormonal": [
+          "cheek and jawline profile, clear skin",
+          "lower face and chin fragment, warm light",
+          "chin and jawline with soft freckles"
         ]
       }
     }

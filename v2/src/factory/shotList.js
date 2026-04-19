@@ -47,6 +47,21 @@ Examples:
 - "What Causes Cold Sores?" → PHYSICAL: (none specific — skin/lips only).
 - "Vitamin D Deficiency" → PHYSICAL: vitamin capsule, sunlight.
 
+## STEP 1b — Extract body region from the title
+
+If the title mentions a specific body region, note it. This becomes the subject_topic for skin-close or beauty shots so the image actually shows that body part.
+
+Recognized regions: back, jawline (also "jaw"), forehead, chin, cheek, neck, chest (also "décolletage"), shoulder, temple, hairline, under-eye, hormonal.
+
+Examples:
+- "What Causes Back Acne?" → BODY_REGION: back
+- "What Causes Jawline Acne?" → BODY_REGION: jawline
+- "How to Reduce Forehead Wrinkles" → BODY_REGION: forehead
+- "When Does Hormonal Acne Stop?" → BODY_REGION: hormonal (use chin/jawline-style crops)
+- "Does Chocolate Cause Acne?" → BODY_REGION: (none — whole face is fine)
+
+When body_region is set AND a shot uses subject_type = "skin-close" (or a beauty composition like portrait-profile), set the shot's subject_topic to that region. This makes the render actually show the correct body part instead of a generic pretty face.
+
 ## STEP 2 — Apply HARD distribution rules (these are rules, not goals)
 
 Given N=${N} shots per title:
@@ -85,10 +100,11 @@ ${subjList}
 # THEMES
 ${themes}
 
-# OUTPUT (strict JSON — include subjects_identified for your own reasoning trace)
+# OUTPUT (strict JSON — include subjects_identified and body_region for trace)
 {
   "<titleId>": {
     "subjects_identified": ["creatine powder", "capsule"],
+    "body_region": "back",
     "shots": [{"composition":"...","subject_type":"...","subject_topic":"...","theme":"...","model_spec":null}, ...]
   }
 }

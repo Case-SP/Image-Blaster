@@ -51,6 +51,32 @@ async function runBatch({ cartridgeName = 'nolla', titles, N = 10, critic = true
     const { sanitized, substitutions } = sanitizeShotMap(cartridge, shotMap);
     shotMap = sanitized;
 
+    // STAGE 2c: theme-lock per title when N <= 5 so each title's shots form a
+    // visual series (single palette). Pick the most-common theme the LLM chose
+    // for that title; tie-break to the earliest shot.
+    if (N <= 5) {
+      for (const [tid, sel] of Object.entries(shotMap)) {
+        const shots = sel?.shots || [];
+        if (shots.length < 2) continue;
+        const counts = {};
+        shots.forEach(s => { if (s.theme) counts[s.theme] = (counts[s.theme] || 0) + 1; });
+        const entries = Object.entries(counts);
+        if (!entries.length) continue;
+        const maxCount = Math.max(...entries.map(([, c]) => c));
+        const tied = entries.filter(([, c]) => c === maxCount).map(([k]) => k);
+        const winner = tied.length === 1
+          ? tied[0]
+          : shots.find(s => tied.includes(s.theme))?.theme;
+        if (!winner) continue;
+        shots.forEach((s, i) => {
+          if (s.theme !== winner) {
+            substitutions.push({ titleId: tid, shotIdx: i, field: 'theme', before: s.theme, after: winner, reason: 'theme-lock (N<=5)' });
+            s.theme = winner;
+          }
+        });
+      }
+    }
+
     // STAGE 3: resolve prompts
     trace.startStage('resolved');
     const resolved = buildRenderPrompts(cartridge, titles, shotMap, { batchSeed: Date.now() });
