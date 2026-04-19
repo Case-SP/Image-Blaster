@@ -148,6 +148,14 @@ button:disabled { opacity: 0.4; cursor: wait; }
   color: var(--error);
   margin: 0;
 }
+.welcome {
+  font-size: 1rem;
+  color: var(--text);
+  margin: 0 0 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--surface);
+  border-left: 3px solid var(--accent);
+}
 
 /* ---- Latest run card ---- */
 .run-latest {

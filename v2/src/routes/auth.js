@@ -34,6 +34,61 @@ function cookieOpts() {
   };
 }
 
+// POST /api/auth/signup — accept an invite code + email, auto-provision a client
+// if email isn't already registered, then send OTP. Idempotent for known emails.
+router.post('/signup', async (req, res) => {
+  try {
+    const email = normalizeEmail(req.body?.email);
+    const invite = String(req.body?.invite || '').trim();
+    if (!email || !email.includes('@')) return res.status(400).json({ error: 'email required' });
+    if (!invite) return res.status(400).json({ error: 'invite required' });
+
+    // Validate invite
+    const { data: inv, error: invErr } = await sb().from('invites').select('*').eq('code', invite).maybeSingle();
+    if (invErr || !inv) return res.status(400).json({ error: 'invalid invite' });
+    if (inv.expires_at && new Date(inv.expires_at) < new Date()) {
+      return res.status(400).json({ error: 'invite expired' });
+    }
+    if (inv.uses_remaining <= 0) return res.status(400).json({ error: 'invite already used' });
+
+    // If email is already provisioned (even as a different invite), just send OTP — do not consume a use.
+    const { data: existing } = await sb().from('clients').select('id').eq('email', email).maybeSingle();
+
+    if (!existing) {
+      const token = require('crypto').randomBytes(24).toString('base64url');
+      const displayName = email.split('@')[0];
+      const { error: insErr } = await sb().from('clients').insert([{
+        token,
+        name: displayName,
+        cartridge: inv.cartridge,
+        n_per_title: inv.n_per_title,
+        monthly_image_quota: inv.monthly_image_quota,
+        email,
+        active: true
+      }]);
+      if (insErr) throw insErr;
+      // Consume one use of the invite
+      await sb().from('invites').update({ uses_remaining: inv.uses_remaining - 1 }).eq('code', invite);
+    }
+
+    // Ensure Supabase auth.users row exists so OTP is the 6-digit 'email' type
+    try {
+      const { data: list } = await sb().auth.admin.listUsers({ page: 1, perPage: 200 });
+      const has = (list?.users || []).find(u => (u.email || '').toLowerCase() === email);
+      if (!has) await sb().auth.admin.createUser({ email, email_confirm: true });
+    } catch (e) {
+      console.warn('[auth signup] admin user ensure failed:', e.message);
+    }
+
+    const { error } = await supabaseAnon().auth.signInWithOtp({ email, options: { shouldCreateUser: false } });
+    if (error) throw error;
+    res.json({ sent: true, new_account: !existing });
+  } catch (e) {
+    console.error('[auth signup]', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // POST /api/auth/request-code — send OTP via Supabase Auth (email)
 router.post('/request-code', async (req, res) => {
   try {

@@ -2,6 +2,7 @@
   const API = '/api';
   const $ = (s) => document.querySelector(s);
   const N_CYCLE = [1, 2, 3, 4, 5];
+  const INVITE = new URLSearchParams(location.search).get('invite');
 
   async function json(url, opts = {}) {
     const r = await fetch(url, {
@@ -28,11 +29,16 @@
 
   async function sendCode() {
     const email = $('#email').value.trim().toLowerCase();
-    if (!email) return;
+    if (!email || !email.includes('@')) {
+      $('#email-msg').textContent = 'Please enter a valid email.';
+      return;
+    }
     $('#email-btn').disabled = true;
     $('#email-msg').textContent = '';
     try {
-      await json(`${API}/auth/request-code`, { method: 'POST', body: JSON.stringify({ email }) });
+      const endpoint = INVITE ? `${API}/auth/signup` : `${API}/auth/request-code`;
+      const body = INVITE ? { email, invite: INVITE } : { email };
+      await json(endpoint, { method: 'POST', body: JSON.stringify(body) });
       pendingEmail = email;
       $('#code-email').textContent = email;
       show('code');
@@ -286,6 +292,12 @@
   }
 
   (async function () {
+    // If URL has ?invite=, show welcome message so tester knows they're invited
+    if (INVITE) {
+      const w = $('#welcome-msg');
+      w.hidden = false;
+      w.textContent = "You're invited. Enter your email to get started.";
+    }
     try {
       await json(`${API}/auth/me`);
       enterApp();
