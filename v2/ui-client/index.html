@@ -2,81 +2,50 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <title>Image Generator</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header>
-    <div class="header-inner">
-      <h1>Image Generator</h1>
-      <div id="status-pill" class="idle" hidden>
-        <span class="dot"></span>
-        <span id="status-text">idle</span>
-      </div>
-    </div>
-  </header>
-
   <main>
     <!-- Sign in -->
     <section id="email-section" class="view">
-      <p class="eyebrow">Sign in</p>
-      <h2>Enter your email</h2>
-      <p class="lede">We'll send you a code to sign in.</p>
-      <form id="email-form">
-        <input type="email" id="email" placeholder="you@example.com" autocomplete="email" required>
-        <button type="submit" id="email-btn" class="btn-pill">Send code</button>
-      </form>
+      <label for="email">Email</label>
+      <input type="email" id="email" placeholder="you@example.com" autocomplete="email" required>
+      <button type="button" id="email-btn" class="btn-primary">Send code</button>
       <p class="hint" id="email-msg"></p>
     </section>
 
     <!-- Verify code -->
     <section id="code-section" class="view" hidden>
-      <p class="eyebrow">Verify</p>
-      <h2>Enter the code</h2>
-      <p class="lede">Check <span id="code-email"></span>.</p>
-      <form id="code-form">
-        <input type="text" id="code" inputmode="numeric" pattern="[0-9]{4,10}" maxlength="10" placeholder="— — — — — —" autocomplete="one-time-code" required>
-        <button type="submit" id="code-btn" class="btn-pill">Verify</button>
-      </form>
+      <label for="code">Code sent to <span id="code-email"></span></label>
+      <input type="text" id="code" inputmode="numeric" pattern="[0-9]{4,10}" maxlength="10" placeholder="000000" autocomplete="one-time-code" required>
+      <button type="button" id="code-btn" class="btn-primary">Verify</button>
+      <button type="button" id="resend-btn" class="btn-link">Resend</button>
       <p class="hint" id="code-msg"></p>
-      <button type="button" id="resend-btn" class="linklike">Resend code</button>
     </section>
 
     <!-- App -->
     <section id="app-section" hidden>
-      <section class="view">
-        <p class="eyebrow">New run</p>
-        <h2>Titles</h2>
-        <form id="batch-form">
-          <textarea id="titles" rows="8" placeholder="Does Creatine Cause Hair Loss?&#10;How to Quit Smoking&#10;Can Coffee Cause Acne?"></textarea>
+      <textarea id="titles" rows="8" placeholder="Paste titles, one per line…"></textarea>
 
-          <div class="field-row">
-            <div class="field">
-              <p class="eyebrow small">Images per title</p>
-              <select id="n-per-title" class="select-field">
-                <option value="1">1</option>
-                <option value="3" selected>3</option>
-                <option value="5">5</option>
-                <option value="10">10</option>
-              </select>
-            </div>
-            <div class="field align-right">
-              <p class="eyebrow small">Total</p>
-              <div class="value-big" id="totals">0 titles · 0 images</div>
-            </div>
-          </div>
+      <div class="controls">
+        <button type="button" id="n-btn" class="btn-n" title="Images per title">3</button>
+        <button type="button" id="generate-btn" class="btn-primary btn-compact">Generate</button>
+      </div>
 
-          <button type="submit" id="generate-btn" class="btn-pill">Generate</button>
-          <button type="button" id="signout-btn" class="linklike center">Sign out</button>
-        </form>
-      </section>
+      <p class="totals" id="totals"></p>
 
-      <section class="view">
-        <p class="eyebrow">Downloads</p>
-        <div class="run-list" id="run-list"></div>
-        <p class="empty" id="no-runs" hidden>No runs yet.</p>
-      </section>
+      <!-- Latest run, always visible when present -->
+      <div id="latest-run" class="run-latest" hidden></div>
+
+      <!-- Older runs, collapsed by default -->
+      <details id="older-runs" hidden>
+        <summary>Older<span id="older-count"></span></summary>
+        <div id="older-list" class="run-list"></div>
+      </details>
+
+      <button type="button" id="signout-btn" class="btn-link signout">Sign out</button>
     </section>
   </main>
 

@@ -1,6 +1,7 @@
 (function () {
   const API = '/api';
   const $ = (s) => document.querySelector(s);
+  const N_CYCLE = [1, 2, 3, 4, 5];
 
   async function json(url, opts = {}) {
     const r = await fetch(url, {
@@ -19,18 +20,15 @@
     $('#app-section').hidden = which !== 'app';
   }
 
-  function setStatus(kind, text) {
-    const pill = $('#status-pill');
-    pill.hidden = false;
-    pill.className = kind;
-    $('#status-text').textContent = text;
-  }
-
+  // ---- Email step ----
   let pendingEmail = null;
 
-  $('#email-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
+  $('#email-btn').addEventListener('click', sendCode);
+  $('#email').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendCode(); });
+
+  async function sendCode() {
     const email = $('#email').value.trim().toLowerCase();
+    if (!email) return;
     $('#email-btn').disabled = true;
     $('#email-msg').textContent = '';
     try {
@@ -44,11 +42,15 @@
     } finally {
       $('#email-btn').disabled = false;
     }
-  });
+  }
 
-  $('#code-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
+  // ---- Code step ----
+  $('#code-btn').addEventListener('click', verifyCode);
+  $('#code').addEventListener('keydown', (e) => { if (e.key === 'Enter') verifyCode(); });
+
+  async function verifyCode() {
     const code = $('#code').value.trim();
+    if (!code) return;
     $('#code-btn').disabled = true;
     $('#code-msg').textContent = '';
     try {
@@ -62,11 +64,11 @@
     } finally {
       $('#code-btn').disabled = false;
     }
-  });
+  }
 
   $('#resend-btn').addEventListener('click', async () => {
     if (!pendingEmail) return;
-    $('#code-msg').textContent = 'Sending new code…';
+    $('#code-msg').textContent = 'Sending…';
     try {
       await json(`${API}/auth/request-code`, { method: 'POST', body: JSON.stringify({ email: pendingEmail }) });
       $('#code-msg').textContent = 'New code sent.';
@@ -75,59 +77,65 @@
     }
   });
 
+  // ---- App ----
   async function enterApp() {
     show('app');
-    // Initialize N selector from client default
     try {
       const me = await json(`${API}/auth/me`);
-      const defN = String(me.n_per_title || 3);
-      const sel = $('#n-per-title');
-      if (sel.querySelector(`option[value="${defN}"]`)) sel.value = defN;
-    } catch {}
+      const defN = Math.min(5, Math.max(1, parseInt(me.n_per_title, 10) || 3));
+      setN(defN);
+    } catch {
+      setN(3);
+    }
     updateTotals();
     await renderRuns();
     openSSE();
   }
+
+  // N button rotator (cycles 1 → 2 → 3 → 4 → 5 → 1)
+  function currentN() { return parseInt($('#n-btn').textContent, 10) || 3; }
+  function setN(n) { $('#n-btn').textContent = String(n); }
+  $('#n-btn').addEventListener('click', () => {
+    const cur = currentN();
+    const idx = N_CYCLE.indexOf(cur);
+    const next = N_CYCLE[(idx + 1) % N_CYCLE.length];
+    setN(next);
+    updateTotals();
+  });
 
   function countTitles() {
     return $('#titles').value.trim().split('\n').map(x => x.trim()).filter(Boolean).length;
   }
   function updateTotals() {
     const t = countTitles();
-    const n = parseInt($('#n-per-title').value, 10) || 1;
-    $('#totals').textContent = `${t} title${t === 1 ? '' : 's'} · ${t * n} image${t * n === 1 ? '' : 's'} total`;
+    const n = currentN();
+    if (t === 0) { $('#totals').textContent = ''; return; }
+    $('#totals').textContent = `${t} × ${n} = ${t * n} images`;
   }
   $('#titles').addEventListener('input', updateTotals);
-  $('#n-per-title').addEventListener('change', updateTotals);
 
   $('#signout-btn').addEventListener('click', async () => {
     await fetch(`${API}/auth/logout`, { method: 'POST', credentials: 'same-origin' });
     location.reload();
   });
 
-  $('#batch-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
+  $('#generate-btn').addEventListener('click', async () => {
     const titles = $('#titles').value.trim().split('\n').map(x => x.trim()).filter(Boolean);
     if (!titles.length) return;
-    const N = parseInt($('#n-per-title').value, 10) || 3;
+    const N = currentN();
     const total = titles.length * N;
 
-    // Warning at >50 titles OR >200 total images
     if (titles.length > 50 || total > 200) {
       const ok = confirm(
-        `You're about to generate ${total} images (${titles.length} titles × ${N} per title).\n\n` +
-        `At roughly 4 seconds per image, this will take about ${Math.ceil(total * 4 / 60)} minute${Math.ceil(total * 4 / 60) === 1 ? '' : 's'}.\n\n` +
-        `Continue?`
+        `${total} images (${titles.length} titles × ${N}).\n\n` +
+        `~${Math.ceil(total * 4 / 60)} min. Continue?`
       );
       if (!ok) return;
     }
 
     $('#generate-btn').disabled = true;
     try {
-      await json(`${API}/public/runs`, {
-        method: 'POST',
-        body: JSON.stringify({ titles, N })
-      });
+      await json(`${API}/public/runs`, { method: 'POST', body: JSON.stringify({ titles, N }) });
       $('#titles').value = '';
       updateTotals();
     } catch (err) {
@@ -138,6 +146,7 @@
     await renderRuns();
   });
 
+  // ---- Runs rendering: latest pinned, older collapsed ----
   function formatDate(iso) {
     const d = new Date(iso);
     const pad = n => String(n).padStart(2, '0');
@@ -145,51 +154,68 @@
     return `${yy}/${pad(d.getMonth() + 1)}/${pad(d.getDate())} · ${pad(d.getHours())}:${pad(d.getMinutes())}`;
   }
 
-  async function renderRuns() {
-    const runs = await json(`${API}/public/runs`);
-    const list = $('#run-list');
-    list.innerHTML = '';
-    $('#no-runs').hidden = runs.length > 0;
+  function runTitleText(r) {
+    const p = r.renderProgress || { ok: 0, failed: 0, total: 0 };
+    const isRunning = r.status === 'running';
+    const labelBits = `${r.titleCount} title${r.titleCount === 1 ? '' : 's'} · ${p.total} image${p.total === 1 ? '' : 's'}`;
+    if (isRunning) {
+      const done = p.ok + p.failed;
+      return `<span class="running-dot"></span>${labelBits} · ${done}/${p.total}`;
+    }
+    if (r.status === 'failed') return `${labelBits} · failed`;
+    if (p.failed) return `${labelBits} · ${p.failed} failed`;
+    return labelBits;
+  }
 
-    let anyRunning = false;
-    for (const r of runs) {
+  function runActionHtml(r) {
+    const p = r.renderProgress || { ok: 0, failed: 0, total: 0 };
+    const canDownload = r.status === 'done' && p.ok > 0;
+    if (canDownload) return `<button class="btn-action" data-run="${r.id}">Download</button>`;
+    if (r.status === 'running') return `<div class="run-status running">running</div>`;
+    if (r.status === 'failed') return `<div class="run-status failed">failed</div>`;
+    return `<div class="run-status">—</div>`;
+  }
+
+  function renderLatest(r) {
+    const latest = $('#latest-run');
+    latest.hidden = !r;
+    if (!r) return;
+    latest.innerHTML = `
+      <div class="run-left">
+        <div class="run-date">${formatDate(r.startedAt)}</div>
+        <div class="run-title">${runTitleText(r)}</div>
+      </div>
+      <div class="run-action">${runActionHtml(r)}</div>`;
+  }
+
+  function renderOlder(olderRuns) {
+    const section = $('#older-runs');
+    const list = $('#older-list');
+    section.hidden = olderRuns.length === 0;
+    $('#older-count').textContent = olderRuns.length ? ` (${olderRuns.length})` : '';
+    list.innerHTML = '';
+    for (const r of olderRuns) {
       const row = document.createElement('div');
       row.className = 'run-row';
-      const p = r.renderProgress || { ok: 0, failed: 0, total: 0 };
-      const done = p.ok + p.failed;
-      const isRunning = r.status === 'running';
-      if (isRunning) anyRunning = true;
-
-      const titleBits = `${r.titleCount} title${r.titleCount === 1 ? '' : 's'} · ${p.total} image${p.total === 1 ? '' : 's'}`;
-      const canDownload = r.status === 'done' && p.ok > 0;
-
-      let rightHtml = '';
-      if (canDownload) {
-        rightHtml = `<button class="btn-action" data-run="${r.id}">Download</button>`;
-      } else if (isRunning) {
-        rightHtml = `<div class="run-status running">${done}/${p.total || '—'}</div>`;
-      } else if (r.status === 'failed') {
-        rightHtml = `<div class="run-status failed">failed</div>`;
-      } else {
-        rightHtml = `<div class="run-status">—</div>`;
-      }
-
       row.innerHTML = `
         <div class="run-left">
           <div class="run-date">${formatDate(r.startedAt)}</div>
-          <div class="run-title">${titleBits}${p.failed ? ` <span class="run-meta">· ${p.failed} failed</span>` : ''}</div>
+          <div class="run-title">${runTitleText(r)}</div>
         </div>
-        <div class="run-right">${rightHtml}</div>`;
+        <div class="run-action">${runActionHtml(r)}</div>`;
       list.appendChild(row);
     }
-    bindDownloadButtons();
-
-    if (anyRunning) setStatus('running', 'generating');
-    else setStatus('idle', 'idle');
   }
 
+  async function renderRuns() {
+    const runs = await json(`${API}/public/runs`);
+    renderLatest(runs[0] || null);
+    renderOlder(runs.slice(1));
+    bindDownloadButtons();
+  }
+
+  // ---- Download with progress ----
   async function downloadZip(runId, btn) {
-    // Replace the button with an inline progress element
     const right = btn?.parentElement;
     if (!right) return;
     const original = right.innerHTML;
@@ -204,14 +230,10 @@
     try {
       const r = await fetch(`${API}/public/runs/${runId}/zip`, { credentials: 'same-origin' });
       if (!r.ok) throw new Error('HTTP ' + r.status);
-
-      // Content-Length is rarely set on chunked transfer. Fall back to the
-      // server's rough hint for percentage math; otherwise show bytes only.
       const total = parseInt(r.headers.get('Content-Length') || r.headers.get('x-approx-content-length') || '0', 10);
       const reader = r.body.getReader();
       const chunks = [];
       let received = 0;
-
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -239,9 +261,8 @@
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
 
-      textEl.textContent = `done · ${(blob.size / 1048576).toFixed(1)} MB`;
-      fillEl.classList.add('done');
-      setTimeout(() => { right.innerHTML = original; bindDownloadButtons(); }, 1800);
+      textEl.textContent = `${(blob.size / 1048576).toFixed(1)} MB`;
+      setTimeout(() => { right.innerHTML = original; bindDownloadButtons(); }, 1500);
     } catch (err) {
       textEl.textContent = 'failed';
       fillEl.classList.add('failed');
