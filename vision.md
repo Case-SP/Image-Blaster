@@ -123,6 +123,32 @@ This phase is done when, for Nolla:
 - **Member roles.** Once teams exist, roles matter: owner (can invite, can edit cartridge), generator (can fire runs, download), viewer (can download only, can't fire).
 - **Self-service cartridge upload.** Today cartridges ship in the Docker image and admin edits them. Future: cartridge owners upload their own reference images, palette, and profile via the UI; system re-loads without a deploy.
 
+## Nolla is the test instance, not the product
+
+The real product is a **brand-agnostic prompt-engineering system**. Nolla is one cartridge — useful because it gives us an opinionated reference brand to solve against, and because its outputs are evaluable (palette adherence, editorial feel, skincare-relevant compositions). But every generalization test — "would a French wine brand / B2B SaaS / pet food brand need this differently?" — should be part of the design loop before a feature ships.
+
+### What has to stay cartridge-configurable (not baked into the engine)
+
+| Today's Nolla default | Should be per-cartridge |
+|---|---|
+| ~50/50 person vs product | `person_product_ratio_target: 0..1` |
+| Model diversity (all ethnicities + genders) | `model_distribution` (array of weights) |
+| "apply-product-visible" hybrid composition | Cartridge-owned, not a global default |
+| Warm-earth palette (sage/cream/terracotta) | Already in `palette.json` ✓ |
+| Body regions (back/jawline/forehead/…) | Already in `subjects.json` phrase_banks ✓ |
+| Composition library | Already in `compositions.json` ✓ |
+| Image references | Already in `references/` ✓ |
+| OTP-length / email template | Supabase-wide today, per-brand later |
+| N-per-title default | Already in `clients.n_per_title` ✓ |
+
+### Design principle for new features
+
+Before adding any feature motivated by a Nolla observation, ask:
+1. **Would another brand need the opposite behavior?** → cartridge toggle, not global default.
+2. **Is this a photographic principle or a brand preference?** → photographic principles live in the engine; preferences live in the cartridge.
+3. **Could this feature be trained from the references?** → prefer inference from `references/*` over hand-configured rules.
+
 ## Update log
 - 2026-04-16 — initial vision written alongside prompt-strategy audit
 - 2026-04-18 — added team-access / multi-email as future improvement; v0 ships with one-email-per-client
+- 2026-04-19 — reframed: Nolla is the test instance, the product is the brand-agnostic system. Added cartridge-vs-engine design principle and matrix of things that MUST stay per-cartridge.

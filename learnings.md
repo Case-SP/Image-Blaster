@@ -158,5 +158,35 @@ Until this rubric is written down, the KPI is vibes. Propose: after every genera
 
 ---
 
+## 12. Generalizing beyond Nolla — the actual product
+
+Nolla is the test instance. The real product is a **prompt-engineering system that turns a cartridge + a list of titles into a high-hit-rate stream of on-brand images**. Every improvement we make against Nolla's outputs should be audited for whether it generalizes.
+
+### Axes the system must handle for ANY brand
+
+1. **Subject extraction** — pull physical nouns from a title, map them to subject types in the cartridge. ✓ Working (substance/device/food cases all resolved correctly for Nolla).
+2. **Body-region awareness** — when a title references anatomy, the image should frame that anatomy. First iteration (phrase banks per region) worked for face regions + theme-lock at N≤5, but composition slots still slipped for non-face regions (back, shoulder). Second iteration adds slot overrides + face-only composition substitution.
+3. **Series coherence per title** — N shots for one title should read as a set (one palette), while the batch across titles stays varied. Shipped via theme-lock at N≤5. Holds up at 3/title. Untested at 10/title.
+4. **Hybrid compositions** — person + visible product is the highest-hitting frame in wellness/beauty. Probably not the right hybrid in other domains (tech, food, fashion). Cartridge-level setting — not system-wide.
+5. **Palette adherence** — references + theme + suffix enforce this jointly. Strongest single lever for brand fidelity.
+
+### What doesn't generalize (Nolla-specific guesses)
+
+- The person/product 50/50 default is a wellness-blog assumption. A wine brand cartridge would want 90% product. A dating app would want 95% person. **This should be a cartridge parameter** (`person_product_ratio_target`), not a system default.
+- The "apply-product-visible" hybrid composition is beauty-specific. Other brands need other hybrids (a tech brand might have "product-in-hand-using-it," a fashion brand might have "product-worn-walking").
+- The model diversity rule (vary ethnicity + gender) is universal for person shots, but the *distribution* may not be — a French luxury brand might target mostly European models; a Black-owned beauty brand might target 80%+ Black models. **Also cartridge-level.**
+
+### The meta-learning
+
+Every time we fix a Nolla-specific issue, we're either:
+- Teaching the system a general principle (good — ship it to the engine) → e.g. body-region slot overrides
+- Hard-coding a Nolla value (bad — belongs in the cartridge) → e.g. "apply-product-visible" composition being whitelisted globally
+
+The test when adding a new feature: **"Would a non-beauty brand need exactly this, or a different flavor of this?"** If different-flavor, make it cartridge-configurable from the start.
+
+---
+
 ## Update log
 - 2026-04-16 — initial audit of prompt strategy, diversity crisis identified as architectural
+- 2026-04-18 — email+OTP auth via Supabase; client UI simplified to email→code→titles→download
+- 2026-04-19 — (1) anatomy-aware phrase banks for skin-close (back, jawline, chin, forehead, etc.) landed; jawline renders as jaw profile, back renders as actual back. (2) theme-lock per title at N≤5 confirmed working — mini-series effect. (3) known gap: composition-internal `{area}` slots sampled independently from subject_topic, causing "cream on under-eye" renders for back-acne titles. Fix shipped: slot override in resolver + sanitizer substitutes face-only compositions when topic targets a non-face body region.

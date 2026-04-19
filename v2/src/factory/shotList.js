@@ -156,6 +156,20 @@ async function buildShotList(cartridge, titles, { N = 10, model = 'anthropic/cla
   };
 }
 
+// Body-region topics (extend when cartridge adds more).
+const BODY_REGIONS = new Set([
+  'back', 'jawline', 'jaw', 'chin', 'forehead', 'cheek', 'neck',
+  'chest', 'decolletage', 'shoulder', 'temple', 'hairline', 'under-eye', 'hormonal'
+]);
+
+// When subject_topic is a body region, force the composition's area/crop/fragment
+// slot to that region. Without this, a composition like `fragment-crop` would
+// randomly pick 'lips and chin' even when the title asks for 'back'.
+function bodyRegionSlotOverrides(topic) {
+  if (!BODY_REGIONS.has(topic)) return null;
+  return { area: topic, crop: topic, fragment: topic };
+}
+
 function resolveShot(cartridge, shot, seed) {
   const composition = cartridge.compositions[shot.composition];
   if (!composition) throw new Error(`Unknown composition: ${shot.composition}`);
@@ -173,7 +187,9 @@ function resolveShot(cartridge, shot, seed) {
   const hasEthnicityInPhrase = /^(Black|White|Latina|Latino|Asian|South Asian|East Asian|mixed-race|middle-aged|older|young|dark|olive|pale|medium|deep|light)/i.test(subject);
   const modelSpec = isPerson && shot.model_spec && !hasEthnicityInPhrase ? shot.model_spec : null;
 
-  const built = buildPrompt({ composition, subject, seed, suffix: cartridge.suffix, themeSuffix, modelSpec });
+  const slotOverrides = bodyRegionSlotOverrides(topic);
+
+  const built = buildPrompt({ composition, subject, seed, suffix: cartridge.suffix, themeSuffix, modelSpec, slotOverrides });
   return {
     prompt: built.prompt,
     hasPerson: isPerson,
@@ -214,6 +230,21 @@ const VALID_SUBJECTS = Object.keys(SUBJECT_CATEGORY);
  * from the appropriate category. Returns { sanitized, substitutions: [{titleId, shotIdx, field, before, after, reason}] }.
  * Never throws — even unrecognizable input becomes a valid shot via defaults.
  */
+// Compositions that are fundamentally face-centric — their skeleton describes a
+// face touch/close-up that cannot render non-face body regions even with slot
+// overrides. When a shot pairs one of these with a non-face body region topic,
+// the sanitizer swaps the composition for a body-region-friendly alternative.
+const FACE_ONLY_COMPOSITIONS = new Set([
+  'apply-product-visible',  // "finger pressing on {area}" — area options are all face
+  'applying-touch',         // same shape
+  'portrait-direct', 'portrait-profile', 'gaze-intense',
+  'serene-eyes-closed', 'mirror-reflection', 'natural-candid'
+]);
+const NON_FACE_REGIONS = new Set(['back', 'shoulder', 'chest', 'decolletage']);
+// Compositions that accept any body region (their skeleton wraps the subject phrase
+// generically, so the subject phrase + area override land the region correctly).
+const REGION_FRIENDLY = ['texture-dewy', 'macro-pores', 'macro-surface', 'fragment-crop'];
+
 function sanitizeShotMap(cartridge, shotMap) {
   const compNames = Object.keys(cartridge.compositions);
   const themeNames = Object.keys(cartridge.themes);
@@ -225,6 +256,10 @@ function sanitizeShotMap(cartridge, shotMap) {
   const pickByCategory = (cat, seed) => {
     const list = byCategory[cat] || compNames;
     return list[Math.abs(seed) % list.length];
+  };
+  const pickRegionFriendly = (seed) => {
+    const available = REGION_FRIENDLY.filter(n => cartridge.compositions[n]);
+    return available[Math.abs(seed) % available.length] || REGION_FRIENDLY[0];
   };
 
   const substitutions = [];
@@ -266,6 +301,18 @@ function sanitizeShotMap(cartridge, shotMap) {
       const subjDef = cartridge.subjects[out.subject_type];
       if (subjDef && out.subject_topic && !subjDef.phrase_banks?.[out.subject_topic]) {
         // Don't substitute silently — resolveShot already falls back to 'default' bank
+      }
+
+      // Body-region incompatibility: swap face-only compositions when the topic
+      // targets a non-face region (back, shoulder, chest, decolletage). Without
+      // this the shot renders e.g. "cream on under-eye" for a back-acne title.
+      if (NON_FACE_REGIONS.has(out.subject_topic) && FACE_ONLY_COMPOSITIONS.has(out.composition)) {
+        const before = out.composition;
+        out.composition = pickRegionFriendly(++seedCounter);
+        substitutions.push({
+          titleId: tid, shotIdx: idx, field: 'composition', before, after: out.composition,
+          reason: `face-only composition incompatible with body region '${out.subject_topic}'`
+        });
       }
 
       return out;

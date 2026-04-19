@@ -10,7 +10,14 @@ function rng(seed) {
 }
 const pick = (arr, rand) => arr[Math.floor(rand() * arr.length)];
 
-function sampleComposition(composition, { subject, seed = Date.now() }) {
+/**
+ * @param composition — composition object with `skeleton`, `slots`, `cameras`, `lenses`
+ * @param opts.subject — phrase to substitute for {subject}
+ * @param opts.seed — PRNG seed (deterministic)
+ * @param opts.slotOverrides — optional map of slotName → fixed value. Used to force a slot
+ *                             (e.g. body region) bypassing the bank's random pick.
+ */
+function sampleComposition(composition, { subject, seed = Date.now(), slotOverrides = {} }) {
   const rand = rng(seed);
   let prompt = composition.skeleton.replace(/\{subject\}/g, subject || 'subject');
 
@@ -21,9 +28,14 @@ function sampleComposition(composition, { subject, seed = Date.now() }) {
     if (m[1] !== 'subject') slotNames.add(m[1]);
   }
   for (const slot of slotNames) {
-    const bank = composition.slots?.[slot];
-    if (!bank?.length) continue;
-    const value = pick(bank, rand);
+    let value;
+    if (slotOverrides[slot] !== undefined && slotOverrides[slot] !== null) {
+      value = slotOverrides[slot];
+    } else {
+      const bank = composition.slots?.[slot];
+      if (!bank?.length) continue;
+      value = pick(bank, rand);
+    }
     slotsUsed[slot] = value;
     prompt = prompt.replace(new RegExp(`\\{${slot}\\}`, 'g'), value);
   }
@@ -32,8 +44,8 @@ function sampleComposition(composition, { subject, seed = Date.now() }) {
   return { prompt, camera, lens, slotsUsed };
 }
 
-function buildPrompt({ composition, subject, seed, suffix, themeSuffix, modelSpec }) {
-  const s = sampleComposition(composition, { subject, seed });
+function buildPrompt({ composition, subject, seed, suffix, themeSuffix, modelSpec, slotOverrides }) {
+  const s = sampleComposition(composition, { subject, seed, slotOverrides });
   const parts = [];
   if (modelSpec) parts.push(modelSpec);
   parts.push(`${s.prompt}, ${s.camera}, ${s.lens}`);
