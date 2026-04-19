@@ -182,23 +182,80 @@
         <div class="run-right">${rightHtml}</div>`;
       list.appendChild(row);
     }
-    list.querySelectorAll('.btn-action').forEach(b =>
-      b.addEventListener('click', () => downloadZip(b.dataset.run))
-    );
+    bindDownloadButtons();
 
     if (anyRunning) setStatus('running', 'generating');
     else setStatus('idle', 'idle');
   }
 
-  async function downloadZip(runId) {
-    const r = await fetch(`${API}/public/runs/${runId}/zip`, { credentials: 'same-origin' });
-    if (!r.ok) { alert('Download failed: ' + r.status); return; }
-    const blob = await r.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `${runId}.zip`;
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  async function downloadZip(runId, btn) {
+    // Replace the button with an inline progress element
+    const right = btn?.parentElement;
+    if (!right) return;
+    const original = right.innerHTML;
+    right.innerHTML = `
+      <div class="dl-progress">
+        <div class="dl-bar"><div class="dl-bar-fill" style="width:0%"></div></div>
+        <div class="dl-text">starting…</div>
+      </div>`;
+    const fillEl = right.querySelector('.dl-bar-fill');
+    const textEl = right.querySelector('.dl-text');
+
+    try {
+      const r = await fetch(`${API}/public/runs/${runId}/zip`, { credentials: 'same-origin' });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+
+      // Content-Length is rarely set on chunked transfer. Fall back to the
+      // server's rough hint for percentage math; otherwise show bytes only.
+      const total = parseInt(r.headers.get('Content-Length') || r.headers.get('x-approx-content-length') || '0', 10);
+      const reader = r.body.getReader();
+      const chunks = [];
+      let received = 0;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value);
+        received += value.length;
+        const mb = (received / 1048576).toFixed(1);
+        if (total) {
+          const pct = Math.min(99, Math.round((received / total) * 100));
+          fillEl.style.width = pct + '%';
+          textEl.textContent = `${pct}% · ${mb} MB`;
+        } else {
+          fillEl.style.width = '100%';
+          fillEl.classList.add('indeterminate');
+          textEl.textContent = `${mb} MB`;
+        }
+      }
+      fillEl.style.width = '100%';
+      fillEl.classList.remove('indeterminate');
+      textEl.textContent = 'saving…';
+
+      const blob = new Blob(chunks, { type: 'application/zip' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `${runId}.zip`;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+      textEl.textContent = `done · ${(blob.size / 1048576).toFixed(1)} MB`;
+      fillEl.classList.add('done');
+      setTimeout(() => { right.innerHTML = original; bindDownloadButtons(); }, 1800);
+    } catch (err) {
+      textEl.textContent = 'failed';
+      fillEl.classList.add('failed');
+      setTimeout(() => { right.innerHTML = original; bindDownloadButtons(); }, 2000);
+      console.error('download failed', err);
+    }
+  }
+
+  function bindDownloadButtons() {
+    document.querySelectorAll('.btn-action').forEach(b => {
+      if (b.dataset.bound) return;
+      b.dataset.bound = '1';
+      b.addEventListener('click', () => downloadZip(b.dataset.run, b));
+    });
   }
 
   function openSSE() {

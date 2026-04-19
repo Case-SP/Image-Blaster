@@ -258,6 +258,48 @@ button.linklike.center { align-self: center; }
 .run-status.failed { color: var(--accent-warn); }
 .run-status.running { color: var(--accent-sage); }
 
+/* ---- Download progress (inline, replaces the Download button) ---- */
+.dl-progress {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+  min-width: 140px;
+}
+.dl-bar {
+  width: 140px;
+  height: 4px;
+  background: var(--border-strong);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.dl-bar-fill {
+  height: 100%;
+  background: var(--accent-sage);
+  border-radius: 999px;
+  transition: width 0.2s ease-out;
+  width: 0%;
+}
+.dl-bar-fill.indeterminate {
+  background: linear-gradient(90deg, transparent 0%, var(--accent-sage) 50%, transparent 100%);
+  background-size: 50% 100%;
+  background-repeat: no-repeat;
+  animation: shimmer 1.2s infinite linear;
+}
+.dl-bar-fill.done { background: var(--accent-sage); }
+.dl-bar-fill.failed { background: var(--accent-warn); }
+@keyframes shimmer {
+  0% { background-position: -50% 0; }
+  100% { background-position: 150% 0; }
+}
+.dl-text {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  line-height: 1;
+}
+
 /* ---- Empty ---- */
 .empty {
   color: var(--text-dim);

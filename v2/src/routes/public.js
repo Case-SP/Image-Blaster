@@ -1,9 +1,9 @@
 const express = require('express');
+const archiver = require('archiver');
 const { requireClient } = require('../auth/middleware');
 const { runBatch } = require('../orchestrator');
 const { readTrace, listTraces, bus, EVENTS } = require('../trace/store');
 const createStorage = require('../storage');
-const { packZip } = require('../zip/pack');
 
 const storage = createStorage();
 const router = express.Router();
@@ -77,30 +77,55 @@ router.get('/runs/:id', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// GET /api/public/runs/:id/zip — stream a ZIP of all images
+// GET /api/public/runs/:id/zip — streams the ZIP (first byte arrives immediately;
+// images are read from storage lazily, one at a time, so memory stays bounded).
 router.get('/runs/:id/zip', async (req, res) => {
+  let trace;
   try {
-    const trace = await readTrace(req.params.id, req.client.id);
+    trace = await readTrace(req.params.id, req.client.id);
     if (!trace) return res.status(404).json({ error: 'not found' });
-    const items = trace.stages?.renders?.items || {};
-    const files = [];
-    for (const [tid, arr] of Object.entries(items)) {
-      const title = trace.input.titles.find(t => t.id === tid);
-      if (!title) continue;
-      for (const item of arr) {
-        if (item.status !== 'ok') continue;
-        const buf = await storage.readImage(trace.id, title.slug, item.filename);
-        if (buf) files.push({ filename: `${title.slug}/${item.filename}`, buffer: buf });
-      }
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+
+  const items = trace.stages?.renders?.items || {};
+  // Flatten into a list of (slug, filename) to append
+  const plan = [];
+  let approxTotalBytes = 0;
+  for (const [tid, arr] of Object.entries(items)) {
+    const title = trace.input.titles.find(t => t.id === tid);
+    if (!title) continue;
+    for (const item of arr) {
+      if (item.status !== 'ok') continue;
+      plan.push({ slug: title.slug, filename: item.filename });
+      approxTotalBytes += 1_500_000; // ~1.5 MB per 1K image, rough for client progress hint
     }
-    if (!files.length) return res.status(404).json({ error: 'no images yet' });
-    const zip = await packZip(files);
-    res.set({
-      'Content-Type': 'application/zip',
-      'Content-Disposition': `attachment; filename="${req.params.id}.zip"`
-    });
-    res.send(zip);
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  }
+  if (!plan.length) return res.status(404).json({ error: 'no images yet' });
+
+  res.set({
+    'Content-Type': 'application/zip',
+    'Content-Disposition': `attachment; filename="${req.params.id}.zip"`,
+    // Hint for the client progress bar. Actual zipped size will be close but not
+    // exact (PNGs are already compressed). Better than no signal at all.
+    'X-Approx-Content-Length': String(approxTotalBytes)
+  });
+
+  const archive = archiver('zip', { zlib: { level: 6 } });
+  archive.on('warning', err => { if (err.code !== 'ENOENT') console.error('[zip] warn:', err); });
+  archive.on('error', err => { console.error('[zip] error:', err); try { res.end(); } catch {} });
+  archive.pipe(res);
+
+  try {
+    for (const { slug, filename } of plan) {
+      const buf = await storage.readImage(trace.id, slug, filename);
+      if (buf) archive.append(buf, { name: `${slug}/${filename}` });
+    }
+    await archive.finalize();
+  } catch (e) {
+    console.error('[zip] stream failed:', e);
+    try { res.end(); } catch {}
+  }
 });
 
 // GET /api/public/events?run=<id> — SSE scoped to this client's runs
