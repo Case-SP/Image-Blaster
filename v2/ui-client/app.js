@@ -138,34 +138,55 @@
     await renderRuns();
   });
 
+  function formatDate(iso) {
+    const d = new Date(iso);
+    const pad = n => String(n).padStart(2, '0');
+    const yy = String(d.getFullYear()).slice(-2);
+    return `${yy}/${pad(d.getMonth() + 1)}/${pad(d.getDate())} · ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
   async function renderRuns() {
     const runs = await json(`${API}/public/runs`);
-    const tbody = $('#runs-table tbody');
-    tbody.innerHTML = '';
+    const list = $('#run-list');
+    list.innerHTML = '';
     $('#no-runs').hidden = runs.length > 0;
 
     let anyRunning = false;
     for (const r of runs) {
-      const tr = document.createElement('tr');
+      const row = document.createElement('div');
+      row.className = 'run-row';
       const p = r.renderProgress || { ok: 0, failed: 0, total: 0 };
       const done = p.ok + p.failed;
       const isRunning = r.status === 'running';
       if (isRunning) anyRunning = true;
-      const progressStr = p.total
-        ? `${done}/${p.total}` + (p.failed ? ` · ${p.failed} failed` : '')
-        : (isRunning ? 'starting…' : '—');
-      const canDownload = r.status === 'done' && p.ok > 0;
-      tr.innerHTML = `
-        <td>${new Date(r.startedAt).toLocaleString()}</td>
-        <td>${r.titleCount}</td>
-        <td>${progressStr}</td>
-        <td>${canDownload ? `<button data-run="${r.id}" class="dl">Download ZIP</button>`
-                          : (r.status === 'failed' ? '<span class="muted">failed</span>' : '')}</td>`;
-      tbody.appendChild(tr);
-    }
-    tbody.querySelectorAll('.dl').forEach(b => b.addEventListener('click', () => downloadZip(b.dataset.run)));
 
-    if (anyRunning) setStatus('running', 'generating…');
+      const titleBits = `${r.titleCount} title${r.titleCount === 1 ? '' : 's'} · ${p.total} image${p.total === 1 ? '' : 's'}`;
+      const canDownload = r.status === 'done' && p.ok > 0;
+
+      let rightHtml = '';
+      if (canDownload) {
+        rightHtml = `<button class="btn-action" data-run="${r.id}">Download</button>`;
+      } else if (isRunning) {
+        rightHtml = `<div class="run-status running">${done}/${p.total || '—'}</div>`;
+      } else if (r.status === 'failed') {
+        rightHtml = `<div class="run-status failed">failed</div>`;
+      } else {
+        rightHtml = `<div class="run-status">—</div>`;
+      }
+
+      row.innerHTML = `
+        <div class="run-left">
+          <div class="run-date">${formatDate(r.startedAt)}</div>
+          <div class="run-title">${titleBits}${p.failed ? ` <span class="run-meta">· ${p.failed} failed</span>` : ''}</div>
+        </div>
+        <div class="run-right">${rightHtml}</div>`;
+      list.appendChild(row);
+    }
+    list.querySelectorAll('.btn-action').forEach(b =>
+      b.addEventListener('click', () => downloadZip(b.dataset.run))
+    );
+
+    if (anyRunning) setStatus('running', 'generating');
     else setStatus('idle', 'idle');
   }
 
