@@ -187,6 +187,78 @@ router.post('/verify-code', async (req, res) => {
   }
 });
 
+// Redeem an access grant (shared by GET /a/:token and POST /redeem-code).
+// Looks up the grant, validates, ensures a clients row, marks grant used,
+// creates a session row, and returns { sid, client } for the caller to
+// attach the cookie + respond.
+async function redeemGrant({ token, code, userAgent }) {
+  const query = sb().from('access_grants').select('*').is('used_at', null).gt('expires_at', new Date().toISOString());
+  const { data: grant, error: qErr } = token
+    ? await query.eq('token', token).maybeSingle()
+    : await query.eq('code', code).maybeSingle();
+  if (qErr) throw qErr;
+  if (!grant) { const e = new Error('invalid or expired access'); e.status = 401; throw e; }
+
+  // Ensure clients row for this email
+  let { data: client } = await sb().from('clients').select('*').eq('email', grant.email).maybeSingle();
+  if (!client) {
+    const clientToken = crypto.randomBytes(24).toString('base64url');
+    const displayName = grant.email.split('@')[0];
+    const { data: inserted, error: insErr } = await sb().from('clients').insert([{
+      token: clientToken,
+      name: displayName,
+      cartridge: grant.cartridge,
+      n_per_title: grant.n_per_title,
+      monthly_image_quota: grant.monthly_image_quota,
+      email: grant.email,
+      active: true
+    }]).select().single();
+    if (insErr) throw insErr;
+    client = inserted;
+  } else if (!client.active) {
+    const e = new Error('client inactive'); e.status = 403; throw e;
+  }
+
+  // Mark grant used (single-use)
+  await sb().from('access_grants')
+    .update({ used_at: new Date().toISOString(), used_client_id: client.id })
+    .eq('token', grant.token);
+
+  // Create session
+  const sid = newSessionId();
+  const expires = new Date(Date.now() + SESSION_TTL_DAYS * 24 * 60 * 60 * 1000);
+  const { error: sErr } = await sb().from('sessions').insert([{
+    id: sid,
+    client_id: client.id,
+    expires_at: expires.toISOString(),
+    user_agent: String(userAgent || '').slice(0, 500)
+  }]);
+  if (sErr) throw sErr;
+
+  return { sid, client };
+}
+
+// POST /api/auth/redeem-code — typed-code fallback for the sign-in page.
+router.post('/redeem-code', async (req, res) => {
+  try {
+    const code = String(req.body?.code || '').trim();
+    if (!/^\d{6}$/.test(code)) return res.status(400).json({ error: 'enter the 6-digit code' });
+    const { sid, client } = await redeemGrant({
+      code,
+      userAgent: req.headers['user-agent']
+    });
+    res.cookie(COOKIE_NAME, sid, cookieOpts());
+    res.json({
+      ok: true,
+      client: { name: client.name, cartridge: client.cartridge, n_per_title: client.n_per_title }
+    });
+  } catch (e) {
+    const status = e.status || 500;
+    console.error('[auth redeem-code]', e.message);
+    res.status(status).json({ error: e.message });
+  }
+});
+
 // POST /api/auth/logout — delete session + clear cookie
 router.post('/logout', async (req, res) => {
   try {
@@ -223,4 +295,4 @@ router.get('/me', async (req, res) => {
   }
 });
 
-module.exports = { router, COOKIE_NAME };
+module.exports = { router, COOKIE_NAME, redeemGrant, cookieOpts };

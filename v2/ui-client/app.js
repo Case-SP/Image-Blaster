@@ -18,6 +18,7 @@
   function show(which) {
     $('#email-section').hidden = which !== 'email';
     $('#code-section').hidden = which !== 'code';
+    $('#access-section').hidden = which !== 'access';
     $('#app-section').hidden = which !== 'app';
   }
 
@@ -82,6 +83,30 @@
       $('#code-msg').textContent = err.message;
     }
   });
+
+  // ---- Access-grant code (out-of-band) ----
+  $('#have-code-btn').addEventListener('click', () => { show('access'); $('#access-code').focus(); });
+  $('#back-to-email-btn').addEventListener('click', () => { show('email'); $('#email').focus(); });
+  $('#access-btn').addEventListener('click', redeemAccess);
+  $('#access-code').addEventListener('keydown', (e) => { if (e.key === 'Enter') redeemAccess(); });
+
+  async function redeemAccess() {
+    const code = $('#access-code').value.trim();
+    if (!/^\d{6}$/.test(code)) {
+      $('#access-msg').textContent = 'Enter the 6-digit code.';
+      return;
+    }
+    $('#access-btn').disabled = true;
+    $('#access-msg').textContent = '';
+    try {
+      await json(`${API}/auth/redeem-code`, { method: 'POST', body: JSON.stringify({ code }) });
+      enterApp();
+    } catch (err) {
+      $('#access-msg').textContent = err.message;
+    } finally {
+      $('#access-btn').disabled = false;
+    }
+  }
 
   // ---- App ----
   async function enterApp() {

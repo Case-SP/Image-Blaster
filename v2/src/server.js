@@ -8,7 +8,7 @@ const { loadCartridge } = require('./factory/cartridge');
 const { readTrace, listTraces, bus, EVENTS } = require('./trace/store');
 const publicRoutes = require('./routes/public');
 const adminRoutes = require('./routes/admin');
-const { router: authRoutes } = require('./routes/auth');
+const { router: authRoutes, redeemGrant, cookieOpts, COOKIE_NAME } = require('./routes/auth');
 const createStorage = require('./storage');
 
 const app = express();
@@ -30,6 +30,26 @@ app.use('/api/admin', adminRoutes);
 app.get('/i/:code', (req, res) => {
   const code = encodeURIComponent(req.params.code);
   res.redirect(302, `/?invite=${code}`);
+});
+
+// ---- One-time access grant: /a/<token> → session cookie + redirect home ----
+app.get('/a/:token', async (req, res) => {
+  try {
+    const { sid } = await redeemGrant({
+      token: req.params.token,
+      userAgent: req.headers['user-agent']
+    });
+    res.cookie(COOKIE_NAME, sid, cookieOpts());
+    res.redirect(302, '/');
+  } catch (e) {
+    const status = e.status || 500;
+    console.error('[access-link]', e.message);
+    res.status(status).send(
+      `<!doctype html><meta charset="utf-8"><title>Access</title>` +
+      `<body style="font-family:system-ui;padding:2rem;max-width:420px">` +
+      `<p>${e.message}</p><p><a href="/">Back to sign-in</a></p></body>`
+    );
+  }
 });
 
 // ---- Client UI (primary: served at root; /client kept for backward compat) ----

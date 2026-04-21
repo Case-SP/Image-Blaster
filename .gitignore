@@ -40,3 +40,4 @@ build/
 
 # Reference image source library (personal, not needed in repo — cartridge refs are tracked)
 # v2/cartridge/<name>/references/ stays tracked for repeatable deploys
+.playwright-mcp/

@@ -15,6 +15,16 @@
       <input type="email" id="email" placeholder="you@example.com" autocomplete="email">
       <button type="button" id="email-btn" class="btn-primary">Send code</button>
       <p class="hint" id="email-msg"></p>
+      <button type="button" id="have-code-btn" class="btn-link">I have an access code</button>
+    </section>
+
+    <!-- Redeem access code (out-of-band grant) -->
+    <section id="access-section" class="view" hidden>
+      <label for="access-code">Access code</label>
+      <input type="text" id="access-code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="000000" autocomplete="one-time-code">
+      <button type="button" id="access-btn" class="btn-primary">Sign in</button>
+      <p class="hint" id="access-msg"></p>
+      <button type="button" id="back-to-email-btn" class="btn-link">Use email instead</button>
     </section>
 
     <!-- Verify code -->
