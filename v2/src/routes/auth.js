@@ -2,6 +2,7 @@ const express = require('express');
 const crypto = require('crypto');
 const { createClient } = require('@supabase/supabase-js');
 const { sb } = require('../db/supabase');
+const { requireClient } = require('../auth/middleware');
 
 const router = express.Router();
 
@@ -274,6 +275,16 @@ router.post('/logout', async (req, res) => {
 // GET /api/auth/me — return current session's client, or 401
 router.get('/me', async (req, res) => {
   try {
+    // Open mode: auth disabled → return the shared public client
+    if (process.env.AUTH_MODE === 'open') {
+      return requireClient(req, res, () => {
+        res.json({
+          name: req.client.name,
+          cartridge: req.client.cartridge,
+          n_per_title: req.client.n_per_title
+        });
+      });
+    }
     const sid = req.cookies?.[COOKIE_NAME];
     if (!sid) return res.status(401).json({ error: 'not signed in' });
     const { data: session } = await sb()

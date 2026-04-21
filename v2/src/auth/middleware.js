@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const { findClientByToken, sb } = require('../db/supabase');
 
 const COOKIE_NAME = 'sid';
@@ -6,6 +7,32 @@ const COOKIE_NAME = 'sid';
 const tokenCache = new Map();
 const sessionCache = new Map();
 const TTL_MS = 5 * 60 * 1000;
+
+// ---- Open mode: AUTH_MODE=open disables auth entirely. Every request
+// resolves to a shared "public" client. Reversible by unsetting the env var.
+const OPEN_MODE = process.env.AUTH_MODE === 'open';
+const PUBLIC_EMAIL = 'public@image-blaster.local';
+let openModeClientPromise = null;
+
+async function ensureOpenModeClient() {
+  if (openModeClientPromise) return openModeClientPromise;
+  openModeClientPromise = (async () => {
+    const { data: existing } = await sb().from('clients').select('*').eq('email', PUBLIC_EMAIL).maybeSingle();
+    if (existing) return existing;
+    const { data: inserted, error } = await sb().from('clients').insert([{
+      token: crypto.randomBytes(24).toString('base64url'),
+      name: 'public',
+      cartridge: process.env.OPEN_MODE_CARTRIDGE || 'nolla',
+      n_per_title: parseInt(process.env.OPEN_MODE_N || '3', 10),
+      monthly_image_quota: parseInt(process.env.OPEN_MODE_QUOTA || '5000', 10),
+      email: PUBLIC_EMAIL,
+      active: true
+    }]).select().single();
+    if (error) throw error;
+    return inserted;
+  })();
+  return openModeClientPromise;
+}
 
 function extractToken(req) {
   const auth = req.headers['authorization'] || '';
@@ -50,6 +77,14 @@ async function resolveClientBySession(sid) {
 
 function requireClient(req, res, next) {
   (async () => {
+    if (OPEN_MODE) {
+      try {
+        req.client = await ensureOpenModeClient();
+        return next();
+      } catch (e) {
+        return res.status(500).json({ error: e.message });
+      }
+    }
     // Prefer session cookie (browser) → fallback to Bearer token (API)
     const sid = req.cookies?.[COOKIE_NAME];
     const token = !sid ? extractToken(req) : null;
