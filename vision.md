@@ -122,6 +122,9 @@ This phase is done when, for Nolla:
 - **Team access per cartridge.** Today one email = one client = one cartridge. Future: a `client` owns multiple `members` by email, so a team can share access to the same cartridge without passing a single token around. Requires splitting `clients` (cartridge identity) from `members` (access identity). Adds invite/remove flow for the cartridge owner.
 - **Member roles.** Once teams exist, roles matter: owner (can invite, can edit cartridge), generator (can fire runs, download), viewer (can download only, can't fire).
 - **Self-service cartridge upload.** Today cartridges ship in the Docker image and admin edits them. Future: cartridge owners upload their own reference images, palette, and profile via the UI; system re-loads without a deploy.
+- **API-key-exchange variant (headless).** A second product surface for developers — no UI, no sign-in. Single header (`X-API-Key`) authenticates a programmatic client, `POST /v1/generate` fires a batch, polling endpoints return status + asset URLs. See `docs/api-variant.md` for the full spec. Reuses the same cartridge + factory + renderer pipeline; only the delivery wrapper changes.
+- **Auth modes as first-class config, not hacks.** The `AUTH_MODE=open|session|api_key|mixed` axis shipped initially as an escape-hatch env var. The end state treats each mode as a supported posture: `open` for demos, `session` for UI users, `api_key` for programmatic access, `mixed` for products that want both. All modes resolve to the same `req.client`; what differs is how we get there.
+- **Link-safe single-use tokens.** Current `/a/:token` gets consumed by link-preview crawlers (Slackbot, Twitterbot, Discordbot, iMessage, WhatsApp). Fix: defer redemption when `User-Agent` matches a known preview bot — return 200 with a placeholder page instead of running the redeem handler. Real browsers continue to redeem. Until that ships, instruct testers to use the paired 6-digit code rather than the link.
 
 ## Nolla is the test instance, not the product
 
@@ -152,3 +155,4 @@ Before adding any feature motivated by a Nolla observation, ask:
 - 2026-04-16 — initial vision written alongside prompt-strategy audit
 - 2026-04-18 — added team-access / multi-email as future improvement; v0 ships with one-email-per-client
 - 2026-04-19 — reframed: Nolla is the test instance, the product is the brand-agnostic system. Added cartridge-vs-engine design principle and matrix of things that MUST stay per-cartridge.
+- 2026-04-22 — added the API-key-exchange variant as a second product surface (`docs/api-variant.md`). Elevated auth modes to first-class config. Logged link-safe token handling as known future work.

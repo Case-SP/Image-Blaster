@@ -186,7 +186,53 @@ The test when adding a new feature: **"Would a non-beauty brand need exactly thi
 
 ---
 
+## 13. Auth delivery is a product surface, not a checkbox
+
+We burned ~48h on "users can't sign in" problems that had nothing to do with our code. The takeaways compound across any future deploy.
+
+### The Resend sandbox trap
+
+Supabase OTP was wired up correctly and returning a believable error (`"Error sending magic link email"`), but new users got 500s while the project owner's email worked. Root cause: the SMTP sender was set to `onboarding@resend.dev`, Resend's **sandbox sender**, which will *only* deliver to the Resend account owner's email. Every other recipient bounces. The error looked generic and was easy to misread as "Supabase is broken" or "Resend quota hit."
+
+**Rule:** if you're using Resend via Supabase SMTP, the first move is **verify your own domain in Resend** and point the sender at `noreply@yourdomain`. The sandbox sender is a dev convenience that fails silently (or ambiguously) in exactly the way that looks like a code bug.
+
+### You don't have the DNS you think you have
+
+When we went to verify the domain, the registrar was on a Vercel project the user couldn't access. **Assume domain-control friction.** Before staking beta delivery on a domain you control, run `dig NS <domain> +short` and confirm you actually have an account at whatever hosts the NS records. If you don't, either buy a cheap dedicated domain for the tool or route through one you own.
+
+### Single-use tokens and link-preview crawlers
+
+When Supabase email was blocked, we built a parallel out-of-band auth path: `issue-access.js` creates a one-time `access_grants` row (URL + 6-digit code, 2-day expiry), you paste the copy-ready email body into Gmail manually. Works. What didn't work: **Dennis pasted the URL into Slack**, and `Slackbot-LinkExpanding 1.0` crawled it for a preview before Dennis clicked. That GET redeemed the grant, created a session for *Slackbot*, and by the time Dennis clicked, the grant was `used_at != null`.
+
+**Three different lessons:**
+1. Single-use GET-redeemed tokens are incompatible with messaging apps — any URL pasted into Slack / iMessage / Discord gets pre-fetched.
+2. The paired 6-digit code (redeemed via POST with a JSON body) is Slack-safe because crawlers don't construct requests — they only follow links. Instructing users to paste the code into the sign-in page instead of clicking a link avoids this class of failure entirely.
+3. When we re-ship the link path, it needs a bot-UA filter — if `User-Agent` matches `Slackbot|Twitterbot|Discordbot|WhatsApp` etc., return 404 (or redirect without redeeming). That defers redemption until a real browser shows up.
+
+### `AUTH_MODE=open` is the right escape hatch
+
+Once we'd spent a day working around mail delivery, the honest move was to accept that beta onboarding shouldn't block on auth. Added a single env-var switch: `AUTH_MODE=open` makes every request resolve to a shared "public" client (auto-created on first boot), and `/api/auth/me` returns that client so the UI skips the sign-in screen. Flip the env var off and auth is back — no code removed, no rollback.
+
+**Rule:** an auth gate that's tangled with deliverability needs a one-toggle bypass. If the cost of turning it off is "push a code change," you're going to keep it on for bad reasons. Make the toggle an env var from day one.
+
+---
+
+## 14. Database security posture: service key vs. anon key
+
+Supabase's database linter flagged every table we created (`clients`, `runs`, `images`, `sessions`, `invites`, `access_grants`) for `rls_disabled_in_public` + `sensitive_columns_exposed`. This doesn't block the app (we use the service-role key, which bypasses RLS), but it matters.
+
+The threat model is: **the anon key is designed to be public** — it's the same class of secret as a Firebase API key, meant to live in a browser. Supabase's whole security story assumes anon key is exposed and RLS gates the rest. Without RLS, anyone who ever gets our anon key can `SELECT * FROM clients` and harvest every email + token, or `SELECT * FROM access_grants` and redeem live grants.
+
+Today our anon key is server-side only, but it *will* leak eventually (the moment we ever do browser-side realtime, the moment the `.env` ends up in a screenshot, etc.). **Enable RLS before you ever need it.** `ALTER TABLE ... ENABLE ROW LEVEL SECURITY;` with no policies = anon sees nothing, service role still reads everything. Six lines, non-breaking, covers you.
+
+Saved as `sql/enable_rls.sql`.
+
+---
+
 ## Update log
 - 2026-04-16 — initial audit of prompt strategy, diversity crisis identified as architectural
 - 2026-04-18 — email+OTP auth via Supabase; client UI simplified to email→code→titles→download
 - 2026-04-19 — (1) anatomy-aware phrase banks for skin-close (back, jawline, chin, forehead, etc.) landed; jawline renders as jaw profile, back renders as actual back. (2) theme-lock per title at N≤5 confirmed working — mini-series effect. (3) known gap: composition-internal `{area}` slots sampled independently from subject_topic, causing "cream on under-eye" renders for back-acne titles. Fix shipped: slot override in resolver + sanitizer substitutes face-only compositions when topic targets a non-face body region.
+- 2026-04-20 — Resend sandbox sender identified as root cause of "Error sending magic link email" for all new testers. Added out-of-band access-grants system (`scripts/issue-access.js` + `GET /a/:token` + `POST /api/auth/redeem-code`) so beta onboarding doesn't depend on Supabase email.
+- 2026-04-21 — added `AUTH_MODE=open` env-toggle that bypasses auth and resolves every request to a shared public client; beta now ships via the raw URL. Discovered Slackbot link-preview consumes single-use `/a/:token` grants; documented the code-path as Slack-safe fallback. Sean redeemed his grant via Chrome (clean); Dennis's first grant was eaten by Slackbot and we re-issued code-only.
+- 2026-04-22 — RLS enable script written (`sql/enable_rls.sql`) after Supabase linter flagged all public tables as missing row-level security. Service key still works; anon key now denied. Six-line, non-breaking, resolves 8 linter errors.

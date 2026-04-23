@@ -8,13 +8,16 @@ const { createTrace } = require('./trace/store');
 const createStorage = require('./storage');
 const storage = createStorage();
 
-async function runBatch({ cartridgeName = 'nolla', titles, N = 10, critic = true, model, aspectRatio, debug = true, clientId = null }) {
+async function runBatch({ cartridgeName = 'nolla', titles, N = 10, critic = true, model, aspectRatio, debug = true, clientId = null, onTraceCreated }) {
   const cartridge = loadCartridge(cartridgeName);
   const trace = createTrace({
     cartridge: cartridgeName,
     input: { titles, N, options: { critic, model, aspectRatio } },
     clientId
   });
+  if (typeof onTraceCreated === 'function') {
+    try { onTraceCreated(trace); } catch (e) { console.warn('[orchestrator] onTraceCreated threw:', e.message); }
+  }
 
   try {
     // STAGE 1: shot list

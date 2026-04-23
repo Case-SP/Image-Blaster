@@ -8,6 +8,7 @@ const { loadCartridge } = require('./factory/cartridge');
 const { readTrace, listTraces, bus, EVENTS } = require('./trace/store');
 const publicRoutes = require('./routes/public');
 const adminRoutes = require('./routes/admin');
+const v1Routes = require('./routes/v1');
 const { router: authRoutes, redeemGrant, cookieOpts, COOKIE_NAME } = require('./routes/auth');
 const createStorage = require('./storage');
 
@@ -20,8 +21,11 @@ const storage = createStorage();
 // ---- Auth ----
 app.use('/api/auth', authRoutes);
 
-// ---- Public API ----
+// ---- Public API (UI-facing) ----
 app.use('/api/public', publicRoutes);
+
+// ---- v1 API (programmatic, X-API-Key header) ----
+app.use('/v1', v1Routes);
 
 // ---- Admin API ----
 app.use('/api/admin', adminRoutes);

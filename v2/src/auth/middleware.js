@@ -6,7 +6,21 @@ const COOKIE_NAME = 'sid';
 // In-memory cache (5 min TTL) — avoids hitting DB on every request
 const tokenCache = new Map();
 const sessionCache = new Map();
+const apiKeyCache = new Map();
 const TTL_MS = 5 * 60 * 1000;
+
+function hashApiKey(key) {
+  return crypto.createHash('sha256').update(key).digest('hex');
+}
+
+async function resolveClientByApiKey(key) {
+  const hash = hashApiKey(key);
+  const cached = apiKeyCache.get(hash);
+  if (cached && cached.expires > Date.now()) return cached.client;
+  const { data: client } = await sb().from('clients').select('*').eq('api_key_hash', hash).eq('active', true).maybeSingle();
+  if (client) apiKeyCache.set(hash, { client, expires: Date.now() + TTL_MS });
+  return client;
+}
 
 // ---- Open mode: AUTH_MODE=open disables auth entirely. Every request
 // resolves to a shared "public" client. Reversible by unsetting the env var.
@@ -85,14 +99,19 @@ function requireClient(req, res, next) {
         return res.status(500).json({ error: e.message });
       }
     }
-    // Prefer session cookie (browser) → fallback to Bearer token (API)
-    const sid = req.cookies?.[COOKIE_NAME];
-    const token = !sid ? extractToken(req) : null;
+    // Auth resolution order: API key → session cookie → legacy bearer/query token
+    const apiKey = req.headers['x-api-key'];
+    const sid = !apiKey ? req.cookies?.[COOKIE_NAME] : null;
+    const token = (!apiKey && !sid) ? extractToken(req) : null;
 
-    if (!sid && !token) return res.status(401).json({ error: 'not authenticated' });
+    if (!apiKey && !sid && !token) return res.status(401).json({ error: 'not authenticated' });
 
     try {
-      const client = sid ? await resolveClientBySession(sid) : await resolveClientByToken(token);
+      const client = apiKey
+        ? await resolveClientByApiKey(apiKey)
+        : sid
+          ? await resolveClientBySession(sid)
+          : await resolveClientByToken(token);
       if (!client) return res.status(401).json({ error: 'invalid or expired' });
       req.client = client;
       next();
@@ -108,4 +127,4 @@ function requireAdmin(req, res, next) {
   next();
 }
 
-module.exports = { requireClient, requireAdmin, extractToken };
+module.exports = { requireClient, requireAdmin, extractToken, hashApiKey };
