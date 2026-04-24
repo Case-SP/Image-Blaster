@@ -152,7 +152,11 @@ async function buildShotList(cartridge, titles, { N = 10, model = 'anthropic/cla
   const systemPrompt = buildShotListSystemPrompt(cartridge, N);
   const baseUserPrompt = `Generate ${N} shots for each title:\n\n` +
     titles.map(t => `[ID:${t.id}] [CAT:${t.category || 'general'}] "${t.title}"`).join('\n');
-  const maxTokens = Math.min(titles.length * N * 80, 16000);
+  // 80 tokens/shot was too tight — small batches (e.g. 1 title × N=1 = 80 total)
+  // got truncated mid-string. Bumped to 160 and added a 1200-token floor so
+  // even the smallest request has room for the wrapper + at least one full
+  // shot with all required fields.
+  const maxTokens = Math.max(1200, Math.min(titles.length * N * 160, 16000));
   const t0 = Date.now();
 
   let raw = null, lastContent = null, lastErr = null, result = null;
