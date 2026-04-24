@@ -112,14 +112,21 @@ ${themes}
 No markdown, no explanation. Just the JSON.`;
 }
 
-async function buildShotList(cartridge, titles, { N = 10, model = 'anthropic/claude-3-haiku' } = {}) {
-  if (!process.env.OPENROUTER_API_KEY) throw new Error('OPENROUTER_API_KEY not set');
+// Trim whitespace, strip markdown fences, and slice to the outermost {...}.
+// Strips trailing commas before ] or }. Doesn't try to invent content — if the
+// LLM truncated mid-object we'll still fail parse and surface the error.
+function cleanJsonCandidate(raw) {
+  let s = String(raw || '').trim();
+  const md = s.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+  if (md) s = md[1];
+  const first = s.indexOf('{');
+  const last = s.lastIndexOf('}');
+  if (first >= 0 && last > first) s = s.slice(first, last + 1);
+  s = s.replace(/,(\s*[}\]])/g, '$1');
+  return s.trim();
+}
 
-  const systemPrompt = buildShotListSystemPrompt(cartridge, N);
-  const userPrompt = `Generate ${N} shots for each title:\n\n` +
-    titles.map(t => `[ID:${t.id}] [CAT:${t.category || 'general'}] "${t.title}"`).join('\n');
-
-  const t0 = Date.now();
+async function callShotListLLM({ systemPrompt, userPrompt, model, maxTokens }) {
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -130,15 +137,47 @@ async function buildShotList(cartridge, titles, { N = 10, model = 'anthropic/cla
     },
     body: JSON.stringify({
       model,
-      max_tokens: Math.min(titles.length * N * 80, 16000),
+      max_tokens: maxTokens,
       messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }]
     })
   });
   if (!response.ok) throw new Error(`OpenRouter ${response.status}: ${await response.text()}`);
   const result = await response.json();
-  let content = result.choices[0].message.content.trim();
-  const md = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/); if (md) content = md[1];
-  const raw = JSON.parse(content);
+  return { result, content: result.choices[0].message.content };
+}
+
+async function buildShotList(cartridge, titles, { N = 10, model = 'anthropic/claude-3-haiku' } = {}) {
+  if (!process.env.OPENROUTER_API_KEY) throw new Error('OPENROUTER_API_KEY not set');
+
+  const systemPrompt = buildShotListSystemPrompt(cartridge, N);
+  const baseUserPrompt = `Generate ${N} shots for each title:\n\n` +
+    titles.map(t => `[ID:${t.id}] [CAT:${t.category || 'general'}] "${t.title}"`).join('\n');
+  const maxTokens = Math.min(titles.length * N * 80, 16000);
+  const t0 = Date.now();
+
+  let raw = null, lastContent = null, lastErr = null, result = null;
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    // On retry, remind the model explicitly — it usually fixes trailing-comma /
+    // unterminated-string cases the first cleanup pass couldn't salvage.
+    const userPrompt = attempt === 1
+      ? baseUserPrompt
+      : baseUserPrompt + `\n\nRETURN VALID JSON ONLY. Previous attempt was not parseable. Check every quote and brace. No prose, no code fences, just the JSON object.`;
+
+    try {
+      const call = await callShotListLLM({ systemPrompt, userPrompt, model, maxTokens });
+      result = call.result;
+      lastContent = call.content;
+      raw = JSON.parse(cleanJsonCandidate(lastContent));
+      break;
+    } catch (e) {
+      lastErr = e;
+      console.warn(`[shotList] attempt ${attempt} JSON parse failed: ${e.message}. ${attempt < 2 ? 'Retrying with stricter reminder…' : 'Giving up.'}`);
+    }
+  }
+  if (!raw) {
+    const snippet = String(lastContent || '').slice(0, 300);
+    throw new Error(`shot-list JSON parse failed after 2 attempts: ${lastErr?.message}. Head of last reply: ${snippet}`);
+  }
 
   const variance = {};
   for (const [tid, sel] of Object.entries(raw)) variance[tid] = shotListVariance(sel.shots);
@@ -150,8 +189,8 @@ async function buildShotList(cartridge, titles, { N = 10, model = 'anthropic/cla
       model,
       elapsedMs: Date.now() - t0,
       systemPromptChars: systemPrompt.length,
-      userPromptChars: userPrompt.length,
-      tokensUsed: result.usage
+      userPromptChars: baseUserPrompt.length,
+      tokensUsed: result?.usage
     }
   };
 }

@@ -13,6 +13,7 @@ const { router: authRoutes, redeemGrant, cookieOpts, COOKIE_NAME } = require('./
 const createStorage = require('./storage');
 
 const app = express();
+app.set('trust proxy', 1); // Railway terminates TLS upstream; honor X-Forwarded-* for req.protocol/req.ip
 app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
 const PORT = parseInt(process.env.PORT || '3002', 10);
