@@ -134,6 +134,21 @@
     updateTotals();
   });
 
+  // Model cycle (internal-only; session-auth surface).
+  // Display → model id.
+  const MODEL_CYCLE = [
+    { label: 'nano', id: 'fal-ai/nano-banana-pro' },
+    { label: 'gpt-2', id: 'fal-ai/openai/gpt-image-2' }
+  ];
+  function currentModel() { return $('#model-btn').dataset.model; }
+  $('#model-btn').addEventListener('click', () => {
+    const cur = currentModel();
+    const idx = MODEL_CYCLE.findIndex(m => m.id === cur);
+    const next = MODEL_CYCLE[(idx + 1) % MODEL_CYCLE.length];
+    $('#model-btn').textContent = next.label;
+    $('#model-btn').dataset.model = next.id;
+  });
+
   function countTitles() {
     return $('#titles').value.trim().split('\n').map(x => x.trim()).filter(Boolean).length;
   }
@@ -166,7 +181,7 @@
 
     $('#generate-btn').disabled = true;
     try {
-      await json(`${API}/public/runs`, { method: 'POST', body: JSON.stringify({ titles, N }) });
+      await json(`${API}/public/runs`, { method: 'POST', body: JSON.stringify({ titles, N, model: currentModel() }) });
       $('#titles').value = '';
       updateTotals();
     } catch (err) {

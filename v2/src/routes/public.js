@@ -4,6 +4,7 @@ const { requireClient, requireSession } = require('../auth/middleware');
 const { runBatch } = require('../orchestrator');
 const { readTrace, listTraces, bus, EVENTS } = require('../trace/store');
 const createStorage = require('../storage');
+const { SESSION_ALLOWED_MODELS } = require('../render/models');
 
 const storage = createStorage();
 const router = express.Router();
@@ -18,12 +19,15 @@ const MAX_TOTAL_IMAGES = 500;
 
 router.post('/runs', async (req, res) => {
   try {
-    const { titles = [], N: requestedN } = req.body;
+    const { titles = [], N: requestedN, model } = req.body;
     if (!Array.isArray(titles) || !titles.length) {
       return res.status(400).json({ error: 'titles[] required' });
     }
     if (titles.length > MAX_TITLES) {
       return res.status(400).json({ error: `too many titles (${titles.length}); max ${MAX_TITLES} per run` });
+    }
+    if (model && !SESSION_ALLOWED_MODELS.has(model)) {
+      return res.status(400).json({ error: `model '${model}' not in allowlist` });
     }
 
     const N = Math.max(1, Math.min(MAX_N, parseInt(requestedN, 10) || req.client.n_per_title || 3));
@@ -54,6 +58,7 @@ router.post('/runs', async (req, res) => {
       titles: normalized,
       N,
       critic: true,
+      model: model || undefined,
       clientId: req.client.id
     }).catch(e => console.error('[runBatch]', e));
 

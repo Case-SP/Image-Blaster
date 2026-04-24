@@ -4,6 +4,7 @@ const { requireClient } = require('../auth/middleware');
 const { runBatch } = require('../orchestrator');
 const { readTrace, listTraces } = require('../trace/store');
 const createStorage = require('../storage');
+const { API_ALLOWED_MODELS } = require('../render/models');
 
 const storage = createStorage();
 const router = express.Router();
@@ -77,6 +78,13 @@ router.post('/generate', async (req, res) => {
     if (cartridgeName !== req.client.cartridge) {
       return err(res, 403, 'cartridge_not_found',
         `this key is scoped to cartridge '${req.client.cartridge}'`);
+    }
+
+    // Model allowlist: API-key callers can only request prompt-tuned models.
+    if (model && !API_ALLOWED_MODELS.has(model)) {
+      return err(res, 400, 'model_not_available',
+        `model '${model}' is not available on this surface`,
+        { available: Array.from(API_ALLOWED_MODELS) });
     }
 
     // Capture run_id synchronously via onTraceCreated, then fire-and-forget.
