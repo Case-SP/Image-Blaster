@@ -229,6 +229,38 @@ Saved as `sql/enable_rls.sql`.
 
 ---
 
+## 15. Surface partitioning is a deployment invariant, not a per-release checklist item
+
+The moat is the prompt strategy (per vision.md §"The moat"). Every new surface we ship has to answer one question before it goes live: **does a caller on this surface see anything about HOW prompts are built?** If yes, we've leaked the moat.
+
+### Concrete near-miss on the /v1 launch
+
+On the first ship of the `/v1` API-key variant, three leaks slipped through:
+
+1. **`GET /v1/runs/:id` returned each image's full prompt** in the `images[].prompt` field. I'd copied it from the UI's shape without thinking; the UI is an internal surface, `/v1` is not.
+2. **API keys authenticated on `/api/public/*` too.** The shared `requireClient` middleware accepted `X-API-Key` anywhere, which meant Sean's key could GET `/api/public/runs/:id` and read the *entire trace* — shot list, critic revisions, system prompts, stage metadata. Every word of the moat.
+3. **Render errors echoed back prompt fragments** from fal/OpenRouter failure messages. Subtler but the same class of leak.
+
+None of these were anyone's fault at write-time — they were reasonable defaults for an internal UI. The problem was the **new caller class** (programmatic, external) inherited assumptions made for a different caller class (internal browser).
+
+### The invariant
+
+**Every deploy that touches ingress or auth must re-audit the surface partition.** Not a general "review the diff" pass — a specific checklist, run against the actual live endpoints:
+
+1. **Enumerate every route a non-session client can reach.** (Run them through curl with the external auth method.) For each:
+2. **Does the response body contain any of: `prompt`, `shot_list`, `shots`, `composition`, `subject_topic`, `slot`, `system_prompt`, `critic`, `stage`, `trace`, `variance`?** If yes → strip or reject.
+3. **Do any error messages include text that came from the prompt path?** (fal, OpenRouter, parser errors can all echo inputs.) If yes → collapse to a generic `error.code` and log the real message server-side only.
+4. **Are there image sidecars in storage?** (`.png.json` files written by the renderer — dev-fs only today, but if they ever hit Supabase storage, the ZIP would include them.) Confirm only PNGs are in the archive.
+5. **Does auth-method checking happen at the router level, or is it implicit?** Implicit = bug waiting to happen. Every internal surface should have an explicit `requireSession` (or equivalent) gate that rejects non-session auth, not a comment.
+
+Added `requireSession` middleware + `req.authMethod` tag specifically so future surfaces can gate explicitly: `router.use(requireSession)` one line; future diffs read obviously.
+
+### Why this is a standing rule, not a one-time fix
+
+The leak surface grows monotonically with the number of surfaces and the number of LLM stages. Every new endpoint and every new stage adds a way for prompt data to escape. Catching it by code review alone is brittle — reviewers see the code they're diffing, not the whole matrix of (route × auth method × response field × stage output). An explicit surface audit after any ingress/auth change catches what review misses.
+
+---
+
 ## Update log
 - 2026-04-16 — initial audit of prompt strategy, diversity crisis identified as architectural
 - 2026-04-18 — email+OTP auth via Supabase; client UI simplified to email→code→titles→download
@@ -236,3 +268,5 @@ Saved as `sql/enable_rls.sql`.
 - 2026-04-20 — Resend sandbox sender identified as root cause of "Error sending magic link email" for all new testers. Added out-of-band access-grants system (`scripts/issue-access.js` + `GET /a/:token` + `POST /api/auth/redeem-code`) so beta onboarding doesn't depend on Supabase email.
 - 2026-04-21 — added `AUTH_MODE=open` env-toggle that bypasses auth and resolves every request to a shared public client; beta now ships via the raw URL. Discovered Slackbot link-preview consumes single-use `/a/:token` grants; documented the code-path as Slack-safe fallback. Sean redeemed his grant via Chrome (clean); Dennis's first grant was eaten by Slackbot and we re-issued code-only.
 - 2026-04-22 — RLS enable script written (`sql/enable_rls.sql`) after Supabase linter flagged all public tables as missing row-level security. Service key still works; anon key now denied. Six-line, non-breaking, resolves 8 linter errors.
+- 2026-04-23 — Phase A of API-key variant shipped: `/v1/generate` + `/v1/runs*` behind `X-API-Key` header (sha256-hashed at rest). Sean issued first key, full end-to-end verified (auth + generate + image fetch + ZIP + 401 cases). Small fixes same day: `trust proxy` for https URLs behind Railway, shot-list `max_tokens` floor (1200) after N=1 runs hit truncation — root cause was per-shot budget with no floor, not malformed JSON. Retry-on-bad-JSON kept because it's still defensive.
+- 2026-04-23 — §15 added: caught three moat-leak paths on first `/v1` ship (prompt field in response, API keys reaching `/api/public/*`, errors echoing prompt fragments). Added `requireSession` middleware + `req.authMethod` so future surfaces partition explicitly. Standing rule: surface audit on every ingress/auth-touching deploy.
