@@ -1,6 +1,6 @@
 const express = require('express');
 const archiver = require('archiver');
-const { requireClient } = require('../auth/middleware');
+const { requireClient, requireSession } = require('../auth/middleware');
 const { runBatch } = require('../orchestrator');
 const { readTrace, listTraces, bus, EVENTS } = require('../trace/store');
 const createStorage = require('../storage');
@@ -9,6 +9,7 @@ const storage = createStorage();
 const router = express.Router();
 
 router.use(requireClient);
+router.use(requireSession); // /api/public/* is the UI surface — API-key clients must use /v1/*
 
 // POST /api/public/runs — start a batch for this client
 const MAX_TITLES = 200;

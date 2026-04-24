@@ -94,6 +94,7 @@ function requireClient(req, res, next) {
     if (OPEN_MODE) {
       try {
         req.client = await ensureOpenModeClient();
+        req.authMethod = 'open';
         return next();
       } catch (e) {
         return res.status(500).json({ error: e.message });
@@ -114,11 +115,19 @@ function requireClient(req, res, next) {
           : await resolveClientByToken(token);
       if (!client) return res.status(401).json({ error: 'invalid or expired' });
       req.client = client;
+      req.authMethod = apiKey ? 'api_key' : sid ? 'session' : 'bearer';
       next();
     } catch (e) {
       res.status(500).json({ error: e.message });
     }
   })();
+}
+
+// Gate specifically to UI callers (session cookie). API-key clients get a
+// generic 404 — they must use /v1/* which returns a blind surface.
+function requireSession(req, res, next) {
+  if (req.authMethod === 'api_key') return res.status(404).end();
+  next();
 }
 
 function requireAdmin(req, res, next) {
@@ -127,4 +136,4 @@ function requireAdmin(req, res, next) {
   next();
 }
 
-module.exports = { requireClient, requireAdmin, extractToken, hashApiKey };
+module.exports = { requireClient, requireAdmin, extractToken, hashApiKey, requireSession };

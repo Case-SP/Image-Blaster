@@ -133,6 +133,9 @@ router.get('/runs/:id', async (req, res) => {
     const trace = await readTrace(req.params.id, req.client.id);
     if (!trace) return err(res, 404, 'not_found', 'run not found');
 
+    // Blind surface: we never expose the prompt, shot-list, critic output, or
+    // any LLM stage detail to API-key clients. Errors are collapsed to a
+    // generic reason to avoid leaking prompt fragments that providers echo back.
     const renders = trace.stages?.renders?.items || {};
     const images = [];
     for (const [titleId, arr] of Object.entries(renders)) {
@@ -145,11 +148,10 @@ router.get('/runs/:id', async (req, res) => {
           slug: title.slug,
           filename: item.filename,
           status: item.status,
-          prompt: item.prompt || null,
           url: item.status === 'ok'
             ? `${req.protocol}://${req.get('host')}/v1/runs/${trace.id}/images/${title.slug}/${item.filename}`
             : null,
-          error: item.error || null
+          error: item.status === 'failed' ? 'render_failed' : null
         });
       }
     }
