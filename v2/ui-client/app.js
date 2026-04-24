@@ -135,18 +135,22 @@
   });
 
   // Model cycle (internal-only; session-auth surface).
-  // Display → model id.
+  // 'both' fires parallel runs, one per real model — lets Case A/B prompts.
   const MODEL_CYCLE = [
-    { label: 'nano', id: 'fal-ai/nano-banana-pro' },
-    { label: 'gpt-2', id: 'openai/gpt-image-2' }
+    { label: 'nano',  ids: ['fal-ai/nano-banana-pro'] },
+    { label: 'gpt-2', ids: ['openai/gpt-image-2'] },
+    { label: 'both',  ids: ['fal-ai/nano-banana-pro', 'openai/gpt-image-2'] }
   ];
-  function currentModel() { return $('#model-btn').dataset.model; }
+  function currentModelIds() {
+    const label = $('#model-btn').textContent;
+    return (MODEL_CYCLE.find(m => m.label === label) || MODEL_CYCLE[0]).ids;
+  }
   $('#model-btn').addEventListener('click', () => {
-    const cur = currentModel();
-    const idx = MODEL_CYCLE.findIndex(m => m.id === cur);
+    const label = $('#model-btn').textContent;
+    const idx = MODEL_CYCLE.findIndex(m => m.label === label);
     const next = MODEL_CYCLE[(idx + 1) % MODEL_CYCLE.length];
     $('#model-btn').textContent = next.label;
-    $('#model-btn').dataset.model = next.id;
+    $('#model-btn').dataset.model = next.ids[0]; // primary id kept for back-compat
   });
 
   function countTitles() {
@@ -181,7 +185,11 @@
 
     $('#generate-btn').disabled = true;
     try {
-      await json(`${API}/public/runs`, { method: 'POST', body: JSON.stringify({ titles, N, model: currentModel() }) });
+      const modelIds = currentModelIds();
+      // Parallel runs, one per selected model ('both' → 2 runs, nano & gpt-2)
+      await Promise.all(modelIds.map(model =>
+        json(`${API}/public/runs`, { method: 'POST', body: JSON.stringify({ titles, N, model }) })
+      ));
       $('#titles').value = '';
       updateTotals();
     } catch (err) {
