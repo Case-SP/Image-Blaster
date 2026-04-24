@@ -59,10 +59,11 @@ function createTrace({ cartridge, input, clientId = null }) {
     finishedAt: null,
     input,
     stages: {
-      shotList: { status: 'pending' },
-      critic:   { status: 'pending' },
-      resolved: { status: 'pending' },
-      renders:  { status: 'pending', items: {} }
+      shotList:     { status: 'pending' },
+      critic:       { status: 'pending' },
+      resolved:     { status: 'pending' },
+      gpt2Rewrite:  { status: 'pending' },  // only runs when model is openai/gpt-image-2
+      renders:      { status: 'pending', items: {} }
     },
     verdicts: {},
     error: null

@@ -25,6 +25,7 @@ function loadCartridge(name) {
   const critic = readTextOr(path.join(dir, 'critic.md'));
   const guardrails = readTextOr(path.join(dir, 'guardrails.md'));
   const studioRules = readTextOr(path.join(dir, 'studio-rules.md'));
+  const gpt2Voice = readTextOr(path.join(dir, 'gpt2_rewriter.md')); // optional brand voice for gpt-image-2 rewriter
 
   const refsDir = path.join(dir, 'references');
   const references = fs.existsSync(refsDir) ? fs.readdirSync(refsDir)
@@ -45,7 +46,7 @@ function loadCartridge(name) {
     });
   }
 
-  return { name, profile, themes, compositions, subjects, palette, suffix, critic, guardrails, studioRules, references, categories };
+  return { name, profile, themes, compositions, subjects, palette, suffix, critic, guardrails, studioRules, gpt2Voice, references, categories };
 }
 
 module.exports = { loadCartridge };

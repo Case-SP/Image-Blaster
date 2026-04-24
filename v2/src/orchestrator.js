@@ -3,6 +3,7 @@ const { loadCartridge } = require('./factory/cartridge');
 const { buildShotList, buildRenderPrompts, buildShotListSystemPrompt, sanitizeShotMap } = require('./factory/shotList');
 const { critiqueShotList } = require('./factory/critic');
 const { promptVariance } = require('./factory/variance');
+const { rewriteForGpt2 } = require('./factory/gpt2Rewriter');
 const { renderOne, downloadImage } = require('./render/fal');
 const { createTrace } = require('./trace/store');
 const createStorage = require('./storage');
@@ -92,6 +93,59 @@ async function runBatch({ cartridgeName = 'nolla', titles, N = 10, critic = true
       if (errs.length) resolveErrors[tid] = errs;
     }
     trace.finishStage('resolved', { prompts: resolved, promptVariance: promptVar, resolveErrors, substitutions });
+
+    // STAGE 3.5: model-specific rewrite. gpt-image-2 wants candid-photography
+    // prose, not keyword stacks — rewrite each prompt through the 9-move
+    // template (engine) + cartridge.gpt2Voice (brand flavor). Runs in parallel
+    // with bounded concurrency; a failed rewrite falls back to the original
+    // prompt so the render still fires.
+    if (model === 'openai/gpt-image-2') {
+      trace.startStage('gpt2Rewrite');
+      const REWRITE_CONCURRENCY = Math.max(1, Math.min(10, parseInt(process.env.REWRITE_CONCURRENCY || '5', 10)));
+      const rewriteTasks = [];
+      for (const [tid, arr] of Object.entries(resolved)) {
+        for (let i = 0; i < arr.length; i++) {
+          const shot = arr[i];
+          if (shot.__error || !shot.prompt) continue;
+          rewriteTasks.push({ tid, i, shot });
+        }
+      }
+      const rewriteResults = [];
+      const rewriteInflight = new Set();
+      const rewriteOne = async ({ tid, i, shot }) => {
+        try {
+          const { rewritten, meta } = await rewriteForGpt2({
+            prompt: shot.prompt,
+            brandVoice: cartridge.gpt2Voice || '',
+            context: {
+              subject_type: shot.subject_type,
+              subject_topic: shot.subject_topic,
+              composition: shot.composition,
+              body_region: shot.body_region,
+              theme: shot.theme
+            }
+          });
+          shot.__originalPrompt = shot.prompt;
+          shot.prompt = rewritten;
+          rewriteResults.push({ tid, i, ok: true, chars: rewritten.length, elapsedMs: meta.elapsedMs });
+        } catch (e) {
+          rewriteResults.push({ tid, i, ok: false, error: e.message });
+        }
+      };
+      for (const task of rewriteTasks) {
+        const p = rewriteOne(task).finally(() => rewriteInflight.delete(p));
+        rewriteInflight.add(p);
+        if (rewriteInflight.size >= REWRITE_CONCURRENCY) await Promise.race(rewriteInflight);
+      }
+      await Promise.all(rewriteInflight);
+      const okCount = rewriteResults.filter(r => r.ok).length;
+      trace.finishStage('gpt2Rewrite', {
+        totalShots: rewriteTasks.length,
+        rewritten: okCount,
+        failed: rewriteTasks.length - okCount,
+        results: rewriteResults
+      });
+    }
 
     // STAGE 4: render (parallel with concurrency limit — tunable via env var)
     trace.startStage('renders');
