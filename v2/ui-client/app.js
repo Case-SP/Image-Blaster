@@ -138,7 +138,7 @@
   // Display → model id.
   const MODEL_CYCLE = [
     { label: 'nano', id: 'fal-ai/nano-banana-pro' },
-    { label: 'gpt-2', id: 'fal-ai/openai/gpt-image-2' }
+    { label: 'gpt-2', id: 'openai/gpt-image-2' }
   ];
   function currentModel() { return $('#model-btn').dataset.model; }
   $('#model-btn').addEventListener('click', () => {

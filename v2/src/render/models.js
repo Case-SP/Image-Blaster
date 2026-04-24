@@ -14,8 +14,7 @@ const API_ALLOWED_MODELS = new Set([
 // experimental models we're actively tuning prompts for.
 const SESSION_ALLOWED_MODELS = new Set([
   ...API_ALLOWED_MODELS,
-  'fal-ai/gpt-image-1',   // fal-hosted OpenAI image model (gpt-image-2 once fal exposes it)
-  'fal-ai/openai/gpt-image-2'
+  'openai/gpt-image-2' // fal-hosted; minimal input schema — see render/fal.js payload shaping
 ]);
 
 const DEFAULT_MODEL = 'fal-ai/nano-banana-pro';

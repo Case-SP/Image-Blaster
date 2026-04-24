@@ -10,8 +10,16 @@ async function renderOne(prompt, options = {}) {
   const references = options.references || [];
   const supportsRefs = ['fal-ai/nano-banana-pro', 'fal-ai/flux-pro/kontext'].includes(model);
 
-  const payload = { prompt, aspect_ratio: aspectRatio, resolution: '1K', num_images: 1, output_format: 'png', safety_tolerance: '6' };
-  if (supportsRefs && references.length) payload.image_urls = references.slice(0, 4).map(r => r.url);
+  // Per-model payload shaping. gpt-image-2 rejects nano-banana-specific fields
+  // (safety_tolerance, resolution, output_format). Start minimal and add knobs
+  // as we confirm they're accepted.
+  let payload;
+  if (model === 'openai/gpt-image-2') {
+    payload = { prompt };
+  } else {
+    payload = { prompt, aspect_ratio: aspectRatio, resolution: '1K', num_images: 1, output_format: 'png', safety_tolerance: '6' };
+    if (supportsRefs && references.length) payload.image_urls = references.slice(0, 4).map(r => r.url);
+  }
 
   const t0 = Date.now();
   let attempt = 0;
