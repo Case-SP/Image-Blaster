@@ -6,20 +6,24 @@ const TRACE_DIR = path.join(__dirname, '../../data/traces');
 if (!fs.existsSync(GENS_DIR)) fs.mkdirSync(GENS_DIR, { recursive: true });
 if (!fs.existsSync(TRACE_DIR)) fs.mkdirSync(TRACE_DIR, { recursive: true });
 
+// Paths are keyed on runId to match the Supabase layout — without this,
+// two concurrent runs (e.g. 'both' mode firing nano + gpt-2 over the same
+// titles) collide on disk because they produce identical slugs and
+// filenames, and the second writer silently overwrites the first.
 async function writeImage(runId, slug, filename, buffer, metadata) {
-  const dir = path.join(GENS_DIR, slug);
+  const dir = path.join(GENS_DIR, runId, slug);
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(path.join(dir, filename), buffer);
   if (metadata) fs.writeFileSync(path.join(dir, `${filename}.json`), JSON.stringify(metadata, null, 2));
-  return `${slug}/${filename}`;
+  return `${runId}/${slug}/${filename}`;
 }
 async function readImage(runId, slug, filename) {
-  const p = path.join(GENS_DIR, slug, filename);
+  const p = path.join(GENS_DIR, runId, slug, filename);
   if (!fs.existsSync(p)) return null;
   return fs.readFileSync(p);
 }
 async function listImages(runId, slug) {
-  const dir = path.join(GENS_DIR, slug);
+  const dir = path.join(GENS_DIR, runId, slug);
   if (!fs.existsSync(dir)) return [];
   return fs.readdirSync(dir).filter(f => f.endsWith('.png')).map(filename => ({ slug, filename }));
 }
