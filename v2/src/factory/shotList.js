@@ -62,6 +62,32 @@ Examples:
 
 When body_region is set AND a shot uses subject_type = "skin-close" (or a beauty composition like portrait-profile), set the shot's subject_topic to that region. This makes the render actually show the correct body part instead of a generic pretty face.
 
+## STEP 1c — Extract the visible manifestation (medical / health titles ONLY)
+
+If the title names a specific medical condition, symptom, rash, infection, or visible skin/body anomaly, you MUST write a brief visual description of what that condition LOOKS LIKE on the body. This is the single most load-bearing anchor for medical titles — without it, the model renders a generic pretty face instead of the actual condition.
+
+Format: one short clause (5–18 words). Concrete, visible, anatomically plausible. No medical jargon the camera can't see. No text on skin.
+
+Examples:
+- "How Long Does Pinkeye Last?" → MANIFESTATION: "bright red inflamed conjunctiva with visible tear duct swelling, slightly watery eye"
+- "How to Get Rid of Melasma" → MANIFESTATION: "patchy brown hyperpigmentation across cheekbones and upper lip, uneven tone"
+- "What Does Poison Ivy Look Like?" → MANIFESTATION: "red raised linear streaks of rash with small clear blisters along forearm"
+- "How to Treat Cellulitis" → MANIFESTATION: "warm red swollen patch of skin with ill-defined borders, glossy from swelling"
+- "How to Get Rid of Ringworm" → MANIFESTATION: "circular red ring-shaped rash with scaly raised border and clear center"
+- "How to Treat Rosacea" → MANIFESTATION: "flushed red cheeks with visible broken capillaries and small inflamed bumps"
+- "How to Get Rid of Canker Sores" → MANIFESTATION: "small round white ulcer with red inflamed halo on inner lip"
+- "How Do You Know If Your Tooth Is Infected?" → MANIFESTATION: "swollen reddened gum around one tooth, slight jaw puffiness"
+- "How to Treat Seasonal Allergies" → MANIFESTATION: "red watery eyes, slightly puffy eyelids, flushed nose"
+- "What Is Scabies?" → MANIFESTATION: "clusters of small red bumps and thin curvy burrow lines on wrist or between fingers"
+- "How to Reduce Wrinkles on your Face" → MANIFESTATION: "fine lines at corners of eyes and forehead, softly lit to show texture"
+- "Does Chocolate Cause Acne?" → MANIFESTATION: "scattered active pimples on chin and forehead, some inflamed, some healing"
+
+If the title is NOT a medical/health topic, leave manifestation empty and do NOT invent one.
+
+For every shot that depicts the condition — typically skin-close, macro-pores, texture-dewy, fragment-crop, or portrait-profile — set the shot's \`affliction_detail\` to this same manifestation string (same for every such shot in the title; do not paraphrase per shot). This splices directly into the render prompt and forces both models (nano + gpt-2) to depict the condition, not a generic pretty face.
+
+At least **1** shot per medical title MUST carry \`affliction_detail\`. For non-medical titles, omit the field entirely on every shot.
+
 ## STEP 2 — Apply HARD distribution rules (these are rules, not goals)
 
 Given N=${N} shots per title:
@@ -83,13 +109,14 @@ Given N=${N} shots per title:
 
 ## STEP 3 — Output the shots
 
-Each shot: { composition, subject_type, subject_topic, theme, model_spec (or null) }
+Each shot: { composition, subject_type, subject_topic, theme, model_spec (or null), affliction_detail (optional) }
 
 - composition: MUST be EXACTLY one of the composition names listed below. Never invent.
 - subject_type: MUST be EXACTLY one of these 11 values: powder, liquid, food, device, skincare-bottle, skincare-cream, skincare-tube, supplement-pill, person-beauty, person-lifestyle, skin-close. NEVER output "product" — that's a category label, not a subject_type. NEVER invent a new subject_type.
 - subject_topic: the specific keyword from the title ("creatine", "ozempic", etc.) OR "default"
 - theme: MUST be one of the theme names below. Vary across shots.
 - model_spec: for person shots, "ethnicity gender" string (e.g. "Black woman"). null for non-person.
+- affliction_detail: REQUIRED on at least 1 shot per medical/health title (see Step 1c). Copy the Step-1c manifestation string verbatim. OMIT entirely for non-medical titles.
 
 # COMPOSITIONS
 ${compList}
@@ -100,12 +127,13 @@ ${subjList}
 # THEMES
 ${themes}
 
-# OUTPUT (strict JSON — include subjects_identified and body_region for trace)
+# OUTPUT (strict JSON — include subjects_identified, body_region, and condition_manifestation for trace)
 {
   "<titleId>": {
     "subjects_identified": ["creatine powder", "capsule"],
     "body_region": "back",
-    "shots": [{"composition":"...","subject_type":"...","subject_topic":"...","theme":"...","model_spec":null}, ...]
+    "condition_manifestation": "scattered active pimples on back with some inflamed, some healing",
+    "shots": [{"composition":"...","subject_type":"...","subject_topic":"...","theme":"...","model_spec":null,"affliction_detail":"scattered active pimples on back with some inflamed, some healing"}, ...]
   }
 }
 
@@ -213,6 +241,14 @@ function bodyRegionSlotOverrides(topic) {
   return { area: topic, crop: topic, fragment: topic };
 }
 
+// Optional: the LLM's Step-1c "condition manifestation" clause. Fused into the
+// subject phrase so every composition picks it up without touching grammar.js.
+// Capped at 140 chars and stripped of prompt-breakers (quotes, braces, semis).
+function sanitizeAfflictionDetail(raw) {
+  if (!raw || typeof raw !== 'string') return '';
+  return raw.replace(/[{}"'`;]/g, '').replace(/\s+/g, ' ').trim().slice(0, 140);
+}
+
 function resolveShot(cartridge, shot, seed) {
   const composition = cartridge.compositions[shot.composition];
   if (!composition) throw new Error(`Unknown composition: ${shot.composition}`);
@@ -221,7 +257,18 @@ function resolveShot(cartridge, shot, seed) {
 
   const topic = shot.subject_topic || 'default';
   const bank = subjectDef.phrase_banks?.[topic] || subjectDef.phrase_banks?.default || ['subject'];
-  const subject = bank[(seed + (shot.phrase_idx || 0)) % bank.length];
+  const basePhrase = bank[(seed + (shot.phrase_idx || 0)) % bank.length];
+
+  // For medical/condition titles the LLM writes a Step-1c manifestation clause
+  // and attaches it here. Fuse it onto the subject phrase so the image actually
+  // depicts the condition (e.g. "red inflamed conjunctiva...") instead of a
+  // generic pretty face. Only applies to skin-close / person / macro shots —
+  // product subjects (powder, liquid, device) ignore it.
+  const affliction = sanitizeAfflictionDetail(shot.affliction_detail);
+  const isConditionFriendlySubject = ['skin-close', 'person-beauty', 'person-lifestyle'].includes(shot.subject_type);
+  const subject = (affliction && isConditionFriendlySubject)
+    ? `${basePhrase} showing ${affliction}`
+    : basePhrase;
 
   const theme = cartridge.themes[shot.theme];
   const themeSuffix = theme ? `${theme.background}, ${theme.color_grade}` : null;
@@ -239,7 +286,8 @@ function resolveShot(cartridge, shot, seed) {
     composition: shot.composition, subject_type: shot.subject_type, subject_topic: topic,
     subject_phrase: subject, theme: shot.theme,
     camera: built.camera, lens: built.lens, slots_used: built.slotsUsed,
-    model_spec: modelSpec
+    model_spec: modelSpec,
+    affliction_detail: affliction || undefined
   };
 }
 

@@ -15,6 +15,17 @@ const MAX_TITLES = 200;
 const MAX_N = 10;
 const MAX_TOTAL_IMAGES = 500;
 
+// Experimental models are default-deny per client. Only emails listed in
+// EXPERIMENTAL_MODEL_EMAILS (comma-sep) can request them. Same env var as
+// the session surface so one config controls both /v1 and /api/public.
+const EXPERIMENTAL_MODELS = new Set(['openai/gpt-image-2']);
+const EXPERIMENTAL_EMAILS = new Set(
+  (process.env.EXPERIMENTAL_MODEL_EMAILS || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
+);
+function hasExperimentalAccess(client) {
+  return EXPERIMENTAL_EMAILS.has((client?.email || '').toLowerCase());
+}
+
 function err(res, status, code, message, extra = {}) {
   return res.status(status).json({ error: { code, message, ...extra } });
 }
@@ -85,6 +96,12 @@ router.post('/generate', async (req, res) => {
       return err(res, 400, 'model_not_available',
         `model '${model}' is not available on this surface`,
         { available: Array.from(API_ALLOWED_MODELS) });
+    }
+    // Experimental gate: gpt-image-2 is in the surface allowlist but only
+    // callable by clients whose email is in EXPERIMENTAL_MODEL_EMAILS.
+    if (model && EXPERIMENTAL_MODELS.has(model) && !hasExperimentalAccess(req.client)) {
+      return err(res, 403, 'model_not_available',
+        `model '${model}' is not available on this account`);
     }
 
     // Capture run_id synchronously via onTraceCreated, then fire-and-forget.

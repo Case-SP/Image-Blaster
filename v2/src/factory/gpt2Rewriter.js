@@ -48,7 +48,8 @@ HARD RULES:
 - Never name a real brand, logo, or product name — keep subjects generic (a tub of cream, a serum bottle, a device) unless the original explicitly included one.
 - Never describe text, labels, or packaging copy on any object.
 - Do not introduce people if the original prompt had none. Do not remove people if the original had them.
-- Keep the composition family roughly intact (overhead → overhead, portrait → portrait, macro → macro) — but describe it as candid rather than art-directed.${brandBlock}
+- Keep the composition family roughly intact (overhead → overhead, portrait → portrait, macro → macro) — but describe it as candid rather than art-directed.
+- If the shot context includes \`affliction_detail\` (a description of a medical/skin condition to depict), the rewritten prompt MUST include an explicit, concrete visual description of that condition on the subject's body. This is the single most important anchor for medical content — do not soften it, do not replace it with generic "glowing skin", do not omit it. Weave it into the wardrobe/grooming or imperfection clause. If \`affliction_detail\` is absent, do NOT invent a condition.${brandBlock}
 
 Return ONLY the rewritten prompt as prose. No prefix, no suffix, no quotes.`;
 }
@@ -63,7 +64,8 @@ async function rewriteForGpt2({ prompt, brandVoice = '', model = 'anthropic/clau
     context.subject_topic && `subject_topic: ${context.subject_topic}`,
     context.composition && `composition: ${context.composition}`,
     context.body_region && context.body_region !== 'default' && `body_region: ${context.body_region}`,
-    context.theme && `theme: ${context.theme}`
+    context.theme && `theme: ${context.theme}`,
+    context.affliction_detail && `affliction_detail: ${context.affliction_detail}`
   ].filter(Boolean).join(' · ');
 
   const userPrompt =

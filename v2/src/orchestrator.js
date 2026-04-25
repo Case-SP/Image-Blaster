@@ -9,11 +9,21 @@ const { createTrace } = require('./trace/store');
 const createStorage = require('./storage');
 const storage = createStorage();
 
-async function runBatch({ cartridgeName = 'nolla', titles, N = 10, critic = true, model, aspectRatio, debug = true, clientId = null, onTraceCreated }) {
+async function runBatch({ cartridgeName = 'nolla', titles, N = 10, critic = true, model, models, aspectRatio, debug = true, clientId = null, onTraceCreated }) {
   const cartridge = loadCartridge(cartridgeName);
+  // Accept either `models: string[]` (new, for 'both' mode) or legacy `model: string`.
+  // Dedupe + preserve order. 'both' lets us render the same shot list across
+  // multiple models so we can A/B the rewriter (keyword-stack → nano vs
+  // prose-rewritten → gpt-2) without the shot list itself varying.
+  const modelList = Array.from(new Set(
+    (models && models.length ? models : [model]).filter(Boolean)
+  ));
+  if (!modelList.length) modelList.push(undefined); // fall back to render default
+  const needsRewrite = modelList.includes('openai/gpt-image-2');
+
   const trace = createTrace({
     cartridge: cartridgeName,
-    input: { titles, N, options: { critic, model, aspectRatio } },
+    input: { titles, N, options: { critic, model: modelList[0], models: modelList, aspectRatio } },
     clientId
   });
   if (typeof onTraceCreated === 'function') {
@@ -96,10 +106,11 @@ async function runBatch({ cartridgeName = 'nolla', titles, N = 10, critic = true
 
     // STAGE 3.5: model-specific rewrite. gpt-image-2 wants candid-photography
     // prose, not keyword stacks — rewrite each prompt through the 9-move
-    // template (engine) + cartridge.gpt2Voice (brand flavor). Runs in parallel
-    // with bounded concurrency; a failed rewrite falls back to the original
-    // prompt so the render still fires.
-    if (model === 'openai/gpt-image-2') {
+    // template (engine) + cartridge.gpt2Voice (brand flavor). The rewrite is
+    // stored on shot.__gpt2Prompt (NOT mutating shot.prompt) so a single shot
+    // list can feed both models in 'both' mode — nano gets shot.prompt,
+    // gpt-2 gets shot.__gpt2Prompt, and we can diff them against each other.
+    if (needsRewrite) {
       trace.startStage('gpt2Rewrite');
       const REWRITE_CONCURRENCY = Math.max(1, Math.min(10, parseInt(process.env.REWRITE_CONCURRENCY || '5', 10)));
       const rewriteTasks = [];
@@ -122,11 +133,11 @@ async function runBatch({ cartridgeName = 'nolla', titles, N = 10, critic = true
               subject_topic: shot.subject_topic,
               composition: shot.composition,
               body_region: shot.body_region,
-              theme: shot.theme
+              theme: shot.theme,
+              affliction_detail: shot.affliction_detail
             }
           });
-          shot.__originalPrompt = shot.prompt;
-          shot.prompt = rewritten;
+          shot.__gpt2Prompt = rewritten;
           rewriteResults.push({ tid, i, ok: true, chars: rewritten.length, elapsedMs: meta.elapsedMs });
         } catch (e) {
           rewriteResults.push({ tid, i, ok: false, error: e.message });
@@ -147,31 +158,44 @@ async function runBatch({ cartridgeName = 'nolla', titles, N = 10, critic = true
       });
     }
 
-    // STAGE 4: render (parallel with concurrency limit — tunable via env var)
+    // STAGE 4: render — one render per (shot × model). In 'both' mode each
+    // shot fans out twice; filenames are model-suffixed so they don't collide
+    // on disk. gpt-2 reads shot.__gpt2Prompt when present (falls back to the
+    // keyword-stack prompt on rewrite failure); everything else reads shot.prompt.
     trace.startStage('renders');
     const CONCURRENCY = Math.max(1, Math.min(20, parseInt(process.env.RENDER_CONCURRENCY || '5', 10)));
+    const modelSuffix = (m) => {
+      if (!m) return 'default';
+      if (m.includes('gpt-image-2')) return 'gpt2';
+      if (m.includes('nano-banana')) return 'nano';
+      return m.split('/').pop().replace(/[^a-z0-9]+/gi, '-');
+    };
     const tasks = [];
     for (const title of titles) {
       const shots = resolved[title.id] || [];
       for (let i = 0; i < shots.length; i++) {
-        tasks.push({ title, shot: shots[i], idx: i });
+        for (const m of modelList) {
+          tasks.push({ title, shot: shots[i], idx: i, model: m });
+        }
       }
     }
 
-    const runOne = async ({ title, shot, idx }) => {
-      const filename = `gen-${String(idx + 1).padStart(3, '0')}.png`;
+    const runOne = async ({ title, shot, idx, model: m }) => {
+      const suffix = modelList.length > 1 ? `-${modelSuffix(m)}` : '';
+      const filename = `gen-${String(idx + 1).padStart(3, '0')}${suffix}.png`;
       if (shot.__error) {
-        trace.recordRenderItem(title.id, { promptIdx: idx, filename, status: 'failed', error: 'resolve: ' + shot.__error, stage: 'resolve' });
+        trace.recordRenderItem(title.id, { promptIdx: idx, filename, status: 'failed', error: 'resolve: ' + shot.__error, stage: 'resolve', model: m });
         return;
       }
+      const prompt = (m === 'openai/gpt-image-2' && shot.__gpt2Prompt) ? shot.__gpt2Prompt : shot.prompt;
       try {
-        const img = await renderOne(shot.prompt, { model, aspectRatio, references: cartridge.references });
+        const img = await renderOne(prompt, { model: m, aspectRatio, references: cartridge.references });
         const buf = await downloadImage(img.url);
-        const metadata = { ...shot, model: img.model, generatedAt: new Date().toISOString(), runId: trace.id };
+        const metadata = { ...shot, prompt, model: img.model, generatedAt: new Date().toISOString(), runId: trace.id };
         await storage.writeImage(trace.id, title.slug, filename, buf, metadata);
         trace.recordRenderItem(title.id, { promptIdx: idx, filename, status: 'ok', elapsedMs: img.elapsedMs, model: img.model });
       } catch (e) {
-        trace.recordRenderItem(title.id, { promptIdx: idx, filename, status: 'failed', error: e.message });
+        trace.recordRenderItem(title.id, { promptIdx: idx, filename, status: 'failed', error: e.message, model: m });
       }
     };
 
