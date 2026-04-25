@@ -261,6 +261,46 @@ The leak surface grows monotonically with the number of surfaces and the number 
 
 ---
 
+## 16. gpt-image-2 wants prose, not keyword stacks — and the fix is a rewriter stage, not a prompt rewrite
+
+### What we observed
+Running the same keyword-stacked prompts through `fal-ai/nano-banana-pro` and `openai/gpt-image-2` produced visibly different failure modes. Nano renders as intended — handheld, warm, slightly messy. gpt-2 interprets the same string as an editorial instruction: over-lit, symmetric, posed, every subject centered, skin retouched, wardrobe too clean. The model isn't worse — it's reading a different language.
+
+Three prompts that *do* produce candid-looking output on gpt-2 (mirror selfie, home skincare, street-style walking) share a structural shape that the keyword-stacked shape does not have.
+
+### The 9 structural moves in every gpt-2-friendly prompt
+1. **Shot qualifier** — "A candid/realistic [setting] photo of a [subject] [doing action]…"
+2. **Body + framing** — what each hand/limb is doing, body angle, specific crop ("mid-thigh to head"), posture texture
+3. **Wardrobe + grooming** — named fabrics (fitted, ribbed, cotton) with small imperfections (wrinkled, damp, smudged, uneven)
+4. **Environment in layers** — 2–3 sentences of architectural depth, practical light sources, depth cues
+5. **Lighting in photographer vocabulary** — named source (warm indoor, late-afternoon window, overhead practical), shadow behavior, uneven vs even
+6. **Camera / device hint** — "iPhone front camera", "wide-angle around 24-28mm", "handheld, slightly unstable feel"
+7. **Imperfection clause** — 3–5 enumerated flaws (motion blur, soft focus, subtle grain, uneven exposure, wrinkled fabric, smudges, asymmetric framing, bg people OOF)
+8. **Mood line** — "The mood is [adj], [adj], and [adj]" with a qualifier ("social-media candid", "late-night", "everyday")
+9. **Anti-directive tail** — "Avoid [model-like posing / cinematic grading / perfect symmetry / studio polish]. Keep [naturalness]. Do not [introduce glossy retouching]."
+
+Every move matters. Drop #6 (device hint) and gpt-2 defaults to DSLR-studio. Drop #7 (imperfections) and it returns to symmetric polish. Drop #9 (anti-directive tail) and it over-styles. The model treats these as soft negative constraints, not decoration.
+
+### The architectural fix: a rewriter stage, not a better prompt template
+The shot-list prompts are keyword-stacked because **nano likes it that way** and we don't want to bifurcate prompt generation. Instead, the rewriter runs as **Stage 3.5** between resolve and render, gated on `model === 'openai/gpt-image-2'`. Each resolved prompt gets a Haiku call with the 9-move system prompt + 3 few-shot examples + the original prompt. Output replaces `shot.prompt`; the original is kept on `shot.__originalPrompt` for A/B.
+
+Why per-prompt rewrite instead of a model-specific shot-list? The shot list decides *what* the image is (composition, subject_type, topic, theme). The rewriter decides *how* gpt-2 should read it. Separating them means: one shot list produces both nano and gpt-2 outputs (the `both` mode), and adding a new model is a new rewriter, not a new prompt pipeline.
+
+### Engine vs. brand split — this is the generalizable move
+`v2/src/factory/gpt2Rewriter.js` holds the 9-move template + hard rules (preserve subject, no brand names, no legible text, keep composition family). Zero brand content. `v2/cartridge/<brand>/gpt2_rewriter.md` holds only voice — palette cues, model direction, preferred/avoided lighting vocabulary, subject treatment. The cartridge file is *optional*; the engine works without it.
+
+Swapping brands means replacing one markdown file. Adding a new cartridge inherits gpt-2 handling for free. This is the pattern to repeat for every downstream model that needs a voice layer: engine owns the shape, cartridge owns the flavor.
+
+### Failure handling matters when rewrites are the critical path
+Per-shot rewrite failure falls back to the original prompt so the render still fires. Bounded concurrency (`REWRITE_CONCURRENCY`, default 5) matches the shape of the existing render concurrency — if it's a fan-out stage, it needs a back-pressure knob from day one, not retrofitted after the first rate-limit page.
+
+### Still open
+- UI doesn't show the before/after in the trace viewer — the rewrite is silent, which makes tuning the 9-move template hard. Needs a Stage 3.5 block that lists original vs. rewritten per shot with char counts and pass/fail flag.
+- No end-to-end gpt-2 run has been shot through the rewriter yet — architecture is landed, empirical hit-rate vs. the pre-rewriter baseline is unmeasured.
+- The 3 few-shot examples are all people in home/street contexts. No product-only or overhead-composition examples in the few-shot set yet, so the rewriter is extrapolating when the shot list calls for those. Likely needs a 4th example.
+
+---
+
 ## Update log
 - 2026-04-16 — initial audit of prompt strategy, diversity crisis identified as architectural
 - 2026-04-18 — email+OTP auth via Supabase; client UI simplified to email→code→titles→download
@@ -270,3 +310,4 @@ The leak surface grows monotonically with the number of surfaces and the number 
 - 2026-04-22 — RLS enable script written (`sql/enable_rls.sql`) after Supabase linter flagged all public tables as missing row-level security. Service key still works; anon key now denied. Six-line, non-breaking, resolves 8 linter errors.
 - 2026-04-23 — Phase A of API-key variant shipped: `/v1/generate` + `/v1/runs*` behind `X-API-Key` header (sha256-hashed at rest). Sean issued first key, full end-to-end verified (auth + generate + image fetch + ZIP + 401 cases). Small fixes same day: `trust proxy` for https URLs behind Railway, shot-list `max_tokens` floor (1200) after N=1 runs hit truncation — root cause was per-shot budget with no floor, not malformed JSON. Retry-on-bad-JSON kept because it's still defensive.
 - 2026-04-23 — §15 added: caught three moat-leak paths on first `/v1` ship (prompt field in response, API keys reaching `/api/public/*`, errors echoing prompt fragments). Added `requireSession` middleware + `req.authMethod` so future surfaces partition explicitly. Standing rule: surface audit on every ingress/auth-touching deploy.
+- 2026-04-23 — §16 added: gpt-image-2 rewriter landed. Engine (`v2/src/factory/gpt2Rewriter.js`) owns the 9-move structural template + 3 few-shot examples from Case's empirical successes (mirror selfie, home skincare, street-style). Brand voice (`v2/cartridge/nolla/gpt2_rewriter.md`) is optional, swap-per-brand. Orchestrator Stage 3.5 gates on `model === 'openai/gpt-image-2'`, bounded concurrency, fallback-to-original on per-shot failure. Still untested end-to-end; trace viewer has no before/after surface.
