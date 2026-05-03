@@ -1,4 +1,4 @@
-# v2 — Brand Image Blaster
+# Recast (v2 engine)
 
 Parallel pipeline with live chain-inspection UI. Runs on port 3002.
 

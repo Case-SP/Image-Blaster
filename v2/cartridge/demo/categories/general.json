@@ -1,0 +1,18 @@
+{
+  "name": "General",
+  "slug": "general",
+  "description": "Default contact-sheet category for the demo cartridge.",
+  "visual_dna": {
+    "palette": "warm off-white #FAFAFA background, neutral panel content",
+    "lighting": "even, consistent across all panels",
+    "mood": "editorial, calm, layout-driven",
+    "skin_tones": "n/a unless explicitly in brief",
+    "backgrounds": ["#FAFAFA"]
+  },
+  "archetype_weights": {
+    "product": 0.6,
+    "lifestyle": 0.2,
+    "abstract": 0.2
+  },
+  "suffix": "uniform #FAFAFA background, even gutters, no text, no labels, no borders"
+}

@@ -1,0 +1,9 @@
+{
+  "primary": ["#FAFAFA", "#E5E5E5", "#1a1a1a"],
+  "neutrals": ["#FAFAFA", "#F0F0F0", "#C8C8C8", "#7A7A7A", "#2B2B2B"],
+  "accent": ["#E25822", "#F5C518", "#3A7BD5"],
+  "atmospheric": ["#3D4754", "#5C6B7B", "#8896A4"],
+  "agricultural": ["#2F5233", "#4A7C46", "#7CA77F"],
+  "logo": ["#DA5E15", "#FBBF27", "#2F5EDC", "#6BD0ED"],
+  "notes": "Cool grays and brushed-metal neutrals dominate. Small utilitarian accents (caution orange #E25822, indicator yellow #F5C518, technical blue #3A7BD5) used sparingly. Atmospheric grays for skies. Agricultural greens for aerial fields. The Recast Systems logomark uses its own four-color palette — burnt orange #DA5E15, marigold #FBBF27, cobalt blue #2F5EDC, sky cyan #6BD0ED — and these only appear together when the logomark itself is on the page. No saturated primaries flooding the frame."
+}

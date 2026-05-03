@@ -237,7 +237,7 @@
       const prompt = resolved[r.promptIdx];
       const vkey = `${title.id}/${r.filename}`;
       const v = trace.verdicts?.[vkey]?.verdict;
-      const imgUrl = `${API}/images/${encodeURIComponent(title.slug)}/${encodeURIComponent(r.filename)}`;
+      const imgUrl = `${API}/images/${encodeURIComponent(trace.id)}/${encodeURIComponent(title.slug)}/${encodeURIComponent(r.filename)}`;
       if (r.status !== 'ok') return `<div class="tile failed"><div>${r.filename}</div><div class="error">${escapeHtml(r.error || '')}</div></div>`;
       return `
         <div class="tile verdict-${v || 'none'}">

@@ -1,0 +1,10 @@
+{
+  "subjects": {
+    "object": {
+      "triggers": [],
+      "phrase_banks": {
+        "default": ["object"]
+      }
+    }
+  }
+}

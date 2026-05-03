@@ -1,0 +1,19 @@
+{
+  "compositions": {
+    "contact-sheet-2x3": {
+      "category": "lifestyle",
+      "skeleton": "A photograph of an A4 portrait-format printed page (proportions ~1:1.414, taller than wide) placed flat against a uniform warm off-white #FAFAFA seamless background. The page itself is cream-toned printed paper with faint aged paper-fiber grain and a soft natural drop shadow beneath the page edge anchoring it to the surface. Centered on the page sits a 4:5-aspect interior grid of six equal-sized small photographs arranged in 2 columns by 3 rows, with even thin white gutters between panels and equal margin around the grid on the page. Top-left panel: {p1}. Top-right panel: {p2}. Middle-left panel: {p3}. Middle-right panel: {p4}. Bottom-left panel: {p5}. Bottom-right panel: {p6}. Lighting and photographic treatment consistent across all six panels. The page surrounds the 4:5 grid with empty paper margin — generous at top and bottom, narrower at the sides. No legible text, no readable captions, no readable page numbers in any panel or on the page. {subject}",
+      "slots": {
+        "p1": ["TODO panel 1 — replace with subject phrase"],
+        "p2": ["TODO panel 2 — replace with subject phrase"],
+        "p3": ["TODO panel 3 — replace with subject phrase"],
+        "p4": ["TODO panel 4 — replace with subject phrase"],
+        "p5": ["TODO panel 5 — replace with subject phrase"],
+        "p6": ["TODO panel 6 — replace with subject phrase"]
+      },
+      "cameras": ["WS"],
+      "lenses": ["50mm"],
+      "mood": "A4 catalog page with 4:5 interior grid, photographed flat"
+    }
+  }
+}

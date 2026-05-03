@@ -1,0 +1,8 @@
+{
+  "palette": {
+    "name": "Honest neutral",
+    "primaries": ["#FAFAFA", "#E5E5EA", "#1A1A1A"],
+    "accents": ["#2F5EDC", "#B45A2A"],
+    "notes": "Whites and warm off-whites for product backdrops. Cobalt and rust appear only as the ink color in sketches. The actual object's own color is preserved — never tinted by theme."
+  }
+}

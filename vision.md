@@ -151,8 +151,50 @@ Before adding any feature motivated by a Nolla observation, ask:
 2. **Is this a photographic principle or a brand preference?** → photographic principles live in the engine; preferences live in the cartridge.
 3. **Could this feature be trained from the references?** → prefer inference from `references/*` over hand-configured rules.
 
+## Future improvement: input shape is currently `title`-shaped
+
+### Today's implicit assumption
+
+The shot-list LLM and the API surface both take `titles: string[]` and treat each entry as "the title of an article we're generating one hero asset for." The whole reasoning chain (Step 1 physical subjects, Step 1b body region, Step 1c condition manifestation) is title-shaped. That works for Nolla because Nolla's input is literally blog post titles.
+
+It breaks down for other input shapes. A user pasting a brand brief paragraph, a sentence-form prompt ("a quiet morning routine in a sunlit kitchen"), a structured intake (`{mood, product, audience}`), or a flat product list gets one of two bad outcomes today: the LLM extracts the first noun and overfits, or the input fights the cartridge's prompt graph.
+
+### The five plausible input shapes
+
+1. **Title** — short noun-phrase or question. Today's mode. ✓
+2. **Sentence prompt** — direct scene description. Should mostly bypass the shot-list and use the sentence as subject phrase across N renders varying composition/lighting only.
+3. **Brief / paragraph** — voice + worldview, not a directive for one image. Should decompose into multiple shot intents.
+4. **Structured intake** — `{mood, product, audience, ...}`. Slot directly into cartridge dimensions; no inference needed.
+5. **List** — flat array of items, each → one panel/asset. Layout-driven cartridges (e.g. contact sheets) want this.
+
+### Three architectural options considered
+
+- **A. Input discriminator on the request** — `input_type: 'title' | 'sentence' | 'brief' | 'structured' | 'list'`. Orchestrator branches at Stage 1.  Pros: surgical. Cons: 5 divergent paths that drift; per-cartridge, only some modes make sense.
+- **B. Universal pre-stage intake** — cheap Haiku call normalizes any input shape into a list of shot intents; the rest of the pipeline is unchanged.  Pros: one downstream pipeline. Cons: extra LLM call ($, latency); redundant for title inputs.
+- **C. Cartridge declares its input modes** — `profile.input_mode: 'title' | 'intake' | …`. Each mode owns its own pre-stage. Nolla stays on `title`; new cartridges can ship `intake` mode without touching Nolla's prompt graph.  Pros: per-brand intake logic, no cross-cartridge coupling. Cons: more files per cartridge; mode logic gets duplicated if shared.
+
+### Decision (2026-04-25)
+
+**Going with C for the local demo cartridge.** The demo is a contact-sheet-driven cartridge that takes free-text briefs/sentences/paragraphs and produces a 2x3 panel grid. Its needs are different enough from Nolla's that mixing the two reasoning chains would only add complexity. Smoke-test the cartridge-owned-intake pattern first; if it feels right, generalize.
+
+Nolla stays on `title` mode. Sean's `/v1/generate` keeps working unchanged.
+
+### Related cleanup (deferred until Sean is done — ETA 2026-04-26)
+
+**Rename `titles` → `inputs` at the API and trace-schema level.** Today's `titles` field is doing two jobs: the asset name and the LLM directive. They should split. Naive rename would break Sean's API integration (he POSTs `{titles: [...]}` to `/v1/generate`) and would make every historical `trace.input.titles` in Supabase unreadable.
+
+Safe sequence when we pick this up:
+1. Wire-level shim: `const inputs = req.body.inputs || req.body.titles` on both `/v1/generate` and `/api/public/runs`. Sean unaffected.
+2. Keep `trace.input.titles` as the canonical persisted key forever (don't migrate the schema; it's user-pasted free text now anyway).
+3. UI / scripts can switch to `inputs` at their own pace.
+
+Flagged for cleanup window after Sean's integration is signed off.
+
 ## Update log
 - 2026-04-16 — initial vision written alongside prompt-strategy audit
 - 2026-04-18 — added team-access / multi-email as future improvement; v0 ships with one-email-per-client
 - 2026-04-19 — reframed: Nolla is the test instance, the product is the brand-agnostic system. Added cartridge-vs-engine design principle and matrix of things that MUST stay per-cartridge.
 - 2026-04-22 — added the API-key-exchange variant as a second product surface (`docs/api-variant.md`). Elevated auth modes to first-class config. Logged link-safe token handling as known future work.
+- 2026-04-25 — added the input-shape exploration (5 input types, 3 architectural options); chose option C for the local demo cartridge. Flagged the `titles → inputs` rename as a deferred cleanup (post-Sean signoff).
+- 2026-04-26 (evening) — project renamed **Recast** (in prompts + user-facing UI; directory / repo / Supabase untouched). Architectural commitment: cartridges declare two top-line layers — **style** (how the image is made; grows into lighting/framing/palette/camera/post/surface) and **subject** (what's depicted; grows into slot data on demand). Refs attach per-style. Intake's job becomes a `(style, subject)` matrix pick across 6 panels; orchestrator composes `style.prose + subject.phrase` so the LLM never invents prose per panel. Generalizes both Nolla (one style, many subjects) and NIMBUS (many styles, smaller subject pool) under the same engine. First pass: `v2/cartridge/demo/styles.json` + `v2/cartridge/demo/subjects.recast.json` drafted; orchestrator wiring deferred until schema is reviewed.
+- 2026-04-26 — sketched the two-tier surface split. Internal **brand studio** (admin-only, never ships) for crafting the cartridge: edit profile pillars (signature/mandatory/forbidden), axes, touchstones, manage references; backed by the existing on-disk cartridge. External **brand consumer** surface (UI + `/v1/generate` API) is the stripped-down view — text in, contact sheets out, brand baked in. Same orchestrator, two front doors. First studio cut is intentionally minimal: a `/admin/brand/:cartridge` route reading/writing `profile.json` + `references/` directly, no schema, no auth, no ship. Driven by need to iterate brand DNA faster than re-prompting an LLM round-trip.

@@ -310,4 +310,210 @@ Per-shot rewrite failure falls back to the original prompt so the render still f
 - 2026-04-22 — RLS enable script written (`sql/enable_rls.sql`) after Supabase linter flagged all public tables as missing row-level security. Service key still works; anon key now denied. Six-line, non-breaking, resolves 8 linter errors.
 - 2026-04-23 — Phase A of API-key variant shipped: `/v1/generate` + `/v1/runs*` behind `X-API-Key` header (sha256-hashed at rest). Sean issued first key, full end-to-end verified (auth + generate + image fetch + ZIP + 401 cases). Small fixes same day: `trust proxy` for https URLs behind Railway, shot-list `max_tokens` floor (1200) after N=1 runs hit truncation — root cause was per-shot budget with no floor, not malformed JSON. Retry-on-bad-JSON kept because it's still defensive.
 - 2026-04-23 — §15 added: caught three moat-leak paths on first `/v1` ship (prompt field in response, API keys reaching `/api/public/*`, errors echoing prompt fragments). Added `requireSession` middleware + `req.authMethod` so future surfaces partition explicitly. Standing rule: surface audit on every ingress/auth-touching deploy.
+- 2026-04-26 (very late evening III) — **Three new style refs (cinematic product, factory BTS, designer sketch) + macro subject families (vegetation, textile) + figures rule revised + glass weather-UI dashboard style + targeted single-spec run.** Bundle (V) through (Z).
+
+  **(V) Figures rule revised** in `profile.json` `forbidden` and `intake.md`. Was: "No human figures of any kind." Now: figures-in-landscape *tropes* still forbidden (hooded silhouettes in fog, lone walker on apron, backlit operator gazing at sky, athletes-mid-action, Magnum-style anonymous-person-in-place), but figures ARE allowed when actively working on/with a large piece of equipment in documentary BTS context (technician on a ladder leaning into industrial vessel, operator at control panel, hands at calibration jig). The equipment is the subject; the figure is incidental, mid-action, never close-up faces, never posed. **Driving signal:** user dropped a Bette Suno BTS factory ref and explicitly named "people working on large machines" as a desired subject family. **Revert path:** put the original "No human figures of any kind" string back in profile.json forbidden + restore the matching intake.md paragraph.
+
+  **(W) Three new refs ingested (refs 29–31) + three new styles in `styles.json`:**
+  - `ref-29-cinematic-product-in-grass-night.jpg` (Tommaso Sartori / FLOS) → style `cinematic_product_in_nature` — small Recast hardware emerging from dark organic texture, raking key, deep shadows, 70-85% of frame is natural texture.
+  - `ref-30-factory-bts-worker-large-machine.jpg` (Bette Suno BTS) → style `documentary_factory_floor` — available-light industrial bay, technician mid-action on ladder/platform, hexagonal overhead luminaires, polished concrete with hazard stripes. Equipment dominates; figure incidental.
+  - `ref-31-designer-working-sketch-blue-pen.jpg` (Barber Osgerby) → style `designer_working_sketch` — loose pen-on-paper sketch (cobalt blue most common), faceted geometric forms, sketchbook paper grain, photographed flat with margin around the sketch. Reads as page from a designer's notebook.
+
+  **(X) Two new ref-less styles** added to surface subject families that don't need a specific anchor ref: `macro_vegetation` (botanical-study macro of wheat heads / leaf veins / seedlings / moss / clover / grass blades / crop canopy / root systems) and `macro_textile` (industrial-fabric macro of gore-tex / ripstop / technical knit / denim twill / mylar / weatherproof shell / fleece / polypropylene). Both styles have empty `refs` arrays — the rules carry without anchor images.
+
+  **(Y) `subjects.recast.json` grew 50 → ~75 subjects** with four new sections: `macro_vegetation` (9 subjects), `macro_textile` (8), `industrial_workers` (6 — figures working on large equipment, the only context they're allowed), `design_sketches` (3). Plus the `recast_logomark` subject in the brand-marks section (added in earlier bundle but worth re-noting since the targeted run uses it).
+
+  **(Z) `glass_weather_ui_dashboard` style added** + targeted single-spec run fired. User shared a weather-UI dashboard ref (tablet screen on green-foliage background, multiple cards, 7-day forecast, dark-mode glass) but didn't share a file path so the style has empty `refs` — the prose carries the law. Then fired run `20260426-195212-66n0` with a single very-specific input title locking every panel to the same composition: dark-mode glass weather dashboard on deep-green foliage, 7-day rain forecast prominent, Recast logomark visible in one corner, with controlled variation in foliage / accent color / camera angle / secondary cards across the 6 panels. N=2 × both models = 4 contact sheets = 24 candidate panels. Note: the engine still wraps everything in the A4-page-with-4:5-grid container, so the output is *24 candidates within 4 contact sheets*, not 24 standalone images — the user can crop the best single panel from the result.
+
+  **Things to watch:** (1) gpt-image-2 / nano are weak at rendering legible text on screens — expect the dashboard's numerals and labels to be partially gibberish; the *layout* should land even if the text doesn't; (2) the Recast logomark may render as a generic dot pattern rather than the exact four-color arrangement — that's a known ref-conditioning weakness; (3) if the LLM ignores "every panel is the SAME composition" and produces 6 different scenes, we'll need to either bypass the contact-sheet wrapper for single-image specs or add a `single-spec` composition variant.
+
+- 2026-04-26 (very late evening II) — **Recast Systems logomark added as a sparingly-used brand asset.** User dropped the official SVG logomark — circular orb of overlapping filled dots in four colors (burnt orange #DA5E15, marigold #FBBF27, cobalt blue #2F5EDC, sky cyan #6BD0ED). User direction: appear in *some* outputs, not all.
+
+  **(P) SVG → PNG ingest path established.** Cartridge ref loader only accepts jpg/jpeg/png/webp (not svg). Used `qlmanage -t -s 1200 -o <dir>` (macOS Quick Look) to render the SVG to PNG at 1200px before ingesting via `scripts/refs.js add`. `rsvg-convert` and `inkscape` not installed; qlmanage works without dependencies. Saved as `ref-28-recast-logomark-color-light.png` (149KB). Same recipe will work for any future SVG brand assets.
+
+  **(Q) `palette.json` extended with the four logo colors** under a new `logo` key, plus a sentence in `notes` constraining when those colors appear together (only when the logomark itself is on the page). Keeps the existing accent palette intact — the logo's four-color riot was leaking into other panels otherwise.
+
+  **(R) New STYLE: `recast_logomark_plate`** in `styles.json`. Photograph of a printed brand-mark plate: logomark centered on a saturated solid-color ground (deep slate / chalk green / ochre / warm white), 25–30% page width, vast even negative space, faint paper grain. Anchored to ref-28. The four logo colors are constant; only the background field varies.
+
+  **(S) New SUBJECT: `recast_logomark`** in `subjects.recast.json`, sitting alongside `recast_systems_wordmark` in the brand-marks section.
+
+  **(T) `profile.json` gains a `brand_assets` block** with a structured logomark record (ref filename + description + usage rules). Future stages can find the asset programmatically without parsing prose. Sits adjacent to `forbidden` inside `brand_dna`.
+
+  **(U) `intake.md` BRAND ASSETS section** added near the top (before BRAND CONTEXT). Hard-codes the usage budget the user described: "roughly one panel out of every two contact sheets — about half the runs get it, half don't"; max 1 logomark panel per sheet; max 35% of panel; only two valid contexts (brand-mark plate OR small printed application stamped on an object). Explicit "never invent additional Recast logos or wordmarks" guard so the LLM doesn't hallucinate variations.
+
+  **Revert paths (if logomark surfaces too aggressively or wrong):**
+  - To suppress entirely: delete the BRAND ASSETS section from `intake.md`.
+  - To dial down frequency: change "one panel out of every two contact sheets" → "one panel out of every four" in `intake.md`.
+  - To remove the structured asset record: drop the `brand_assets` block from `profile.json`.
+  - The new style + subject in `styles.json` / `subjects.recast.json` are still proposal-only (engine doesn't read them) — safe to leave or delete.
+
+  **What to verify on next runs:** (1) ~50% of contact sheets have a single logomark panel, ~50% have none; (2) when present, the four colors stay correct (not invented); (3) renderer doesn't put the logomark larger than ~35% of the panel; (4) no rogue extra "Recast" wordmarks invented in adjacent panels.
+
+- 2026-04-26 (very late evening) — **structural change: A4 portrait page + 4:5 interior grid is the new default output container; B&W vintage catalog added as a style.** User confirmed this is structural for the page format AND a style (not a positioning shift) for the B&W catalog look. The brand subjects and territories don't change — but the rendered image is now a *photograph of an A4 page* with the 6-panel 4:5 grid sitting inside the page margins, instead of edge-to-edge contact sheet.
+
+  **(L) Composition rewrite — `v2/cartridge/demo/compositions.json` `contact-sheet-2x3.skeleton`.** Was: "A clean editorial 2x3 contact sheet on uniform #FAFAFA". Now: "A photograph of an A4 portrait-format printed page (~1:1.414, taller than wide) placed flat against #FAFAFA, cream-toned printed paper with faint aged paper-fiber grain and natural drop shadow beneath the page edge. Centered on the page sits a 4:5-aspect interior grid of six panels (2×3) with even thin white gutters and equal margin around the grid on the page. Generous top/bottom paper margin, narrower side margin. No legible text/captions/page numbers." Mood updated: "A4 catalog page with 4:5 interior grid, photographed flat". **Revert path:** restore the prior skeleton string (just one line in compositions.json).
+
+  **(M) fal aspect-ratio default `16:9` → `3:4`.** `v2/src/render/fal.js`. 3:4 is the closest fal-supported aspect to A4 portrait (3:4 = 0.75; A4 = 0.707) — closer than any other standard literal fal accepts reliably. gpt-image-2 mapping (GPT2_SIZE → `portrait_4_3` = 1024×1408 ≈ 0.727) is even closer to A4 than 3:4 itself. Added `'1:1.414'` and `'210:297'` aliases in GPT2_SIZE so future code passing literal A4 strings still works. **Revert path:** flip default back to `'16:9'`.
+
+  **(N) `vintage_catalog_page_bw` added as a STYLE (not a default treatment).** `v2/cartridge/demo/styles.json`. Soft duotone B&W studio photography in the 1960s/70s Scandinavian product catalog manner: single object floated in soft-light empty space, slight grain, faint baseline shadow, generous negative space, no color. Refs: `ref-27-vintage-catalog-page-bw-vase-grid.jpg` (the user-provided catalog page). The B&W is one of many possible panel treatments — the LLM chooses when to apply it. Also surfaced in `intake.md` FEATURED STYLE GRAMMARS print/paper/object section as the new top entry. **Revert path:** delete the `vintage_catalog_page_bw` entry from styles.json + remove the bullet from intake.md FEATURED.
+
+  **(O) `intake.md` preamble + `suffix.md` positives/negatives updated to match the A4 page container.** Preamble now opens with "panel descriptions for an A4 portrait catalog page with a 4:5-aspect interior grid of six panels". Suffix positives lean into the A4 page + paper margin language; negatives gain explicit "no 3x3 grid, no 9-panel grid" — addresses the gpt-2 9-grid misinterpretation user mentioned earlier.
+
+  **What stays the same:** profile.json brand DNA, territories, subjects, refs 01–26 — none of these are touched. The brand IS Recast Systems cloud-seeding company; the BRAND PAGE FORMAT is now A4 catalog. Two separate concerns, finally separable in the schema.
+
+  **What to verify on the next run:** (1) every render is a portrait-shaped image (not landscape) with a single A4 page floating on #FAFAFA, (2) the 6-panel grid sits centered with generous top/bottom margin, (3) at least one of the six panels per sheet leans into the new B&W vintage catalog grammar, (4) no 9-panel/3×3 misfires from gpt-2.
+
+- 2026-04-26 (late evening) — **brand-rename + 7 new style references + schema expansion (Recast Systems).** User dropped a second batch of references that broaden the brand from "cloud-seeding hardware" toward atmospheric / planetary / measurement / editorial-poster territory. Bundle (H), (I), (J), (K) below.
+
+  **(H) Cartridge brand rename: NIMBUS → "Recast Systems".** This is the brand inside the demo cartridge, NOT the project name (project rename earlier handled the engine side). Files touched: `v2/cartridge/demo/profile.json` (`brand_name`, `system_role`), `v2/cartridge/demo/intake.md` (header + territory intro), `v2/cartridge/demo/BRIEF.md`. Crucially the lowercase meteorological "nimbus" in `subjects.recast.json` (cloud-form taxonomy) was preserved — that's the cloud type, not the brand. **Revert path:** `replace_all` "Recast Systems" → "NIMBUS" in those 3 files (subjects.recast.json untouched).
+
+  **(I) Cartridge ref loader cap bumped 24 → 64.** `v2/src/factory/cartridge.js`. With this batch we hit 26 refs total and 25/26 would have been silently dropped. Bumped headroom to 64; first `REF_BUDGET` (default 8) still wins at fal-render time.
+
+  **(J) Seven new references added to demo cartridge (refs 20–26).** Source paths in `~/Pictures/Refs.library/` were renamed to style-focused filenames during ingestion:
+  - `ref-20-mars-travel-poster-flat-illustration.jpg` — Mars travel poster (HEIC-converted via sips, downscaled to 1600px → 282KB)
+  - `ref-21-burgess-johnson-poster.jpg` — Samuel Burgess-Johnson modernist editorial poster
+  - `ref-22-riso-cloud-grid-red-square-album.jpg` — Heavy Cloud album art (riso clouds + grid + red accent square)
+  - `ref-23-cumulus-with-crosshatch-grid-overlay.jpg` — photographic cumulus + plus-sign measurement grid overlay (Tabor Cote)
+  - `ref-24-satellite-river-delta-ochre-white.jpg` — satellite river delta drainage tracery, ochre/white
+  - `ref-25-urdaneta-aerial-landscape.jpg` — large-scale aerial-landscape photography
+  - `ref-26-cosmos-deep-space-frame.png` — frame from a Cosmos animation (used pre-rendered thumbnail since source was .mp4)
+  Routing notes: HEIC → JPG via `sips -s format jpeg`; oversize JPGs → `sips -Z 1600` to keep base64 inlining manageable.
+
+  **(K) Schema expansion in proposal files (still not wired into engine).** `styles.json` grew 11 → 18 styles: added `editorial_travel_poster_two_tone` (Mars-style), `brand_mark_solid_color_field` (Patagonia-style, no ref attached — user showed it visually but didn't share a file), `riso_cloud_grid_with_accent_square`, `photographic_cloud_with_measurement_grid`, `satellite_earth_surface_aerial`, `cosmic_deep_field`, `modernist_editorial_poster`. `subjects.recast.json` grew ~30 → 50 subjects across four new sections (planetary surfaces & space objects, satellite earth-surface features, cosmic / deep-space, overlays / brand marks / page-as-object) — including `planet_mars_surface`, `planet_earth_orbit`, `river_delta_dendritic`, `salt_flat_dendrites`, `recast_systems_wordmark`, `measurement_grid_atop_sky`, `single_red_grid_cell`, `page_as_object`. **Reminder: proposal files only. Engine still uses the legacy intake.md → resolved → render path with the 5-axis territory model.**
+
+  **What's now clearly different about this brand from the original NIMBUS one:** moving from "cloud-seeding company" toward "atmospheric / planetary / measurement systems with a poster-and-publication design language." `profile.json` system_role still reads cloud-seeding — left intact since user said they'd drive prompt refinement themselves.
+
+- 2026-04-26 (evening late) — **three diagnosis-driven changes after watching live UI run `20260426-141442-kmnv`.** User read: "we've added a lot of new refs but it can't seem to break out of eagles and dudes standing." Verified by counting axes across 6 shots: `anonymous_figures` was used in 4/6 shots and dominated each one (silhouettes, hooded technicians, distant operators). The two shots that *avoided* the figures axis were the most diverse panels of the run. Three changes applied as a tracked bundle so any one is independently revertable.
+
+  **(E) Removed the `anonymous_figures` axis from the demo cartridge.** Five territories now (`studio_hardware`, `atmospheric_sky`, `aerial_top_down`, `modular_typology`, `data_display`). Files touched:
+  - `v2/cartridge/demo/intake.md` — territory list trimmed 6→5; `axes_used` valid-name list updated; "all six" → "all five" in run-context language; SHAPE EXAMPLE swapped the figures panel for a topographic-poster panel. Added a hard "No human figures" paragraph at the bottom of the territories section that explicitly translates "people doing X" → "the equipment and traces of X" (the empty workspace, the worn glove, the trail of tracks). Brand reads through its objects, not its inhabitants.
+  - `v2/cartridge/demo/profile.json` — removed `anonymous_figures` from `visual_axes` and `axis_aliases`. Tightened `visual_signature` (dropped the "anonymous utility-wear figures" clause). Tightened `mandatory_elements` (dropped the "Anonymous, distant, full-body figures when humans appear" clause). Widened `forbidden` with explicit "No human figures of any kind — no people, no silhouettes, no technicians, no operators, no athletes, no distant figures, no implied-presence figures."
+  **Revert path:** restore the `anonymous_figures` block at lines ~16/53 of profile.json, restore territory #5 + axes_used "anonymous_figures" + the Magnum-figure example panel in intake.md, and put the prior `visual_signature` / `mandatory_elements` / `forbidden` strings back. (Diff visible in this commit window.)
+
+  **(F) Default `quality` for gpt-image-2 dropped `'high'` → `'medium'`.** `v2/src/render/fal.js:10`. Test runs were averaging ~100s/render at high quality; medium is roughly 2× faster (~50–60s expected) and visually equivalent for contact-sheet usage where each panel is small. UI/API can still override per-run via `quality` in the request body. **Revert path:** flip the default literal back to `'high'` at the top of `renderOne()`.
+
+  **(G) Intake model swapped Haiku → Sonnet 4.5.** `v2/src/factory/intake.js:36` default model `anthropic/claude-3-haiku` → `anthropic/claude-sonnet-4.5`. Diagnosis: prompts coming back from intake were following the rules but cherry-picking the safest interpretation of each axis ("single sensor on cool gradient" / "isometric grid of identical white modules") and recycling the same shapes across shots — a Haiku-class capacity ceiling, not a system-prompt problem. Cost goes up ~3× per intake call (still pennies — intake is one call per shot, ~600 max_tokens). Smoke-tested the slug via OpenRouter (`status 200`, resolves to `claude-4.5-sonnet-20250929` via Bedrock). Other stages (`shotList`, `critic`, `gpt2Rewriter`) stay on Haiku — they're not the creative bottleneck. **Revert path:** restore `'anthropic/claude-3-haiku'` as the default in `runIntake()` signature.
+
+  **What to verify on the next run:**
+  - No human figures, silhouettes, or implied-presence panels in any of the 18 panels (3 titles × N=2 × 6 panels = 36 panels actually, scaled down per N).
+  - gpt-2 average elapsed drops from ~100s to ~50–60s.
+  - Panel descriptions are notably more varied — Sonnet should reach further into adjacencies + featured grammars and stop recycling shapes.
+  - If figures still appear despite the explicit forbidden clause, that's a Sonnet failure mode (not Haiku-class), and the forbidden string needs rewording.
+
+- 2026-04-26 (evening) — **architecture: project rebranded to "Recast" + style/subject schema drafted (files-only, not yet wired).** Driving insight from the user: I'd been treating brand-DNA gaps as touchstone-list and ref-budget tuning problems (bandaids), but the real issue is that the cartridge has no formal *style* layer. Nolla's realism came from a single named style — a long, specific subject-prompt paragraph with sanitizer + composition grammar — that took two days to author. The demo cartridge had no equivalent: refs were doing all the visual law and the intake LLM was inventing both medium AND content per panel, so it kept cherry-picking the easiest combinations and skipping mylar/modernist/celestial entirely. Two top-line layers per cartridge from here on: **STYLE** (how the image is made — medium, treatment, post, the visual law of "what kind of object is this picture") and **SUBJECT** (what's depicted). Refs attach per-style, not per-cartridge. Style starts as `{ id, name, prose }` and grows into sub-fields (lighting, framing, palette, camera, post, surface) as needed. Subject starts as `{ id, phrase }` and grows into slot data when a cartridge demands it. Intake's job becomes a matrix pick: choose 6 (style, subject) pairs that span the matrix and honor mandatory/forbidden — orchestrator composes `${style.prose} ${subject.phrase}`, never asks the LLM to invent both.
+
+  **Rename scope (this session — prompts and UI only).** User explicitly scoped: don't move the directory, don't touch the GitHub repo, don't migrate Supabase, don't rename the `nolla` cartridge (that's a brand inside Recast). Changed: OpenRouter `X-Title` headers in `intake.js`, `critic.js`, `gpt2Rewriter.js`, `shotList.js` ("Brand Image Blaster v2 …" → "Recast …"); UI titles in `v2/ui/index.html`, `v2/ui/run.html`, `v2/ui/brand.html`, `v2/ui-client/index.html`; server boot log in `v2/src/server.js`; access-grant email body in `scripts/issue-access.js`; `v2/README.md` heading. **Revert path:** grep for "Recast" across `v2/` + `scripts/`, restore "Brand Image Blaster v2" / "Image Blaster" / "Image Generator" in each spot.
+
+  **Schema draft (not yet wired).** Two new files in `v2/cartridge/demo/`:
+  - `styles.json` — 11 named styles for NIMBUS, each with `prose` paragraph + per-style refs + optional sub-fields. Clusters the existing 19 refs into named styles instead of leaving them as a flat pile: `studio_hardware_cool_gradient`, `atmospheric_sky_photographic`, `aerial_top_down_landscape`, `modular_typology_grid`, `anonymous_figures_distance`, `ios_weather_widget_glassy`, `topographic_poster_photographed`, `risograph_weather_diagram`, `industrial_mylar_packaging`, `modernist_logotype_typography`, `celestial_icon_typology_black`. The last three are the grammars that kept landing at 0× in test runs — now they have real prose and dedicated refs.
+  - `subjects.recast.json` — ~30 subjects in plain `{ id, phrase }` shape, grouped roughly by territory but the territories are gone from the schema (style replaces them). File is named `*.recast.json` to avoid clobbering the engine's currently-loaded `subjects.json` (panel-mix shape).
+
+  **What still has to happen to actually use this:**
+  1. Cartridge loader (`v2/src/factory/cartridge.js`) reads `styles.json` + `subjects.recast.json` (and eventually subjects.json after the cutover).
+  2. New intake prompt that hands the LLM the styles index + subjects index + the user input, and asks for 6 `(style_id, subject_id)` pairs as JSON — no more inventing prose per panel.
+  3. New compose stage that joins `style.prose + subject.phrase` per panel; current resolver is bypassed for matrix-pick mode.
+  4. Render stage attaches `style.refs` (from the picked style) instead of cartridge-level refs — finally per-style ref grounding.
+  5. `profile.input_mode` gets a third value (`matrix` or similar) that gates the new pipeline. `intake` and `title` modes keep working unchanged.
+
+  Schema is files-only and reversible: delete the two new files to back out, no code path touches them.
+
+- 2026-04-26 (afternoon) — investigated run `20260426-100923-18j2` after user reported "new images haven't made it into the brand" + "prompt failures". Three independent issues found, three changes applied. Logged here as a tracked bundle so we can revert any one piece if the next test run regresses.
+
+  **(A) fal reference-image budget bumped 4 → 8.** `v2/src/render/fal.js:37` was hard-slicing references to the first 4 (alphabetical). Cartridge loader sorts by filename and demo had grown to 19 refs, so fal was permanently anchored to ref-01..04 (storm-clouds-bw, cumulus-moon, aerial-tractor-field, white-drone-studio). Every style ref added since (refs 05–19: topographic posters, risograph diagrams, mylar packaging, cascading modernist typography, celestial icon-set, sensor towers, robot arms, etc.) was loaded into memory but never sent to fal. Fix: replaced the literal `4` with `REF_BUDGET` const (default 8, env-tunable 1..16). Bigger budget costs ~1.5–2x vision-conditioning tokens per ref, so monitor latency on next runs and pull back to 6 if responses balloon. **Revert path:** set `REF_BUDGET=4` in `.env`, or restore the hard-coded 4 at `v2/src/render/fal.js`.
+
+  **(B) `intake.md` — directive-input handler added + featured-grammar guardrail.** Run failure: input `"make me a poster for the brand"` → Haiku refused with `"I apologize, but I cannot generate a full poster design for you…"` and broke JSON parse. Root cause: the system prompt told Haiku to produce panel descriptions and Haiku interpreted the word "poster" as a directive it couldn't satisfy. Fix #1: added a "DIRECTIVES, REQUESTS, AND OPEN QUESTIONS — ALL VALID INPUTS" section near the top that explicitly lists shapes (questions, directives, briefs, lists) and tells the LLM never to apologize or refuse — always produce six panels, regardless of input phrasing. Fix #2: separately, the intake LLM was leaning on safe vocabulary (data display 6×, widget 2×, dashboard 2×) and ignoring the painterly touchstones (mylar 0×, modernist typography 0×, celestial 0×, topographic-poster 0×, risograph 0×) — they were buried in a 26-item list. Added a "FEATURED STYLE GRAMMARS" section above the long touchstones list that pulls out the three most-ignored grammars (industrial mylar packaging, topographic-poster cartography, risograph weather diagrams) as *mandatory*-feeling guidance, plus a Rule 4 addendum: "At least 1 of 6 panels MUST come from FEATURED STYLE GRAMMARS." **Revert path:** in `v2/cartridge/demo/intake.md`, remove the two new sections + the Rule 4 addendum. Original Rule 4 was just "At least 2 of 6 panels MUST lean adjacent."
+
+  **(C) UI label for skipped gpt2Rewrite.** Earlier session bug: `v2/ui-client/app.js:395` labeled missing `__gpt2Prompt` as `"gpt-2 (rewrite failed → nano)"` whether it was a real failure or an intentional skip (intake mode / nano-only run). Fixed: now reads `trace.stages.gpt2Rewrite.status` and shows `"gpt-2 (rewriter skipped — <reason>)"` for skips. Also fixed `v2/src/orchestrator.js:197` to finalize `gpt2Rewrite` to `status: "skipped", reason: "no gpt-image-2 model in this run"` for nano-only runs (was leaving it `pending` forever).
+
+  **What to verify on next run:** (1) renders look meaningfully different from the last run — if not, refs aren't reaching fal, check fal payload via trace; (2) at least one panel per contact sheet leans mylar/topographic/risograph; (3) directive inputs ("make me a poster", "design a hero shot") render successfully without JSON parse failures; (4) UI shows "rewriter skipped — …" not "rewrite failed".
+
+  **(D) downloadImage retry added.** Test run `20260426-133438-59wo` (same 3 titles as baseline, both-mode, N=2) produced 6 ok / 6 fail on the render stage despite the prompt-side wins. Failures: 5× `Download 409` (split across nano AND gpt-2 — not REF_BUDGET-related; gpt-2 doesn't use refs) + 1× `fal 500`. The download path at `v2/src/render/fal.js` had ZERO retries: `renderOne` retries the API call on 429/5xx but `downloadImage` would throw on any non-2xx — fal's signed CDN URLs occasionally 409 for a few seconds after mint, eating real renders. Fix: replicated the `renderOne` retry shape inside `downloadImage` (MAX_RETRIES=3, exponential backoff INITIAL_BACKOFF_MS * 2^attempt + jitter). **Revert path:** restore the 4-line implementation at `v2/src/render/fal.js:100-104` (single fetch, throw on !r.ok). **Verification on next run:** total render failures should drop substantially; expect occasional `[fal] download error on attempt N` warnings in stdout for transient 409s that would have been render failures before.
+
+  **Run-result observations also worth recording (no code change yet):**
+  - Featured-grammar pickup is **uneven**. `topographic-poster` and `risograph` landed (4× each) but `mylar`, `modernist`, `celestial`, `foil`, `graphic standards` all stayed at **0**. Hypothesis: the LLM cherry-picks the two grammars easiest to translate into a "panel of a poster" and skips the others. Possible follow-up: rotate which grammar is featured per shot (round-robin via `recently_used_grammars` or similar) instead of listing all three with equal weight.
+  - 6th-axis `data_display` vocab regressed: `data display` 6→0, `widget` 2→0, `dashboard` 2→0. The LLM swapped its attention budget onto the new FEATURED block at the cost of the `data_display` axis. Net wash on territory diversity — keep an eye on this; if it persists across 5+ runs we should re-balance the prompt structure.
+
+- 2026-04-26 — demo (NIMBUS) cartridge brand DNA expanded post-Strategy-A. Visual axes grew from 5 → 6 (added `data_display` — the software half of the brand: weather widgets, dashboard cards, instrument panels, topographic-poster cartography, risograph weather diagrams, glassy iOS UI mockups read as photographs of screens). Cultural touchstones grew from 15 → 26: added Apple iOS weather-widget aesthetic, topographic-poster art, Outdoor Recreation Archive risograph, Tufte info-design, Rams calculator UI, minimalist conceptual notation (Bas Jan Ader / John Cage), Doppler radar-as-fine-art, plus four style-aesthetic touchstones derived from Graphics-Standards-Manual-era references (industrial mylar/foil packaging, 70s/80s modernist agency typography on flat ground, celestial-body icon typology on black, graphic-standards-manual reference book). User explicitly directed: "ignore the word nasa and instead focus on the style of image" — touchstones name the visual grammar, not the originating brand. References grew from 10 → 19 via `scripts/refs.js add demo …`. Loader cap is 24 (only first 4 reach fal anyway). intake.md updated to surface 6th territory + 6th `axes_used` value + expanded touchstones list. Profile.json axis_aliases augmented for `aerial_top_down` (topographic-poster, risograph) and `modular_typology` (celestial icon-set, conceptual notation, mylar packaging) so adjacency drift covers the new vocabulary.
 - 2026-04-23 — §16 added: gpt-image-2 rewriter landed. Engine (`v2/src/factory/gpt2Rewriter.js`) owns the 9-move structural template + 3 few-shot examples from Case's empirical successes (mirror selfie, home skincare, street-style). Brand voice (`v2/cartridge/nolla/gpt2_rewriter.md`) is optional, swap-per-brand. Orchestrator Stage 3.5 gates on `model === 'openai/gpt-image-2'`, bounded concurrency, fallback-to-original on per-shot failure. Still untested end-to-end; trace viewer has no before/after surface.
+
+---
+
+## §17 — Product cartridge: object-mode + per-style refs (2026-05-02)
+
+### What's new
+- `input_mode: "object"` added (orchestrator path #3 alongside `title` and `intake`). Each input is a single object name; the orchestrator hand-rolls N shots that round-robin through `cartridge.profile.style_order`. **No LLM shot-list call**, no critic, no sanitizer, no rewriter — the cartridge author already declared the styles, and the input text IS the subject.
+- `cartridge.profile.style_order` declares the canonical rotation (`["product-shot","in-situ","sketch"]`). Compositions present in `compositions.json` but missing from the order get appended automatically so nothing silently drops.
+- `cartridge.profile.default_aspect_ratio` honored when the request omits one.
+- `cartridge.references/<style>/*` subfolders supported. Each ref is tagged with its parent dir (`style: "product-shot"`). At render time the orchestrator filters refs by the shot's composition. Untagged refs at the root remain as fallback. Render trace records `refsAttached` and `refsAvailable` per item for debugging.
+- Title text is injected as a per-title `phrase_banks[title.id] = [title.title]` entry on the cartridge's first subject_type, so `{subject}` resolves to the literal object name.
+- Run grid filters by active cartridge bubble — switching cartridges re-scopes both the in-flight status chips and the persistent grid.
+
+### Lesson re-applied (the diversity crisis, again)
+The first product-cartridge prompts were **over-engineered**: 8+ slots stacked with explicit lighting / fill / shadow / finish directives. The model honored the prompt and ignored the references. The fix mirrors §1: stop asking the *prompt* to do the work the *refs* should do. Loosened to 3 composition slots (angle, framing, background) plus a closing line — *"in the visual register of the reference photographs — the references should drive lighting, surface, and treatment"*. Refs got room to act. **Generalizable rule:** for cartridges that ship strong reference imagery, keep prompts to composition decisions only. Style/light/surface/material are reference-driven.
+
+### Open architectural roadmap (see `v2/cartridge/product/PLAN.md`)
+1. **In-situ tone** — push to editorial fashion-publication register (Apartamento, Cereal, Wallpaper*, Sight Unseen, MAQL).
+2. **Cameras & details** — add macro-material and mixed-material compositions across all three styles.
+3. **Material registers** — mirror nolla's body-region pattern: `wood-light`, `wood-dark`, `metal-warm`, `metal-cool`, `wool`, `suede`, `leather-soft`, `ceramic-glazed`, `ceramic-unglazed`, `glass-clear`, `glass-milky`, `plastic-color`, `mixed-materials`. Auto-tagged by keyword on title text in object mode.
+4. **Palette anchors** — small palette set on the cartridge; one palette locked per title across all three styles for visual continuity. Same shape as nolla's `theme-lock` (N≤5).
+5. **Collections** — group inputs to share palette + material register + environment family.
+6. **Product design** — downstream; LLM drafts form from a brief.
+
+### Open issues being tracked
+- **Sketch generation gap on nano-banana-pro**. Photoreal-trained model resists line illustration. Test (a) lead with stricter directive vocabulary ("minimalist line illustration on white", "vector aesthetic"), and (b) consider per-composition model routing — sketch shots could go to flux-pro/kontext or gpt-image-2 which handle flat illustration better. Per-composition model override is a small orchestrator addition: respect `cartridge.compositions[name].model` if present.
+- **Reference budget alphabet**. With 8 refs/render and ~26 sketch refs, files starting with non-digit characters never reach fal. Solution: rename refs `01-`, `02-` for stable ordering, or allow `cartridge.profile.ref_budget` override.
+- **Prompt redundancy** — theme + suffix + composition all repeat "square 1:1 frame". Token waste; consolidate later.
+
+
+---
+
+## §18 — Staged funnel + flux endpoint + ref audit (2026-05-02)
+
+### Staged-funnel architecture (product cartridge)
+Funnel-shaped workflow added to the orchestrator + UI: `sketch → product → in-situ`, with promotion between stages and **lineage tracked on every render item** (`stage`, `parent: {runId,slug,filename}`).
+
+API surface:
+- `POST /api/public/runs` accepts `stage` (one of the cartridge's compositions) and `parents: [{runId, slug, filename, title?, note?}]`.
+- When `stage` is set, the orchestrator restricts the cycle to that composition (no rotation).
+- When `parents` is set, each parent becomes a synthetic title; the orchestrator looks up the original object name via `readTrace(parent.runId)` and **fuses the user's per-parent note into the phrase bank**: `phrase_banks[id] = ['<object>, <note>']`. Notes flow through `{subject}` substitution — no resolver changes needed.
+- `parents` and `stage` together implement both **promote** (multiple parents → next stage) and **amplify** (1 parent, same stage, more renders).
+
+UI surface (product cartridge only):
+- Three-column funnel replaces the flat grid when `cartridge === 'product'`. Pill input always feeds stage 1.
+- Per-tile `+` (hover-revealed, top-right) — fires amplify with default N for that one tile.
+- Per-column `+ more like these` — amplifies the column's selection (or the most recent items if none selected).
+- Per-column `Promote N → <next stage>` — opens an inline notes panel: each selected tile gets its own thumbnail + text input ("material + color note" / "in-situ scene note"). Send → POST to `/runs` with stage and parents.
+- Persistence by default: every column shows everything ever generated for that cartridge at that stage. Selection state persists across runs.
+
+Generalizable rule: **lineage + per-parent notes = staged batches without changing the resolver.** The note becomes part of the phrase bank, the phrase bank becomes part of `{subject}`, the rest of the prompt machinery is unchanged. Amplify and promote collapse to the same primitive: parents + stage.
+
+### flux endpoint bug — wrong model ID
+
+UI "flux" label was pointing at `fal-ai/flux-pro/kontext`. Live-tested → 422 `{"loc":["body","image_url"],"msg":"Field required"}`. **Kontext is an image-edit model — requires an input image.** Every from-scratch flux run was failing silently from the UI's perspective.
+
+Fix: switched the label to `fal-ai/flux-pro/v1.1-ultra` (text-to-image, also in the allowlist). Verified live: 200 with a 2048×2048 PNG.
+
+`fal.js` now branches per-model on the field name when refs are attached:
+- `fal-ai/nano-banana-pro` → `image_urls` (plural array, up to 8)
+- `fal-ai/flux-pro/kontext` → `image_url` (singular) — **single input image only, no multi-ref style mixing**
+- `fal-ai/flux-pro/v1.1-ultra` → no image input
+- `openai/gpt-image-2` → no image input
+
+When we plumb kontext back in for parent-image editing on promote/amplify, this branch is already wired — pass the parent image URL as `references[0]`.
+
+### Reference-image audit
+Verified live what each model actually receives. **nano was getting refs all along** (Gemini even returned a `description` field showing it parsed the input). When the visuals didn't echo the refs in earlier runs, the prompt was overpowering them — confirms §17's "let the refs do the work" rule.
+
+Each render item now records `refsAttached` and `refsAvailable` so the trace is auditable.
+
+### Sketch register evolution (product cartridge)
+Three-step iteration on sketch:
+1. **First pass** — "designer's working sketch" with paper textures and notebook context. Photo-of-paper register. Too literal.
+2. **Second pass** — narrowed to nendo minimal-process diagrams: small black line on pure white, vast empty space. Better, but too clean and too narrow — every sketch landed as the same diagram.
+3. **Third pass (current)** — kept nendo as the base register, **dropped paper as a slot entirely** (gesture and approach lead, not surface), broadened the `register` slot to five modes: nendo minimal, shape-first chunky-contour, CAD/schematic technical, iPad-thumbnail-sheet, process-diagram. `linework` slot pairs naturally with each. `treatment` slot grew to 17 ways of depicting the same object (orthographic, exploded, cross-section, scale-comparison, motion arrow, action sketch, alternate-form, dimensioned, component-study sheet, etc.).
+
+Prompt skeleton makes the blend explicit: *"in the spirit of nendo's small process diagrams mixed with shape-first chunky-contour studies and CAD-schematic technical drawings"*.
+
+### `all` model option
+Cycles after `both` for experimental accounts. Fans out the same shot list across **nano + flux + gpt-2** simultaneously. Filenames get model-suffixed (`-nano`, `-flux`, `-gpt2`) so they don't collide on disk.
+

@@ -17,14 +17,14 @@ const pick = (arr, rand) => arr[Math.floor(rand() * arr.length)];
  * @param opts.slotOverrides — optional map of slotName → fixed value. Used to force a slot
  *                             (e.g. body region) bypassing the bank's random pick.
  */
-function sampleComposition(composition, { subject, seed = Date.now(), slotOverrides } = {}) {
+function sampleComposition(composition, { subject, seed = Date.now(), slotOverrides, cameraOverride, lensOverride } = {}) {
   const overrides = slotOverrides || {};
   const rand = rng(seed);
   let prompt = composition.skeleton.replace(/\{subject\}/g, subject || 'subject');
 
   const slotsUsed = {};
   const slotNames = new Set();
-  let m; const re = /\{([a-z_]+)\}/gi;
+  let m; const re = /\{([a-z][a-z0-9_]*)\}/gi;
   while ((m = re.exec(composition.skeleton)) !== null) {
     if (m[1] !== 'subject') slotNames.add(m[1]);
   }
@@ -40,13 +40,13 @@ function sampleComposition(composition, { subject, seed = Date.now(), slotOverri
     slotsUsed[slot] = value;
     prompt = prompt.replace(new RegExp(`\\{${slot}\\}`, 'g'), value);
   }
-  const camera = pick(composition.cameras || ['CU'], rand);
-  const lens = pick(composition.lenses || ['50mm'], rand);
+  const camera = cameraOverride || pick(composition.cameras || ['CU'], rand);
+  const lens = lensOverride || pick(composition.lenses || ['50mm'], rand);
   return { prompt, camera, lens, slotsUsed };
 }
 
-function buildPrompt({ composition, subject, seed, suffix, themeSuffix, modelSpec, slotOverrides }) {
-  const s = sampleComposition(composition, { subject, seed, slotOverrides });
+function buildPrompt({ composition, subject, seed, suffix, themeSuffix, modelSpec, slotOverrides, cameraOverride, lensOverride }) {
+  const s = sampleComposition(composition, { subject, seed, slotOverrides, cameraOverride, lensOverride });
   const parts = [];
   if (modelSpec) parts.push(modelSpec);
   parts.push(`${s.prompt}, ${s.camera}, ${s.lens}`);

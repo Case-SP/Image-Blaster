@@ -1,0 +1,242 @@
+{
+  "compositions": {
+    "product-shot": {
+      "category": "product",
+      "skeleton": "a clean considered studio product photograph of a single {subject}, {angle}, {framing}, on a {background}, {lighting}, the object's own material reads honest and natural — no heavy grading, no dramatic moodiness, the object is the only subject, no props, no overlay text, square 1:1 frame, in the visual register of the reference photographs — restrained design-catalog photography, the references drive material and light",
+      "slots": {
+        "angle": [
+          "straight-on front elevation",
+          "three-quarter view from camera-left",
+          "three-quarter view from camera-right",
+          "pure profile from the side",
+          "slight high angle looking down about 15 degrees",
+          "slight low hero angle looking up about 10 degrees",
+          "dead overhead plan view",
+          "rear three-quarter view",
+          "tight detail crop on a single feature with the rest falling soft"
+        ],
+        "framing": [
+          "the object fills about 60 percent of the frame with generous breathing room",
+          "the object fills about 45 percent of the frame, vast negative space surrounding",
+          "the object fills about 75 percent of the frame, tight composition",
+          "the object fills about 30 percent of the frame, small with lots of empty space",
+          "macro detail framing — a single feature fills the frame, the rest cropped",
+          "the object centered with deep symmetrical breathing room, museum-plate proportion"
+        ],
+        "background": [
+          "seamless pure white sweep",
+          "seamless soft cream sweep",
+          "seamless warm off-white sweep",
+          "seamless light-grey sweep",
+          "seamless soft beige sweep",
+          "seamless warm-tan sweep",
+          "seamless soft taupe-grey sweep",
+          "seamless bone-cream sweep",
+          "seamless soft chalk-white sweep",
+          "seamless pale stone-grey sweep",
+          "seamless warm clay-cream sweep",
+          "seamless soft mushroom-grey sweep",
+          "seamless pure black sweep, clean and flat, dark mode",
+          "seamless matte black backdrop, no gradient, dark mode",
+          "seamless soft neutral black sweep, even and unmoody, dark mode",
+          "seamless deep velvet black sweep, dark mode",
+          "seamless deep charcoal sweep, dark mode",
+          "seamless near-black warm-brown sweep, dark mode",
+          "seamless near-black cool-grey sweep, dark mode",
+          "seamless ink-black sweep, even and matte, dark mode",
+          "seamless deep coal-black sweep, dark mode",
+          "two-color block composition — pale sage floor meeting a warm cream wall",
+          "two-color block composition — pure black floor meeting a soft warm-grey wall, dark mode"
+        ],
+        "lighting": [
+          "soft diffused overhead with gentle wraparound, near-shadowless",
+          "soft broad window light from camera-left, gentle and directional, soft shadow opposite",
+          "even cyclorama wash with a subtle key from upper-front, catalog-clean",
+          "calm north-facing daylight, even and gentle, no harsh highlights",
+          "soft natural studio light, evenly diffused, restrained shadow",
+          "single softbox from upper-front at gentle 45 degrees, soft falloff",
+          "ambient evenly-lit, no aggressive direction, subtle contact shadow"
+        ]
+      },
+      "wildcard_skeletons": [
+        "a clean considered studio product photograph of a single {subject}, in the visual register of the reference photographs — restrained design-catalog photography, the references drive material, surface, and light, surprise me with the framing and composition, square 1:1 frame, the object's own material reads honest and natural",
+        "a single {subject} photographed against a soft neutral or pure-black ground, soft natural light, the references drive everything, square 1:1 frame, considered restraint, no heavy grading",
+        "a quiet design-catalog frame of a {subject}, the references shape the visual feel, generous breathing room, square 1:1 frame, surprise me with the composition",
+        "a {subject} captured as a single editorial product image, the references drive material and light, square 1:1 frame, confident play within restrained design photography"
+      ],
+      "cameras": ["MCU", "MS"],
+      "lenses": ["50mm", "85mm", "35mm"],
+      "mood": "clean, considered, restrained, neutral"
+    },
+
+    "in-situ": {
+      "category": "product",
+      "skeleton": "an editorial design-publication photograph of a {subject}, {setting}, {figure_mode}, {framing}, {atmosphere}, {camera_move}, {tonal_register}, the object is the visual focus, no posed eye-contact gaze, square 1:1 frame, in the visual register of the reference photographs — Apartamento / Cereal / Wallpaper* / Sight Unseen / MAQL campaign tone, the references drive surface and palette, the slots above drive composition, light, and movement",
+      "slots": {
+        "setting": [
+          "in a sun-lit modernist apartment with oak parquet and a plain plaster wall",
+          "in a small contemporary gallery with raw concrete floor and a warm plaster wall",
+          "in a Japanese-style room with tatami and shoji-diffused daylight",
+          "on a marble counter in a minimalist kitchen, no other objects in view",
+          "on terracotta tile in a sunlit courtyard, potted plants softly framing the edges",
+          "on stone in an outdoor garden setting, plants softly out of focus",
+          "at the corner of a designer's drafting table with an Akari paper lamp soft in the background",
+          "on a low plinth in a darker exhibition gallery, brass and stone plinths around",
+          "in a linen-curtain-filtered room with terracotta floor tile",
+          "in a quiet hallway with wood-paneled wall and terrazzo floor",
+          "on a powder-coated steel shelf in a daylit studio with a plain white wall behind",
+          "in a curated minimalist living room with one or two soft design-magazine props softly in frame",
+          "on a low oak bench in a museum installation, wide empty white wall behind",
+          "in a wabi-sabi tea room with mud-plaster walls and a single tokonoma alcove",
+          "on a stone step in front of a brutalist concrete wall, late-afternoon shadow",
+          "on a sun-bleached wooden deck overlooking soft water out of focus",
+          "in a sun-warmed alcove of a converted warehouse, single high window casting calm light",
+          "on a low travertine plinth in front of a dark linen curtain"
+        ],
+        "figure_mode": [
+          "no figure, the object alone in a quiet considered composition",
+          "no figure — the room itself is the second subject, lived-in but unattended",
+          "a partial figure cropped below the eyes — the object held close to the body, fashion-campaign sensibility",
+          "a hand only, lightly resting on or near the object, the rest of the figure off-frame",
+          "a slow-shutter motion-blur figure mid-step or mid-turn carrying the object, the object held still and sharp while the figure softens, neutral architectural backdrop",
+          "a figure walking past in the background, soft motion blur, the object the still focus in the foreground",
+          "two partial figures in soft conversation in the deep background, the object the focus in the foreground",
+          "a figure seated near the object but cropped at the shoulders, never the eyes, intimate domestic feel",
+          "the object on a museum-style plinth, observer's silhouette implied off-frame but never depicted",
+          "no figure — purely architectural still-life with the object at the center",
+          "no figure — the object as part of a calm multi-object still-life on a surface, two or three companion objects in soft composition (a glass, a small ceramic form, etc.)",
+          "no figure — the object on a stack of design magazines or books, lived-in reading-corner energy",
+          "a motion-blurred figure mid-stride carrying the object, the figure is dressed in soft black or neutral, the backdrop is pale concrete or plaster"
+        ],
+        "framing": [
+          "wide environmental, the object small in the frame with vast considered space around it, magazine-double-page proportion",
+          "medium environmental, the object at one third with the room readable, generous breathing room",
+          "medium-close, the object dominant but the wall, floor, and immediate context still composed around it",
+          "close-but-contextual, the object fills the lower third with quiet space above",
+          "fashion-campaign crop — the object is the hero in the lower-left or lower-right with negative space and architecture composed around it",
+          "tight editorial crop, the object near the center with architecture framing the edges",
+          "low-angle environmental — the object dominant in the lower half, the room rising above",
+          "high-angle observational from across the room, the object compositionally anchored"
+        ],
+        "atmosphere": [
+          "soft afternoon daylight, natural color, calm exposure, no harsh highlights",
+          "north-facing daylight, even and cool, museum-quiet",
+          "warm late-afternoon raking light, long quiet shadows",
+          "shoji-diffused daylight, soft and even, slightly warm",
+          "single skylight from above, deep ambient shadow surrounds the object, gallery quality",
+          "early-evening interior, ambient room light warmed by a single practical lamp",
+          "dappled-leaf shadow pattern across object and surrounding surface",
+          "high-contrast morning light spilling from one window, deep shadow on the opposite side",
+          "overcast even daylight, no shadows, gentle desaturated palette",
+          "warm golden-hour rim light from a side window, halo on the object's silhouette",
+          "blue-hour ambient with a single warm practical just starting to register",
+          "soft pre-dawn cool light, almost monochromatic",
+          "vertical-stripe light through slatted blinds, warm afternoon stripes laid across a neutral wall",
+          "single Akari paper lamp glow softening the room from one side, the rest in calm daylight",
+          "warm hero spotlight on the object, cool ambient gradient across the gallery wall behind",
+          "even pale daylight from a tall window, faint shadow on a plaster wall — magazine-spread tone",
+          "soft b&w-leaning daylight, slight motion in the figure, the object held still and architectural"
+        ],
+        "camera_move": [
+          "still observational frame, no camera movement",
+          "slow-shutter capture: the figure or background softens, the object stays still and sharp",
+          "shallow depth of field, the object razor-sharp, the room softly out of focus",
+          "deep focus, the object and the architecture both readable",
+          "subtle pan blur, the object sharp at center while the edges of the frame motion-trail",
+          "static plate, everything in focus, almost architectural-document precision"
+        ],
+        "tonal_register": [
+          "natural color, gentle contrast, faithful to materials",
+          "muted desaturated palette, considered restraint",
+          "warm-leaning grade with soft golden tones",
+          "cool-leaning grade with soft blue-grey shadows",
+          "high-contrast b&w-leaning monochrome, almost desaturated",
+          "earthy palette, terracotta and ochre dominant",
+          "soft pastel grade, magazine-cover sensibility",
+          "soft sage-and-cream palette — pale green floor, warm cream walls, oak warmth",
+          "grey-green-and-walnut palette — dark walnut surface, soft grey-green wall, calm still-life tone",
+          "pale-mint and warm-cream domestic palette, gentle and slightly nostalgic",
+          "warm-to-cool gallery gradient — cool wall fading to warm hero light on the object",
+          "soft slat-blind backlight tonal — vertical light stripes warming a neutral interior"
+        ]
+      },
+      "wildcard_skeletons": [
+        "a {subject} photographed in a believable real-world context that fits its purpose, editorial design-publication tone in the visual register of the reference photographs, surprise me with the scene and figure, square 1:1 frame",
+        "a {subject} in its natural use-context, captured editorially in the spirit of the references — Apartamento / Cereal / Wallpaper* / Sight Unseen sensibility, square 1:1 frame, restrained and considered",
+        "a {subject} placed in an editorial scene that fits how it's actually used, the references drive light and palette, surprise me with the composition, square 1:1 frame, no posed eye-contact gaze",
+        "a {subject} in a quiet editorial scene, the references drive surface and atmosphere, partial figure or no figure as fits the object, magazine-page proportion, square 1:1 frame"
+      ],
+      "cameras": ["WS", "MS", "MCU"],
+      "lenses": ["35mm", "50mm", "85mm"],
+      "mood": "editorial, fashion-publication, design campaign"
+    },
+
+    "sketch": {
+      "category": "product",
+      "skeleton": "a flat hand-drawn black-line sketch of a {subject} on a pure white background, {register}, {framing}, {treatment}, {linework}, {annotation}, the entire image is white space with the drawing centered — at least 60 percent of the image is plain white, no shading, no fill, no gradients, no shadows, no color besides the black ink and white field, NOT a 3D render, NOT a CAD drawing, NOT a clean technical illustration, NOT a photograph of the actual object — this is a designer's small playful working sketch in the spirit of nendo's process diagrams and gestural shape-first studies, hand-drawn with real pen-pressure roughness, the gesture and the approach are what matter, the line itself is the entire image",
+      "slots": {
+        "register": [
+          "nendo minimal-process register: small considered drawing floating in vast white, single confident contour, hand-drawn roughness, the gesture is the entire piece",
+          "shape-first chunky-contour register: the object built from primitive geometry (cylinders, circles, rectangles, ovals) stacked or joined together, bold thick black outline, pure silhouette construction with no interior detail, confident kindergarten-clear shapes, no shading, no fill",
+          "iPad / digital-thumbnail-sheet register: a sheet of multiple small confident black-ink gestural sketches of the object scattered across the frame, exploring different angles, configurations, and component studies, mid-design energy, like a designer's iPad scratch page",
+          "process-diagram register: a small numbered or arrowed sequence of the same object across two to four steps, each step a tiny drawing with a small ALL-CAPS one-word handwritten label below it",
+          "loose gestural register: dense flowing ink, the object built from continuous overlapping squiggles and quick contour passes, calligraphic energy, single confident gesture",
+          "shape-block register: the object reduced to a few large simple rectangular and circular masses with no detail, stacked or joined, almost iconic"
+        ],
+        "framing": [
+          "the drawing occupies roughly 25 percent of the frame, centered, with vast empty white space on every side",
+          "the drawing is small and floats in the center, more than 75 percent of the image is plain white",
+          "a tiny drawing in the lower-center of the frame with a wide expanse of empty white above",
+          "the drawing slightly off-center, generous white margins on all four sides",
+          "the drawing fits within the central third of the frame, the rest is pure white",
+          "the drawing in the upper-third of the frame with empty white below for breathing room",
+          "the studies arranged across the frame with deliberate empty space between them"
+        ],
+        "treatment": [
+          "the object alone as a single one-pass drawing, no other elements",
+          "the object alone, isometric three-quarter view, faint construction lines beneath the contour",
+          "the object alone in pure profile / side elevation, a single confident silhouette",
+          "the object alone in plan view from above, simple geometric construction",
+          "the object plus a tiny stick-figure character beside it for scale, sometimes with a small thought-bubble",
+          "an orthographic pair — small front-elevation and side-elevation of the object placed side by side on white",
+          "an exploded view — components pulled apart along thin guide axes with hairline arrows showing how they fit",
+          "a cross-section / cutaway showing the inside of the object, exterior outline plus interior lines",
+          "a scale-comparison study — the object drawn twice side by side at different sizes",
+          "a thumbnail page — three to six very small rough versions of the object from slightly different angles arranged across the white",
+          "the object with one curved arrow showing motion or rotation around an axis",
+          "the object with one or two thin pointer lines and one-word handwritten labels calling out features",
+          "an action sketch — the object mid-use, a hand or finger lightly suggested at the edge in the same line weight",
+          "an alternate-form study — two or three small variations of the object's silhouette stacked or arranged together",
+          "the object with light dimension marks at its edges (e.g. 190, 280) in the same hand",
+          "a 2-step or 3-step process diagram — small drawings connected by thin arrows, tiny ALL-CAPS one-word labels below each",
+          "a component-study sheet — the object plus a few of its key parts drawn small and separate around it"
+        ],
+        "linework": [
+          "rough hand-drawn black ink, real pen-pressure variation, slight wobble, occasional doubled-back stroke, the line has ink texture and human imperfection — pairs naturally with nendo and process-diagram registers",
+          "bold thick black contour line, even weight, confident closed shapes, almost marker-like — pairs naturally with the shape-first register",
+          "thin steady black ink with small overlaps at intersections, working-drawing energy, never perfectly straight — pairs naturally with iPad-sheet and thumbnail registers",
+          "thin black hand-drawn fineliner, slightly shaky, faint pressure variation, hand-drawn rather than vector-clean",
+          "soft graphite-pencil-on-white, light wobble, faint smudge texture, no fill",
+          "confident black ink built from multiple short hand-drawn strokes, slightly fragmented and human"
+        ],
+        "annotation": [
+          "no annotation at all, the drawing alone in white space",
+          "one tiny ALL-CAPS handwritten word centered below the drawing in the same thin black hand",
+          "a single tiny thin arrow next to the drawing pointing to one feature with a one-word handwritten label",
+          "tiny rough handwritten dimension marks (e.g. 190, 280) at the edges of the drawing in the same hand",
+          "a tiny handwritten signature-mark in one corner, almost unreadable",
+          "no annotation, just the drawing floating alone"
+        ]
+      },
+      "wildcard_skeletons": [
+        "a small hand-drawn black-line sketch of a {subject} on pure white, in the spirit of the reference sketches — playful, considered, generous empty white space, the gesture is the entire piece, surprise me with the register",
+        "a quick gestural ink sketch of a {subject}, hand-drawn on white, looser than a working drawing, the line carries the form, vast empty space",
+        "a confident black-line drawing of a {subject} on pure white, in the spirit of the references — nendo working diagrams, shape-first studies, gestural pen sketches — surprise me with the approach, the line itself is the entire image",
+        "a small playful pen-and-ink sketch of a {subject} on white, the references drive the register, hand-drawn roughness, considered restraint, vast empty space"
+      ],
+      "cameras": ["centered, vast white space"],
+      "lenses": ["small, considered, gesture-led"],
+      "mood": "playful, considered, hand-drawn, gesture-led"
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "themes": {
+    "fafafa-flat": {
+      "name": "FAFAFA Flat",
+      "background": "uniform #FAFAFA warm off-white seamless background, no texture, no gradient",
+      "color_grade": "neutral, true colors, evenly exposed",
+      "mood": "editorial contact sheet"
+    }
+  }
+}

@@ -118,9 +118,9 @@ app.post('/api/runs/:id/verdict', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-app.get('/api/images/:slug/:filename', async (req, res) => {
-  // Dev-only fallback: read from local fs directly
-  const p = path.join(__dirname, '../output/generations', req.params.slug, req.params.filename);
+app.get('/api/images/:runId/:slug/:filename', async (req, res) => {
+  // Dev-only fallback: read from local fs directly.
+  const p = path.join(__dirname, '../output/generations', req.params.runId, req.params.slug, req.params.filename);
   if (!fs.existsSync(p)) return res.status(404).end();
   res.sendFile(p);
 });
@@ -151,9 +151,74 @@ app.get('/api/events', (req, res) => {
   });
 });
 
+// ---- Brand Studio (local-only admin layer for editing cartridge DNA) ----
+// Lives under /api so it inherits the prod-guard above (404s when SUPABASE_URL is set
+// without ADMIN_MASTER_KEY). Writes directly to v2/cartridge/<name>/.
+const CARTRIDGE_ROOT = path.join(__dirname, '../cartridge');
+const REF_EXT_RE = /\.(jpe?g|png|webp)$/i;
+const sanitizeSlug = s => String(s || 'ref').toLowerCase().replace(/\.[^.]+$/, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'ref';
+
+app.get('/api/brand/:cartridge', (req, res) => {
+  try {
+    const dir = path.join(CARTRIDGE_ROOT, req.params.cartridge);
+    if (!fs.existsSync(dir)) return res.status(404).json({ error: 'cartridge not found' });
+    const profile = JSON.parse(fs.readFileSync(path.join(dir, 'profile.json'), 'utf8'));
+    const refsDir = path.join(dir, 'references');
+    const refs = fs.existsSync(refsDir) ? fs.readdirSync(refsDir).filter(f => REF_EXT_RE.test(f)).sort() : [];
+    res.json({ cartridge: req.params.cartridge, profile, refs });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.put('/api/brand/:cartridge/profile', (req, res) => {
+  try {
+    const dir = path.join(CARTRIDGE_ROOT, req.params.cartridge);
+    if (!fs.existsSync(dir)) return res.status(404).json({ error: 'cartridge not found' });
+    const next = req.body && req.body.profile;
+    if (!next || typeof next !== 'object') return res.status(400).json({ error: 'profile object required' });
+    fs.writeFileSync(path.join(dir, 'profile.json'), JSON.stringify(next, null, 2) + '\n');
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/brand/:cartridge/refs/:filename', (req, res) => {
+  const p = path.join(CARTRIDGE_ROOT, req.params.cartridge, 'references', req.params.filename);
+  if (!REF_EXT_RE.test(req.params.filename) || !fs.existsSync(p)) return res.status(404).end();
+  res.sendFile(p);
+});
+
+app.post('/api/brand/:cartridge/refs', (req, res) => {
+  try {
+    const dir = path.join(CARTRIDGE_ROOT, req.params.cartridge, 'references');
+    if (!fs.existsSync(dir)) return res.status(404).json({ error: 'references dir not found' });
+    const { filename, dataUrl } = req.body || {};
+    if (!filename || !dataUrl) return res.status(400).json({ error: 'filename + dataUrl required' });
+    if (!REF_EXT_RE.test(filename)) return res.status(400).json({ error: 'unsupported ext (jpg/png/webp only)' });
+    const m = String(dataUrl).match(/^data:[^;]+;base64,(.+)$/);
+    if (!m) return res.status(400).json({ error: 'dataUrl must be base64' });
+    const existing = fs.readdirSync(dir).filter(f => REF_EXT_RE.test(f));
+    let max = 0;
+    for (const f of existing) { const mm = f.match(/^ref-(\d{2,})-/); if (mm) max = Math.max(max, parseInt(mm[1], 10)); }
+    const seq = String(max + 1).padStart(2, '0');
+    const ext = path.extname(filename).toLowerCase();
+    const slug = sanitizeSlug(filename);
+    const target = path.join(dir, `ref-${seq}-${slug}${ext}`);
+    fs.writeFileSync(target, Buffer.from(m[1], 'base64'));
+    res.json({ ok: true, filename: path.basename(target) });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.delete('/api/brand/:cartridge/refs/:filename', (req, res) => {
+  try {
+    const p = path.join(CARTRIDGE_ROOT, req.params.cartridge, 'references', req.params.filename);
+    if (!REF_EXT_RE.test(req.params.filename) || !fs.existsSync(p)) return res.status(404).json({ error: 'not found' });
+    fs.unlinkSync(p);
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // Silence browser favicon requests
 app.get('/favicon.ico', (req, res) => res.status(204).end());
 
 // Root is served by the static middleware above (ui-client/index.html)
 
-app.listen(PORT, () => console.log(`v2 live at http://localhost:${PORT}  (client UI: /client, admin UI: /admin-ui)`));
+app.listen(PORT, () => console.log(`Recast live at http://localhost:${PORT}  (client UI: /client, admin UI: /admin-ui)`));

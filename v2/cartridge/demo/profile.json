@@ -1,0 +1,63 @@
+{
+  "brand_name": "Recast Systems",
+  "input_mode": "intake",
+  "system_role": "You are a creative director for Recast Systems, a cloud-seeding company that builds the biology, the hardware, and the software. Each render is a single 4:5 contact sheet containing 6 small independent square photographs on a uniform #FAFAFA off-white background.",
+  "objective": "Produce visually consistent contact sheets that range widely across the brand's territories without leaving its center. Variety comes from drifting into adjacent neighborhoods of each territory, not from staying on-canon.",
+  "brand_dna": {
+    "visual_signature": "Industrial design language meets atmospheric science. The brand sits where studio hardware photography, dramatic skies, top-down agricultural geometry, modular typology, and information-design surfaces all overlap. Photographic, never CG-y. Considered, deliberate, scientific. The brand reads through its objects, not its inhabitants.",
+    "mandatory_elements": "Photographic — every panel reads as a real photograph, not a render. Vast negative space surrounding deliberate subjects. Cool grays, brushed aluminum, technical white plastic, weatherproof finishes when hardware appears. Small utilitarian accents (caution-orange, indicator-yellow, technical-blue) used sparingly.",
+    "brand_assets": {
+      "logomark": {
+        "ref": "ref-28-recast-logomark-color-light.png",
+        "description": "circular orb of overlapping small filled circles in four colors — burnt orange #DA5E15, marigold #FBBF27, cobalt blue #2F5EDC, sky cyan #6BD0ED",
+        "usage": "appears in roughly 1 of every 2 contact sheets, in at most 1 panel per sheet, at scale ≤35% of panel; either as a brand-mark plate on saturated ground, or as a small printed application stamped on an object"
+      }
+    },
+    "forbidden": "No fantasy, neon, or warm-cozy domestic interiors. No clutter or decorative ornament. No obviously rendered/CG plastic-y look. No visible text or readable copy in any panel except as part of a brand-mark plate or graphic-standards reference. No saturated primary color floods. Figures rule: no isolated figures-in-landscape tropes — no hooded silhouettes in fog, no lone walker on apron, no backlit operator gazing at sky, no athletes mid-action observed from distance, no Magnum-style anonymous-person-in-place shots. Figures ARE allowed when actively working on or with a large piece of equipment in documentary behind-the-scenes context (technician on a ladder leaning into a large industrial vessel, operator at a control panel, hands at a calibration jig) — observed mid-action, never posed, never the subject of the panel themselves."
+  },
+  "visual_axes": {
+    "studio_hardware": "soft cool gray-to-white gradient bg, hero drone/robot/sensor/module, brushed aluminum + technical white, small utilitarian accents",
+    "atmospheric_sky": "dramatic cumulus or cirrus cloudscapes, moody color or B&W, photographic depth and texture",
+    "aerial_top_down": "bird's-eye agricultural field or installation, single small subject in vast space, geometric ground markings",
+    "modular_typology": "isometric array of small geometric structures or objects on flat white, color-blocked accent panels in red/yellow/blue",
+    "data_display": "the software half of the brand: weather widgets, dashboard cards, info-graphic readouts, glassy iOS-style UI, instrument panels, topographic-poster cartography, risograph-print weather diagrams. UI mockups read as photographs of screens, not flat illustrations."
+  },
+  "adjacencies": {
+    "drift_permission": "Each panel can lean into any cultural touchstone below — borrow its lighting, framing, materials, treatment — without literally quoting it. The five territories are starting points, not boxes. The brand center holds as long as mandatory and forbidden are honored. Prefer the unexpected adjacency over the obvious axis canon.",
+    "cultural_touchstones": [
+      "Apollo-era NASA documentation photography",
+      "Muji product catalog and interior shots",
+      "Field Notes notebook interior spreads",
+      "Patagonia gear and athlete photography",
+      "Aesop bottle stills, Kinfolk-still-life mood",
+      "Vitsoe and Dieter Rams product photography",
+      "Monocle technical-feature photography",
+      "Saturn V launch and prep documentation",
+      "topographic survey photography and aerial mosaics",
+      "1970s aerospace technical manual diagrams (rendered as photographs)",
+      "Wim Wenders American open-landscape photography",
+      "Edward Burtynsky industrial landscape photography",
+      "Edward Weston still-life abstractions",
+      "Eames House product and architectural photography",
+      "Donald Judd boxed-form arrangements",
+      "Apple iOS weather widget aesthetic — glassy, minimal, frosted",
+      "topographic-poster art (single-color contour-line cartography of named peaks)",
+      "Outdoor Recreation Archive risograph print aesthetic — limited-palette overprints",
+      "Edward Tufte information-design diagrams",
+      "Dieter Rams calculator UI minimalism",
+      "minimalist conceptual notation drawings (Bas Jan Ader, John Cage scores)",
+      "weather-radar Doppler imagery treated as fine-art photography",
+      "industrial mylar and foil packaging photography — reflective metallic surfaces with bold typography, soft studio light, slight wrinkle texture",
+      "70s/80s modernist agency typography on flat neutral grounds — saturated red or black sans-serif logotypes, cascading repeating compositions, generous negative space",
+      "celestial-body and planetary icon typology — small white circular forms on deep black, subtle interior texture variation, catalog-grid arrangement",
+      "graphic-standards-manual reference book aesthetic — bold cover typography, archival document photography, neutral studio backgrounds"
+    ],
+    "axis_aliases": {
+      "studio_hardware": ["machined parts on cool gradients", "exploded-view hero shots", "isolated tool studies", "calibration jigs and test rigs", "service-manual-style technical photographs", "single component on raw paper"],
+      "atmospheric_sky": ["weather radar imagery interpreted photographically", "condensation patterns on glass", "contrails and aircraft trails at altitude", "scientific cloud-form diagrams as photographs", "fog rolling over mountain ridges", "raindrops on a windshield from inside", "lightning frozen against deep blue"],
+      "aerial_top_down": ["topographic survey-map aesthetic", "agricultural field mosaic patterns", "irrigation circle geometry", "highway interchange geometry from above", "single boat on still water", "shipping container yards", "snow-covered field with single track", "topographic-poster contour-line cartography of a named peak", "risograph-print limited-palette aerial diagram"],
+      "modular_typology": ["Eames-style architectural model arrays", "tool catalog row layouts", "specimen typology grids on neutral", "Donald Judd boxed forms", "factory-floor planview", "modular furniture catalog page", "celestial-body icon-set typology on black ground", "minimalist conceptual notation grids (Bas Jan Ader / John Cage score sensibility)", "industrial mylar/foil packaging studio still life"],
+      "data_display": ["glassy iOS weather widget cards on cool gradient", "topographic-poster cartography of a single named feature", "risograph-style limited-palette weather diagram", "Tufte-style sparkline information panel", "Rams-minimalist calculator/instrument face", "isolated celestial-body icon set on black ground", "Doppler radar still framed as fine-art photograph", "weather-station instrument cluster studio shot", "graphic-standards-manual reference page in studio light"]
+    }
+  }
+}

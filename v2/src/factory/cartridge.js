@@ -26,17 +26,36 @@ function loadCartridge(name) {
   const guardrails = readTextOr(path.join(dir, 'guardrails.md'));
   const studioRules = readTextOr(path.join(dir, 'studio-rules.md'));
   const gpt2Voice = readTextOr(path.join(dir, 'gpt2_rewriter.md')); // optional brand voice for gpt-image-2 rewriter
+  const intakePrompt = readTextOr(path.join(dir, 'intake.md'));     // optional intake-mode system prompt (when profile.input_mode === 'intake')
 
   const refsDir = path.join(dir, 'references');
-  const references = fs.existsSync(refsDir) ? fs.readdirSync(refsDir)
-    .filter(f => /\.(jpg|jpeg|png|webp)$/i.test(f))
-    .slice(0, 8)
-    .map(f => {
-      const b = fs.readFileSync(path.join(refsDir, f));
-      const ext = path.extname(f).toLowerCase();
-      const mime = ext === '.png' ? 'image/png' : ext === '.webp' ? 'image/webp' : 'image/jpeg';
-      return { filename: f, url: `data:${mime};base64,${b.toString('base64')}` };
-    }) : [];
+  // Cap kept generous (64) so manual add/remove via scripts/refs.js stays
+  // flexible without surprise truncation as the brand grows. Only REF_BUDGET
+  // (default 8) actually reach fal per render anyway — see render/fal.js.
+  // Subfolders are treated as style buckets — e.g. references/product-shot/*.png
+  // get tagged with style='product-shot'. The orchestrator can filter by style
+  // for cartridges where a composition has dedicated reference imagery.
+  const loadRef = (full, filename, style) => {
+    const b = fs.readFileSync(full);
+    const ext = path.extname(filename).toLowerCase();
+    const mime = ext === '.png' ? 'image/png' : ext === '.webp' ? 'image/webp' : 'image/jpeg';
+    return { filename, style: style || null, url: `data:${mime};base64,${b.toString('base64')}` };
+  };
+  let references = [];
+  if (fs.existsSync(refsDir)) {
+    for (const entry of fs.readdirSync(refsDir).sort()) {
+      const full = path.join(refsDir, entry);
+      if (fs.statSync(full).isDirectory()) {
+        for (const sub of fs.readdirSync(full).sort()) {
+          if (!/\.(jpg|jpeg|png|webp)$/i.test(sub)) continue;
+          references.push(loadRef(path.join(full, sub), sub, entry));
+        }
+      } else if (/\.(jpg|jpeg|png|webp)$/i.test(entry)) {
+        references.push(loadRef(full, entry, null));
+      }
+    }
+    references = references.slice(0, 64);
+  }
 
   const catDir = path.join(dir, 'categories');
   const categories = {};
@@ -46,7 +65,7 @@ function loadCartridge(name) {
     });
   }
 
-  return { name, profile, themes, compositions, subjects, palette, suffix, critic, guardrails, studioRules, gpt2Voice, references, categories };
+  return { name, profile, themes, compositions, subjects, palette, suffix, critic, guardrails, studioRules, gpt2Voice, intakePrompt, references, categories };
 }
 
 module.exports = { loadCartridge };

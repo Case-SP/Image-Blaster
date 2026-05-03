@@ -26,24 +26,63 @@ async function resolveClientByApiKey(key) {
 // resolves to a shared "public" client. Reversible by unsetting the env var.
 const OPEN_MODE = process.env.AUTH_MODE === 'open';
 const PUBLIC_EMAIL = 'public@image-blaster.local';
-let openModeClientPromise = null;
+const OPEN_MODE_CLIENT_TIMEOUT_MS = parseInt(process.env.OPEN_MODE_CLIENT_TIMEOUT_MS || '3000', 10);
+let openModeClient = null;       // resolved value cache
+let openModeClientPromise = null; // in-flight promise (only set while a fetch is mid-flight)
 
 async function ensureOpenModeClient() {
+  // Fast path: already resolved.
+  if (openModeClient) return openModeClient;
+  // In-flight: piggyback on the existing call.
   if (openModeClientPromise) return openModeClientPromise;
+  // Cold path: kick off a new fetch with a timeout. On failure we DON'T cache
+  // the rejected promise — next request gets a fresh attempt rather than
+  // awaiting a dead handle forever.
   openModeClientPromise = (async () => {
-    const { data: existing } = await sb().from('clients').select('*').eq('email', PUBLIC_EMAIL).maybeSingle();
-    if (existing) return existing;
-    const { data: inserted, error } = await sb().from('clients').insert([{
-      token: crypto.randomBytes(24).toString('base64url'),
-      name: 'public',
-      cartridge: process.env.OPEN_MODE_CARTRIDGE || 'nolla',
-      n_per_title: parseInt(process.env.OPEN_MODE_N || '3', 10),
-      monthly_image_quota: parseInt(process.env.OPEN_MODE_QUOTA || '5000', 10),
-      email: PUBLIC_EMAIL,
-      active: true
-    }]).select().single();
-    if (error) throw error;
-    return inserted;
+    const fetchClient = (async () => {
+      const { data: existing } = await sb().from('clients').select('*').eq('email', PUBLIC_EMAIL).maybeSingle();
+      if (existing) return existing;
+      const { data: inserted, error } = await sb().from('clients').insert([{
+        token: crypto.randomBytes(24).toString('base64url'),
+        name: 'public',
+        cartridge: process.env.OPEN_MODE_CARTRIDGE || 'nolla',
+        n_per_title: parseInt(process.env.OPEN_MODE_N || '3', 10),
+        monthly_image_quota: parseInt(process.env.OPEN_MODE_QUOTA || '5000', 10),
+        email: PUBLIC_EMAIL,
+        active: true
+      }]).select().single();
+      if (error) throw error;
+      return inserted;
+    })();
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('ensureOpenModeClient timeout')), OPEN_MODE_CLIENT_TIMEOUT_MS)
+    );
+    try {
+      const c = await Promise.race([fetchClient, timeoutPromise]);
+      openModeClient = c;
+      return c;
+    } catch (e) {
+      // Supabase unreachable / rate-limited / pooler-exhausted. Fall back to
+      // a synthetic in-memory client so the UI shell still loads. New runs
+      // won't persist, but cartridges/static endpoints work and the user
+      // sees the funnel chrome instead of a hung page.
+      console.warn('[open-mode] Supabase fetch failed, using synthetic fallback:', e.message);
+      const fallback = {
+        id: 'open-mode-fallback',
+        email: PUBLIC_EMAIL,
+        name: 'public-fallback',
+        cartridge: process.env.OPEN_MODE_CARTRIDGE || 'nolla',
+        n_per_title: parseInt(process.env.OPEN_MODE_N || '3', 10),
+        monthly_image_quota: parseInt(process.env.OPEN_MODE_QUOTA || '5000', 10),
+        active: true,
+        __synthetic: true
+      };
+      // Don't cache the fallback; next request retries the real Supabase
+      // call in case it's recovered.
+      return fallback;
+    } finally {
+      openModeClientPromise = null;
+    }
   })();
   return openModeClientPromise;
 }

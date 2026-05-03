@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <title>Image Generator</title>
+  <title>Recast</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <main>
     <!-- Sign in -->
-    <section id="email-section" class="view">
+    <section id="email-section" class="view auth">
       <p class="welcome" id="welcome-msg" hidden></p>
       <label for="email">Email</label>
       <input type="email" id="email" placeholder="you@example.com" autocomplete="email">
@@ -18,8 +18,7 @@
       <button type="button" id="have-code-btn" class="btn-link">I have an access code</button>
     </section>
 
-    <!-- Redeem access code (out-of-band grant) -->
-    <section id="access-section" class="view" hidden>
+    <section id="access-section" class="view auth" hidden>
       <label for="access-code">Access code</label>
       <input type="text" id="access-code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="000000" autocomplete="one-time-code">
       <button type="button" id="access-btn" class="btn-primary">Sign in</button>
@@ -27,8 +26,7 @@
       <button type="button" id="back-to-email-btn" class="btn-link">Use email instead</button>
     </section>
 
-    <!-- Verify code -->
-    <section id="code-section" class="view" hidden>
+    <section id="code-section" class="view auth" hidden>
       <label for="code">Code sent to <span id="code-email"></span></label>
       <input type="text" id="code" inputmode="numeric" pattern="[0-9]{4,10}" maxlength="10" placeholder="000000" autocomplete="one-time-code" required>
       <button type="button" id="code-btn" class="btn-primary">Verify</button>
@@ -38,28 +36,87 @@
 
     <!-- App -->
     <section id="app-section" hidden>
-      <textarea id="titles" rows="8" placeholder="Paste titles, one per line…"></textarea>
+      <header class="topbar">
+        <div class="pill" id="pill">
+          <svg class="pill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="7"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <textarea id="titles" rows="1" placeholder="Paste titles, one per line…  ⏎ to generate"></textarea>
+        </div>
 
-      <div class="controls">
-        <button type="button" id="n-btn" class="btn-n" title="Images per title">3</button>
-        <button type="button" id="model-btn" class="btn-n" title="Render model (click to cycle)" data-model="fal-ai/nano-banana-pro">nano</button>
-        <button type="button" id="generate-btn" class="btn-primary btn-compact">Generate</button>
-      </div>
+        <button type="button" class="bubble bubble-cart" id="cart-btn" title="Cartridge (click to cycle)">nolla</button>
+        <button type="button" class="bubble" id="n-btn" title="Images per title (click to cycle)">3</button>
+        <button type="button" class="bubble" id="model-btn" title="Model (click to cycle)" data-model="fal-ai/nano-banana-pro">nano</button>
+        <button type="button" class="bubble bubble-dl" id="dl-btn" title="Download selected" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 4v12"></path>
+            <path d="M6 12l6 6 6-6"></path>
+            <path d="M5 20h14"></path>
+          </svg>
+          <span class="bubble-count" id="dl-count" hidden>0</span>
+        </button>
+      </header>
 
+      <div class="status-strip" id="status-strip" hidden></div>
       <p class="totals" id="totals"></p>
 
-      <!-- Latest run, always visible when present -->
-      <div id="latest-run" class="run-latest" hidden></div>
+      <div id="grid" class="grid"></div>
+      <div id="grid-empty" class="grid-empty" hidden>No generations yet — paste titles above and press ⏎.</div>
 
-      <!-- Older runs, collapsed by default -->
-      <details id="older-runs" hidden>
-        <summary>Older<span id="older-count"></span></summary>
-        <div id="older-list" class="run-list"></div>
-      </details>
+      <!-- Product-cartridge staged funnel — replaces the flat grid when active -->
+      <div id="funnel" class="funnel" hidden>
+        <div class="funnel-col" data-stage="sketch">
+          <div class="funnel-head"><span class="funnel-name">Sketch</span><span class="funnel-count" data-count></span></div>
+          <div class="funnel-action" data-action></div>
+          <div class="funnel-body" data-body></div>
+          <div class="funnel-foot" data-foot></div>
+        </div>
+        <div class="funnel-col" data-stage="product-shot">
+          <div class="funnel-head"><span class="funnel-name">Product</span><span class="funnel-count" data-count></span></div>
+          <div class="funnel-action" data-action></div>
+          <div class="funnel-body" data-body></div>
+          <div class="funnel-foot" data-foot></div>
+        </div>
+        <div class="funnel-col" data-stage="in-situ">
+          <div class="funnel-head"><span class="funnel-name">In-situ</span><span class="funnel-count" data-count></span></div>
+          <div class="funnel-action" data-action></div>
+          <div class="funnel-body" data-body></div>
+          <div class="funnel-foot" data-foot></div>
+        </div>
+      </div>
 
       <button type="button" id="signout-btn" class="btn-link signout">Sign out</button>
     </section>
   </main>
+
+  <div id="status-foot" class="status-foot" hidden>
+    <span class="sf-dot" data-key="sse" title="SSE state"></span>
+    <span class="sf-text" data-key="db">DB —</span>
+    <span class="sf-text" data-key="tiles">— tiles</span>
+    <span class="sf-text" data-key="inflight">0 in-flight</span>
+    <span class="sf-text" data-key="renders" hidden></span>
+    <span class="sf-warn" data-key="warn" hidden></span>
+  </div>
+
+  <!-- Lightbox -->
+  <div id="lightbox" class="lightbox" hidden>
+    <div class="lb-stage">
+      <img id="lb-img" alt="">
+      <div class="lb-prompt" id="lb-prompt"></div>
+      <div class="lb-meta" id="lb-meta"></div>
+      <div class="lb-actions">
+        <button type="button" id="lb-download" class="lb-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 4v12"></path>
+            <path d="M6 12l6 6 6-6"></path>
+            <path d="M5 20h14"></path>
+          </svg>
+          <span>Download</span>
+        </button>
+      </div>
+    </div>
+  </div>
 
   <script src="app.js"></script>
 </body>

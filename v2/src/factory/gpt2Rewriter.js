@@ -83,7 +83,7 @@ async function rewriteForGpt2({ prompt, brandVoice = '', model = 'anthropic/clau
       'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
       'Content-Type': 'application/json',
       'HTTP-Referer': 'http://localhost:3002',
-      'X-Title': 'Brand Image Blaster v2'
+      'X-Title': 'Recast Rewriter'
     },
     body: JSON.stringify({
       model,

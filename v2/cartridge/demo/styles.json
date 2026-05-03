@@ -1,0 +1,226 @@
+{
+  "$schema_version": "0.1",
+  "$notes": "Top-line layer in a Recast cartridge: STYLE — how the image is made (medium, treatment, post-process, the visual law of 'what kind of object is this picture'). Each style is a self-contained paragraph the orchestrator will compose with a subject phrase. Refs attach per-style, not per-cartridge. Sub-fields (lighting, framing, palette, camera, post, surface) are optional today; they grow as we need finer-grained control. The orchestrator will compose: `${style.prose} ${subject.phrase} ${cartridge.studioRules || ''}`.",
+
+  "styles": {
+    "studio_hardware_cool_gradient": {
+      "name": "Studio hardware on cool gradient",
+      "prose": "A photograph of a single industrial-design object isolated on a soft cool gray-to-white seamless gradient backdrop. Brushed aluminum, technical white plastic, weatherproof finishes. Small utilitarian color accents — caution-orange dot, indicator-yellow stripe, technical-blue label — used sparingly. Soft top light, considered shadows, 3/4 angle or dead-on hero framing. Reads as a real product photograph from a Vitsoe or Monocle technical feature, not a render.",
+      "refs": ["ref-04-white-drone-studio.jpg", "ref-08-robot-arm.jpg", "ref-09-storant-cylinder-robot.jpg", "ref-10-sensor-tower.jpg"],
+      "lighting": "soft top, low contrast",
+      "palette": "cool grays, brushed aluminum, technical white, micro-accent in caution-orange or indicator-yellow",
+      "post": "considered, deliberate, scientific — never glossy retouch"
+    },
+
+    "atmospheric_sky_photographic": {
+      "name": "Atmospheric sky, photographic",
+      "prose": "A real photograph of a dramatic cumulus or cirrus cloudscape — moody color or rich black-and-white, deep photographic texture, sense of altitude and weight. Single subject is the sky itself; ground line is low or absent. Reads as fine-art weather photography, not stock or CG.",
+      "refs": ["ref-01-storm-clouds-bw.jpg", "ref-02-cumulus-moon.jpg"],
+      "lighting": "natural, often backlit / late-day",
+      "palette": "monochrome or muted desaturated color",
+      "post": "Wim Wenders / Burtynsky depth, no HDR look"
+    },
+
+    "aerial_top_down_landscape": {
+      "name": "Aerial top-down landscape",
+      "prose": "A bird's-eye photograph of a single small subject in vast cultivated or open landscape — agricultural field mosaic, irrigation circle geometry, highway interchange, snow-covered field with single track. The subject is small, the negative space is huge. Geometric ground markings, considered framing.",
+      "refs": ["ref-03-aerial-tractor-field.jpg", "ref-06-aerial-court-figures.jpg", "ref-14-an-image-uploaded-on-jun-18-2024.jpg"],
+      "lighting": "sun-from-side, long shadows",
+      "framing": "centered or rule-of-thirds, subject occupies <10% of frame"
+    },
+
+    "modular_typology_grid": {
+      "name": "Modular typology grid",
+      "prose": "An isometric or top-down array of small geometric structures arranged on flat white. Eames-style architectural model rows, tool catalog layouts, specimen typology grids, Donald Judd boxed forms, modular furniture catalog page. Even shadows, no labels, even spacing.",
+      "refs": ["ref-05-modular-buildings-array.jpg", "ref-07-figure-cutouts-grid.jpg"],
+      "framing": "isometric or true top-down, even grid",
+      "palette": "neutral whites + occasional Bauhaus primary"
+    },
+
+    "anonymous_figures_distance": {
+      "name": "Anonymous figures, distance",
+      "prose": "A documentary-distance photograph of full-body utility-wear figures — never close-up, never faces. Magnum-style observational distance, factory-worker silhouettes from above, athletes mid-action observed from far, single backlit silhouette in fog. Anonymous, compositional, never heroic.",
+      "refs": ["ref-07-figure-cutouts-grid.jpg"],
+      "framing": "wide, subject small in frame, no faces visible"
+    },
+
+    "glass_weather_ui_dashboard": {
+      "name": "Glass weather UI dashboard",
+      "prose": "A photograph of a single dark-mode glass-UI weather dashboard floating against a richly textured natural background (deep green foliage / tall grass / dense canopy at slight blur). The dashboard is a wide horizontal panel — frosted dark glass with subtle white border light, clean sans-serif type, minimal data density, multiple cards arranged in a balanced grid: a large current-temperature numeral with location + date, an air-quality bar with five condition glyphs across a week strip, a wind-direction compass with sunrise/sunset, a precipitation card showing a 7-day rain bar chart, an hourly forecast strip with thin temperature line plot, a humidity gauge, a visibility readout, a barometric pressure readout, an other-cities mini-list, and one wide map card showing a Doppler-style radar precipitation field in green/yellow/red gradient. The Recast Systems logomark (the four-color orb of dots) sits subtly in one corner of the dashboard at small scale. The overall composition is dark, calm, scientific — the dashboard is a window, not an ad.",
+      "refs": [],
+      "palette": "dark frosted glass + white type + green/yellow/red Doppler accent + brand-orange logomark glints",
+      "framing": "horizontal glass dashboard floating on richly textured natural ground, slight perspective tilt OR flat-on",
+      "post": "subtle glass blur, faint cyan glow on borders, no oversaturation, photographic depth in the background"
+    },
+
+    "ios_weather_widget_glassy": {
+      "name": "iOS-style weather widget photographed",
+      "prose": "A photograph of a single glassy frosted-glass weather widget card or instrument panel, as if shot through a phone or display screen. Soft frost, subtle iOS depth blur, cool palette. The widget is the subject — temperature glyph, conditions icon, minimal numeric readout. Reads as a photograph of a screen, not a flat illustration.",
+      "refs": ["ref-11-an-image-uploaded-on-nov-09-2023.webp", "ref-12-an-image-uploaded-by-girlofdavidson-on-d.jpg"],
+      "post": "subtle frost, gentle bloom, no oversaturation"
+    },
+
+    "topographic_poster_photographed": {
+      "name": "Topographic poster, photographed",
+      "prose": "A photograph of a single-color contour-line cartographic POSTER of a named peak, ridge, watershed, or atmospheric pressure system. Limited palette (one or two ink colors on cream / off-white paper). Slight paper texture, slight shadow under the poster, framed against the brand's #FAFAFA seamless. Read as a poster object, not as a literal aerial photograph.",
+      "refs": ["ref-13-an-image-uploaded-by-layers-on-apr-21-20.jpg", "ref-16-an-image-uploaded-on-mar-30-2025.jpg"],
+      "surface": "uncoated paper, visible fiber",
+      "palette": "single ink + paper, occasionally two-color"
+    },
+
+    "risograph_weather_diagram": {
+      "name": "Risograph weather diagram, photographed",
+      "prose": "A photograph of a risograph-printed weather or scientific diagram — limited two- or three-color overprint, slightly off-register inks, paper grain visible, soft edges from the riso drum. Subject is a cloud-form chart, pressure-system schematic, isobaric map, or instrument readout, drawn as if for a 1970s field-station handout.",
+      "refs": ["ref-15-an-image-uploaded-by-outdoor-recreation-.jpg"],
+      "surface": "riso paper, slight ink misregistration",
+      "palette": "two-color overprint (typical: blue + red, or black + fluorescent)"
+    },
+
+    "industrial_mylar_packaging": {
+      "name": "Industrial mylar packaging",
+      "prose": "A studio photograph of a silver mylar / foil packaging surface with bold sans-serif typography across the front. Reflective metallic skin, gentle wrinkles catching soft top light, soft shadow on neutral seamless background. The package itself is the subject — read as a photograph of a packaged technical artifact (a manual, a sealed instrument, a sample bag).",
+      "refs": ["ref-17-mylar-package-bold-typography.jpg"],
+      "surface": "reflective mylar, micro-wrinkle, slight sheen",
+      "palette": "silver / foil + black or red typography on neutral ground"
+    },
+
+    "modernist_logotype_typography": {
+      "name": "Modernist agency typography, photographed",
+      "prose": "A photograph of bold 70s/80s modernist agency typography on a flat neutral ground — saturated red or black sans-serif logotype, often cascading or repeating in registration, generous negative space. Reads as a graphic-standards-manual cover photographed in studio light, not a digital illustration.",
+      "refs": ["ref-18-cascading-modernist-logotype-red.jpg"],
+      "surface": "matte print stock, slight ink absorption",
+      "palette": "single saturated color (most often red) on cream or pale gray"
+    },
+
+    "celestial_icon_typology_black": {
+      "name": "Celestial-body icon typology on black",
+      "prose": "A photograph of a typology grid of small white circular celestial-body icons (planets, moons, suns, abstract spheres) on a deep black ground. Subtle interior texture variation between forms — striped, dotted, ringed, blank. Catalog-grid arrangement, even spacing, no captions. Reads as a page from a graphic-standards manual or planetary identification chart.",
+      "refs": ["ref-19-celestial-icon-typology-black.jpg"],
+      "framing": "even grid, deep black field, white iconography"
+    },
+
+    "editorial_travel_poster_two_tone": {
+      "name": "Editorial travel poster, two-tone flat illustration",
+      "prose": "A flat-illustration travel poster of a planetary or geological landscape, executed in two saturated tones — typically a warm earth-color ground (rust, ochre, sand) under a cool atmospheric gradient sky (teal, dusk-blue, indigo). Bold modernist sans-serif name set near the top in generous letter-spacing. Single tiny scale element (a craft, a marker, a small structure — not a person) sits low in the frame to anchor scale. Generous negative space, hand-printed paper texture, no rendered light. Reads as an illustrated poster object photographed against #FAFAFA, not as a digital render.",
+      "refs": ["ref-20-mars-travel-poster-flat-illustration.jpg"],
+      "palette": "two saturated tones — warm earth + cool atmospheric — plus paper white",
+      "framing": "horizontal landscape, scale anchor low, name set high, generous void between",
+      "surface": "matte print stock, slight ink absorption"
+    },
+
+    "brand_mark_solid_color_field": {
+      "name": "Brand mark on solid color field",
+      "prose": "A photograph of a centered white sans-serif brand wordmark or logotype on a saturated single-color field — ranging across the brand's accent palette (a Patagonia red, a Klein blue, a deep slate, a chalk green). The mark occupies roughly 25–35% of the frame width, centered or slightly above center, with vast even-color negative space around it. The field reads as a printed surface — flat color, faint paper grain, soft uneven edges — not a digital flat. Reads as a graphic-standards-manual reference plate photographed in studio.",
+      "refs": [],
+      "palette": "single saturated accent + white mark",
+      "framing": "wordmark centered or upper-center, ample margin, no other elements",
+      "surface": "matte printed color, faint paper grain"
+    },
+
+    "riso_cloud_grid_with_accent_square": {
+      "name": "Risograph cloud + grid + accent square",
+      "prose": "An album-cover-shape composition photographed: deep saturated blue ground; risograph-stippled white clouds drift across it; a fine white grid of equal-sized square cells overlays the entire surface; one cell — and only one — is filled with a saturated red riso ink, becoming the focal accent. Slight ink misregistration, paper grain, hand-printed feel. Composition reads as a contemporary editorial album cover or modernist data-art plate, photographed against #FAFAFA.",
+      "refs": ["ref-22-riso-cloud-grid-red-square-album.jpg"],
+      "palette": "saturated blue + white + single red accent cell",
+      "surface": "riso paper, slight overprint misregistration",
+      "framing": "regular square grid covers full frame, single accent cell breaks the field"
+    },
+
+    "photographic_cloud_with_measurement_grid": {
+      "name": "Photographic cloud with measurement grid overlay",
+      "prose": "A real photograph of a single cumulus or cirrus cloud against deep-blue late-afternoon sky, with a faint white measurement grid overlaid across the entire image — fine plus-sign tick-marks at regular intervals, OR a thin crosshatch of horizontal and vertical rules. The overlay reads as a scientific instrument annotation (a sextant reticle, a Hubble guide grid, a vintage cloud-form study chart) — present but never overwhelming the photographic subject. Photographic depth and grain.",
+      "refs": ["ref-23-cumulus-with-crosshatch-grid-overlay.jpg"],
+      "palette": "deep blue + white cloud + faint white grid",
+      "post": "fine grid overlay registered to image edges, ~6–10% opacity"
+    },
+
+    "satellite_earth_surface_aerial": {
+      "name": "Satellite earth-surface aerial",
+      "prose": "A high-resolution satellite-view photograph of an earth-surface feature — river delta drainage tracery, salt-flat dendrites, dune-field ridge patterns, glacier terminus, oxbow meander field — rendered in soft warm earth tones (ochre, umber, sand, bone-white) with occasional deep shadow. Composition reads as a cartographic plate or USGS satellite mosaic, near-abstract, no human structures, no captions. The land is the subject; the texture of the land is the content.",
+      "refs": ["ref-24-satellite-river-delta-ochre-white.jpg", "ref-25-urdaneta-aerial-landscape.jpg"],
+      "palette": "warm earth tones — ochre, umber, sand, bone-white, occasional deep shadow",
+      "framing": "vertical or square crop, edges bleed off the frame, no obvious orientation"
+    },
+
+    "cosmic_deep_field": {
+      "name": "Cosmic deep field",
+      "prose": "A deep-space photograph: pure black ground populated with fine grain noise, a scatter of distant stars, occasional faint nebular dust banding. Single point of brighter light or one off-center cosmic body (planet, moon, distant satellite) anchors the composition. Reads as a still from a contemporary space documentary or a JWST archive plate, never glossy CG.",
+      "refs": ["ref-26-cosmos-deep-space-frame.png"],
+      "palette": "deep black + cool white star points + faint nebular drift",
+      "framing": "subject small or absent, vast empty field dominates"
+    },
+
+    "cinematic_product_in_nature": {
+      "name": "Cinematic product in nature",
+      "prose": "A dark, moody product photograph: a single small Recast Systems hardware artifact (a sensor stem, a brushed-aluminum probe, a low light fixture, a ground-installed instrument) anchored low in the frame against a vast, dense field of natural texture (long grass blades, wheat heads, dark foliage, crop canopy, moss). Deep shadows, single controlled key light raking across the texture, the product reading as a small bright form emerging from the darkness. Long-lens compression, shallow depth of field on the product, painterly midtones, almost-night light. The natural texture occupies 70–85% of the frame; the product is small but precisely placed.",
+      "refs": ["ref-29-cinematic-product-in-grass-night.jpg"],
+      "lighting": "single raking key, deep ambient shadow, near-darkness in upper portion",
+      "palette": "deep green / bottle-green / charcoal + brushed aluminum highlights",
+      "framing": "product low in frame, vast natural texture above, vertical or 4:5 portrait crop",
+      "post": "moody, painterly, slight desaturation, product gently glowing"
+    },
+
+    "documentary_factory_floor": {
+      "name": "Documentary factory-floor / behind-the-scenes",
+      "prose": "An available-light documentary photograph from a working factory floor or assembly bay: large industrial equipment (a stainless-steel spinner / vessel / chamber), a technician mid-action on a wheeled ladder or platform leaning into the equipment, hexagonal or square overhead industrial luminaires, polished concrete floor with painted hazard stripes, structural columns and ductwork visible. Cool industrial light, slight haze, a working-shop feel. The figure is incidental — they're here because they're operating the machine; they're not the subject. Caught mid-gesture, never posed, never facing camera, never close-up.",
+      "refs": ["ref-30-factory-bts-worker-large-machine.jpg"],
+      "lighting": "available industrial overhead, cool color temperature, slight haze",
+      "palette": "polished aluminum, concrete grey, soft ochre/yellow safety stripes",
+      "framing": "wide environmental shot, equipment dominates, figure incidental in mid-gesture"
+    },
+
+    "designer_working_sketch": {
+      "name": "Designer working-sketch on paper",
+      "prose": "A photograph of a designer's working pen-and-paper sketch: a loose ballpoint or felt-tip drawing in a single ink color (cobalt blue, deep black, occasionally rust-red) on warm-white sketchbook paper. Faceted geometric forms in three-quarter perspective, multiple overlapping construction lines, the energy of an in-progress thought rather than a finished diagram. Subtle paper grain, slight wrinkle, soft natural drop shadow under the page edge against #FAFAFA. The sketch fills the central 40–60% of the page with generous margin around it. Reads as a *page from a designer's notebook, photographed flat*.",
+      "refs": ["ref-31-designer-working-sketch-blue-pen.jpg"],
+      "palette": "warm-white paper + single ink color (cobalt blue most common)",
+      "surface": "uncoated sketchbook paper, faint grain, occasional wrinkle",
+      "framing": "sketch centered with generous margin, page corners visible"
+    },
+
+    "macro_vegetation": {
+      "name": "Macro vegetation / crop / leaf",
+      "prose": "An extreme close-up macro photograph of a single botanical detail — a wheat head's individual grain, a single rye stem with its blade insertion point, the underside of a leaf showing veination, a sprouting seedling's first leaves emerging from soil, a moss colony on bark, a clover trifoliate leaflet. Natural light, very shallow depth of field, the subject rendered in sharp clinical detail against a blurred organic ground. Reads as a *botanical study plate or scientific macro frame*, not a stock-photo hero. Typically captured at 1:1 or closer, painterly bokeh in the background.",
+      "refs": [],
+      "lighting": "natural soft, often slightly overcast, gentle directional",
+      "palette": "muted greens, ochre wheats, pale-cream root tones, no saturated colors",
+      "framing": "subject centered or rule-of-thirds, sharp focal plane is razor-thin"
+    },
+
+    "macro_textile": {
+      "name": "Macro textile / technical fabric",
+      "prose": "An extreme close-up macro photograph of a technical or industrial fabric — gore-tex membrane weave, ripstop nylon grid, technical knit honeycomb, denim twill, mylar foil micro-wrinkle, weatherproof shell fabric, recycled fleece pile, polypropylene fiber bundle. Side-lit to bring out fiber direction and weave pattern, very shallow depth of field, no garment context — just the surface. Reads as a *materials-research catalog plate*, never an outfitter ad. Honest, physical, the texture of an engineered surface treated with the seriousness of a microscope slide.",
+      "refs": [],
+      "lighting": "raking side, low-contrast soft fill, brings out weave depth",
+      "palette": "honest fabric color (no boost), often muted greys, blacks, weatherproof olives"
+    },
+
+    "recast_logomark_plate": {
+      "name": "Recast Systems logomark plate",
+      "prose": "A photograph of a printed brand-mark plate featuring the Recast Systems logomark — a circular orb composed of overlapping small filled circles in four colors (burnt orange #DA5E15, marigold #FBBF27, cobalt blue #2F5EDC, sky cyan #6BD0ED). The mark sits centered on a single saturated solid-color ground (most often a deep slate, a chalk green, an ochre, or warm white) with vast even negative space surrounding it. The mark occupies roughly 25–30% of the page width. Faint paper grain, faint shadow under the page edge, no other elements. Reads as a *graphic-standards-manual identity plate, photographed in studio*. The logomark's four colors stay constant; only the background field varies.",
+      "refs": ["ref-28-recast-logomark-color-light.png"],
+      "palette": "single saturated background + the logomark's four colors (orange / marigold / cobalt / cyan)",
+      "framing": "logomark centered, ample even negative space, no other elements",
+      "surface": "matte printed page, faint paper grain"
+    },
+
+    "vintage_catalog_page_bw": {
+      "name": "Vintage black-and-white catalog photography",
+      "prose": "Soft duotone black-and-white studio photography in the manner of a 1960s/70s Scandinavian product catalog or auction-house plate: a single object floated in gentle, soft-light empty space, slight film grain, faint baseline shadow under the object, generous unornamented negative space, gentle midtones, no color anywhere. The subject is centered or slightly off-center, lit from above-camera with a long soft fall-off. Reads as a *page from a vintage product catalog, photographed* — never glossy, never retouched, never high-contrast.",
+      "refs": ["ref-27-vintage-catalog-page-bw-vase-grid.jpg"],
+      "lighting": "soft top, long fall-off, slight backlight separation",
+      "palette": "duotone black + warm-white paper, no color",
+      "post": "fine film grain, gentle midtones, no clipping",
+      "framing": "single object centered, generous baseline negative space, faint floor shadow"
+    },
+
+    "modernist_editorial_poster": {
+      "name": "Modernist editorial / album-cover poster",
+      "prose": "A photograph of a contemporary modernist editorial poster or album cover — dominant typography (often a single word, set tight) anchors the composition; one accent color carries the page; layout is grid-derived, asymmetric, considered. Faint paper grain, slight uneven inking, the object-quality of a printed thing rather than a digital flat. Photographed in flat studio light against #FAFAFA.",
+      "refs": ["ref-21-burgess-johnson-poster.jpg", "ref-18-cascading-modernist-logotype-red.jpg"],
+      "palette": "neutral ground + single saturated accent",
+      "framing": "grid-derived, asymmetric, type-led",
+      "surface": "matte print stock, faint grain"
+    }
+  }
+}

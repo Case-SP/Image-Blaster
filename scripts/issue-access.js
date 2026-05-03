@@ -56,7 +56,7 @@ function sixDigit() {
   console.log(`  cartridge: ${cartridge} · n/title: ${n} · quota: ${quota}${note ? ' · ' + note : ''}`);
   console.log('\nEmail body:');
   console.log('──────────────────────────────────────');
-  console.log(`Hey — here's your access to Image Blaster.`);
+  console.log(`Hey — here's your access to Recast.`);
   console.log('');
   console.log(`Click to sign in:`);
   console.log(`  ${url}`);

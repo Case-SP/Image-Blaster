@@ -161,7 +161,7 @@ async function callShotListLLM({ systemPrompt, userPrompt, model, maxTokens }) {
       'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
       'Content-Type': 'application/json',
       'HTTP-Referer': 'http://localhost:3002',
-      'X-Title': 'Brand Image Blaster v2'
+      'X-Title': 'Recast Shot List'
     },
     body: JSON.stringify({
       model,
@@ -277,9 +277,35 @@ function resolveShot(cartridge, shot, seed) {
   const hasEthnicityInPhrase = /^(Black|White|Latina|Latino|Asian|South Asian|East Asian|mixed-race|middle-aged|older|young|dark|olive|pale|medium|deep|light)/i.test(subject);
   const modelSpec = isPerson && shot.model_spec && !hasEthnicityInPhrase ? shot.model_spec : null;
 
-  const slotOverrides = bodyRegionSlotOverrides(topic);
+  // Merge slot overrides: body-region first (default Nolla behavior), then
+  // any explicit slot_overrides from the shot itself (intake-mode cartridges
+  // attach their 6 panel phrases here). Shot-level overrides win on conflict.
+  const slotOverrides = {
+    ...(bodyRegionSlotOverrides(topic) || {}),
+    ...(shot.slot_overrides || {})
+  };
 
-  const built = buildPrompt({ composition, subject, seed, suffix: cartridge.suffix, themeSuffix, modelSpec, slotOverrides });
+  // Play-mode short-circuit: when the orchestrator has assigned a wildcard
+  // skeleton to this shot (object-mode cartridges with play_ratio > 0), bypass
+  // the slot machinery entirely. Substitute {subject} into the wildcard,
+  // tack on theme + suffix, and ship. The model improvises composition; the
+  // references carry style.
+  let built;
+  if (shot.__playSkeleton) {
+    let prompt = String(shot.__playSkeleton).replace(/\{subject\}/g, subject || 'subject');
+    const parts = [prompt];
+    if (themeSuffix) parts.push(themeSuffix);
+    if (cartridge.suffix?.positives) parts.push(cartridge.suffix.positives);
+    if (cartridge.suffix?.negatives) parts.push(cartridge.suffix.negatives);
+    built = { prompt: parts.join('. '), camera: 'play', lens: 'play', slotsUsed: { __play: '1' } };
+  } else {
+    built = buildPrompt({
+      composition, subject, seed,
+      suffix: cartridge.suffix, themeSuffix, modelSpec, slotOverrides,
+      cameraOverride: shot.__cameraOverride || null,
+      lensOverride: shot.__lensOverride || null
+    });
+  }
   return {
     prompt: built.prompt,
     hasPerson: isPerson,

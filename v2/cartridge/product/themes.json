@@ -1,0 +1,10 @@
+{
+  "themes": {
+    "neutral": {
+      "name": "Neutral",
+      "background": "neutral palette appropriate to the medium",
+      "color_grade": "no aggressive grade, gentle contrast",
+      "mood": "calm, considered"
+    }
+  }
+}

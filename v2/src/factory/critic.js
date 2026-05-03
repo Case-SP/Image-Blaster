@@ -37,7 +37,7 @@ THEMES: ${Object.keys(cartridge.themes).join(', ')}`;
       'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
       'Content-Type': 'application/json',
       'HTTP-Referer': 'http://localhost:3002',
-      'X-Title': 'Brand Image Blaster v2 Critic'
+      'X-Title': 'Recast Critic'
     },
     body: JSON.stringify({
       model, max_tokens: Math.min(Object.keys(shotMap).length * N * 80, 16000),

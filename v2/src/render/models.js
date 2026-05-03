@@ -8,10 +8,12 @@
 // — the surface allowlist makes them reachable; the per-client gate decides
 // who actually gets to call them. Default-deny for any client not on the list.
 const API_ALLOWED_MODELS = new Set([
+  'fal-ai/nano-banana',          // cheap variant — ~$0.039/image, no reference support
   'fal-ai/nano-banana-pro',
   'fal-ai/flux-pro/kontext',
   'fal-ai/flux-pro/v1.1-ultra',
-  'openai/gpt-image-2'
+  'openai/gpt-image-2',
+  'openai/gpt-image-2/edit'      // image-edit variant — used for parent-conditioned runs
 ]);
 
 // Internal (session/UI callers): same set as the API now that gpt-image-2 is

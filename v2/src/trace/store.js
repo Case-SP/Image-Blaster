@@ -6,6 +6,35 @@ const storage = createStorage();
 const bus = new EventEmitter();
 bus.setMaxListeners(200);
 
+// Rolling timing window for /healthz. Each successful render item appends
+// { model, stage, elapsedMs }. We keep up to 200 entries (FIFO) so p50/p95
+// reflect recent activity without unbounded memory growth.
+const RENDER_TIMING_WINDOW = 200;
+const renderTimings = [];
+function recordRenderTiming(entry) {
+  if (!entry || typeof entry.elapsedMs !== 'number') return;
+  renderTimings.push({ model: entry.model, stage: entry.stage, ms: entry.elapsedMs, t: Date.now() });
+  if (renderTimings.length > RENDER_TIMING_WINDOW) renderTimings.shift();
+}
+function summarizeRenderTimings() {
+  if (!renderTimings.length) return { count: 0 };
+  const byModel = {};
+  for (const r of renderTimings) {
+    const k = r.model || 'unknown';
+    (byModel[k] = byModel[k] || []).push(r.ms);
+  }
+  const pct = (arr, p) => {
+    const sorted = [...arr].sort((a, b) => a - b);
+    const idx = Math.min(sorted.length - 1, Math.floor(sorted.length * p));
+    return sorted[idx];
+  };
+  const summary = { count: renderTimings.length, byModel: {} };
+  for (const [m, arr] of Object.entries(byModel)) {
+    summary.byModel[m] = { count: arr.length, p50: pct(arr, 0.5), p95: pct(arr, 0.95) };
+  }
+  return summary;
+}
+
 function newRunId() {
   const d = new Date();
   const pad = n => String(n).padStart(2, '0');
@@ -21,6 +50,13 @@ function computeHitRate(trace) {
   return { total, usable, rate: total ? Number((usable / total).toFixed(3)) : null };
 }
 function computeRenderProgress(trace) {
+  // Prefer the counter-column path when the trace was loaded as a slim
+  // listing (no items[] in stages.renders, just __counts). Fall back to
+  // counting items when the full trace is present.
+  if (trace.__counts) {
+    const total = (trace.input?.titles?.length || 0) * (trace.input?.N || 0);
+    return { ok: trace.__counts.ok || 0, failed: trace.__counts.failed || 0, total };
+  }
   const items = Object.values(trace.stages?.renders?.items || {}).flat();
   const ok = items.filter(i => i.status === 'ok').length;
   const failed = items.filter(i => i.status === 'failed').length;
@@ -38,6 +74,16 @@ async function listTraces({ clientId } = {}) {
     startedAt: t.startedAt, finishedAt: t.finishedAt,
     titleCount: t.input?.titles?.length || 0,
     N: t.input?.N,
+    // Slim summary of input so the UI can do skeleton math + slug lookups
+    // without us projecting the entire `trace->input` JSON (which is large
+    // and made the listing query exceed the 8s timeout).
+    input: t.input ? {
+      stage: t.input.stage || null,
+      N: t.input.N,
+      titles: Array.isArray(t.input.titles)
+        ? t.input.titles.map(x => ({ id: x.id, slug: x.slug, title: x.title }))
+        : []
+    } : null,
     hitRate: computeHitRate(t),
     renderProgress: computeRenderProgress(t),
     stageStatus: {
@@ -70,7 +116,43 @@ function createTrace({ cartridge, input, clientId = null }) {
   };
 
   let latest = trace;
-  const persist = () => storage.writeTrace(latest, clientId).catch(e => console.error('[trace] persist', e.message));
+  // Coalesce persists: keep only the latest snapshot pending while a write
+  // is in flight. Render-heavy stages call mutate dozens of times per
+  // second; without coalescing, every one of those triggers a separate full-
+  // trace upsert and the chain backs up until Supabase times out the
+  // statement. Now: write once, queue at most one more (the latest), drop
+  // every intermediate snapshot in between.
+  let pendingSnapshot = null;
+  let writing = false;
+  // Wall-clock timeout per persist write. A single hung Supabase upsert can
+  // otherwise block the persist chain forever and the orchestrator never
+  // reaches trace.finish(), leaving runs stuck in 'running' until the orphan
+  // sweep catches them 15 minutes later.
+  const PERSIST_TIMEOUT_MS = parseInt(process.env.PERSIST_TIMEOUT_MS || '10000', 10);
+  async function writeWithTimeout(snap) {
+    return Promise.race([
+      storage.writeTrace(snap, clientId),
+      new Promise((_, reject) => setTimeout(() => reject(new Error(`persist timeout ${PERSIST_TIMEOUT_MS}ms`)), PERSIST_TIMEOUT_MS))
+    ]);
+  }
+  async function flushLoop() {
+    if (writing) return;
+    writing = true;
+    try {
+      while (pendingSnapshot) {
+        const snap = pendingSnapshot;
+        pendingSnapshot = null;
+        try { await writeWithTimeout(snap); }
+        catch (e) { console.error('[trace] persist', e.message); }
+      }
+    } finally {
+      writing = false;
+    }
+  }
+  const persist = () => {
+    pendingSnapshot = JSON.parse(JSON.stringify(latest));
+    flushLoop();
+  };
   persist();
   bus.emit(EVENTS.RUN_STARTED, { id: trace.id, trace });
 
@@ -99,6 +181,9 @@ function createTrace({ cartridge, input, clientId = null }) {
         t.stages.renders.items[tid] = t.stages.renders.items[tid] || [];
         t.stages.renders.items[tid].push(item);
       });
+      // Feed the rolling /healthz window. Only ok renders count toward
+      // p50/p95 since failed retries skew the distribution.
+      if (item.status === 'ok') recordRenderTiming(item);
       bus.emit(EVENTS.RENDER_ITEM, { id: trace.id, titleId: tid, item });
     },
     setVerdict(tid, filename, verdict, reasons = []) {
@@ -116,4 +201,4 @@ function createTrace({ cartridge, input, clientId = null }) {
   };
 }
 
-module.exports = { bus, createTrace, readTrace, listTraces, computeHitRate, computeRenderProgress, EVENTS };
+module.exports = { bus, createTrace, readTrace, listTraces, computeHitRate, computeRenderProgress, EVENTS, summarizeRenderTimings };

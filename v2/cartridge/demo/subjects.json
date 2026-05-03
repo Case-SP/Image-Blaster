@@ -1,0 +1,10 @@
+{
+  "subjects": {
+    "panel-mix": {
+      "triggers": ["demo", "default", "brand"],
+      "phrase_banks": {
+        "default": ["editorial contact sheet variant"]
+      }
+    }
+  }
+}

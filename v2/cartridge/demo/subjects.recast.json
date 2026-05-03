@@ -1,0 +1,107 @@
+{
+  "$schema_version": "0.1",
+  "$status": "PROPOSAL — not yet wired into the orchestrator. The currently-loaded `subjects.json` (panel-mix shape) is unchanged. This file exists to argue the schema before the engine refactor.",
+  "$notes": "Top-line layer in a Recast cartridge: SUBJECT — what's depicted in the image. Each subject is a noun-phrase (or short scene fragment) that gets composed with a style's prose by the orchestrator. Style decides HOW; subject decides WHAT. Subjects can be plain (just a phrase) or carry slot data (body_region, theme, etc.) when the cartridge needs finer slotting — that's an extension hook, off by default. Intake's job becomes: pick 6 (style, subject) pairs that span the matrix and honor mandatory/forbidden, NOT invent both.",
+
+  "subjects": {
+    "drone_quadcopter":         { "phrase": "a small white-and-aluminum quadcopter cloud-seeding drone, propellers visible, sensor array slung underneath" },
+    "robotic_arm_lab":          { "phrase": "a six-axis industrial robotic arm holding a small glass cloud-condensation-nuclei sample vial" },
+    "sensor_tower_field":       { "phrase": "a slender weather-sensor tower with anemometer cup-cluster and small instrument enclosure" },
+    "modular_field_station":    { "phrase": "a single small modular weatherproof field-station enclosure with caution-orange handle" },
+    "calibration_jig":          { "phrase": "a calibration jig and exploded-view of machined fittings" },
+
+    "cumulus_cloudscape":       { "phrase": "a tall cumulus cloud column at altitude, mid-afternoon, dramatic vertical development" },
+    "cirrus_streaks_dawn":      { "phrase": "high-altitude cirrus streaks across a pale dawn sky" },
+    "lenticular_cloud":         { "phrase": "a single lenticular cloud over a distant ridge" },
+    "contrails_high":           { "phrase": "crossing aircraft contrails against deep blue at altitude" },
+    "fog_over_ridge":           { "phrase": "fog rolling over a low mountain ridge, shapes barely emerging" },
+
+    "irrigation_circle_aerial": { "phrase": "an irrigation pivot circle scribed across a vast green field, single tractor track bisecting it" },
+    "field_station_aerial":     { "phrase": "a single small field station and its long shadow on cultivated land, viewed from directly above" },
+    "highway_interchange":      { "phrase": "a cloverleaf highway interchange traced across pale ground from directly above" },
+    "snow_field_track":         { "phrase": "a single thin track of footprints across an otherwise unbroken snow field" },
+    "shipping_yard_grid":       { "phrase": "a shipping container yard's strict color-block grid from above, single mover crane casting a long shadow" },
+
+    "ridge_contour_map":        { "phrase": "the contour signature of a named ridge or watershed, single line weight" },
+    "isobaric_pressure_chart":  { "phrase": "an isobaric pressure-system chart with concentric pressure lines around a low" },
+    "cloud_form_taxonomy":      { "phrase": "a labelled cloud-form taxonomy chart — cumulus, stratus, cirrus, nimbus" },
+    "doppler_radar_still":      { "phrase": "a Doppler radar still showing a precipitation cell sweeping east" },
+    "windrose_diagram":         { "phrase": "a wind-rose polar diagram for a named station, twelve directional spokes" },
+
+    "weather_widget_temperature":  { "phrase": "a single temperature numeral and conditions glyph" },
+    "instrument_dashboard_cluster": { "phrase": "an instrument dashboard cluster — humidity, pressure, dew-point, wind speed — clean glyphs only" },
+    "cloud_seeding_status_panel":   { "phrase": "a status readout panel for an active cloud-seeding mission, terse rows of values" },
+
+    "technician_distant_apron": { "phrase": "a single utility-clad technician walking away across pale concrete apron, long shadow, no face visible" },
+    "field_team_silhouettes":   { "phrase": "two anonymous figures in technical jackets crossing a snow field at distance" },
+    "operator_against_sky":     { "phrase": "a backlit silhouette of an operator gesturing toward the sky" },
+
+    "graphics_manual_cover":      { "phrase": "a graphic-standards-manual cover with a bold logotype on neutral stock" },
+    "icon_set_planetary_typology": { "phrase": "a typology of small white planetary icons, catalog spacing" },
+    "mylar_envelope_label":       { "phrase": "a sealed silver mylar envelope with a single bold sans-serif identifier across the face" },
+
+    "$$ section_planetary": "—— planetary surfaces & space objects ——",
+    "planet_mars_surface":      { "phrase": "Mars: rust-red horizon, low ridges in the far distance, faint pink-orange sky" },
+    "planet_earth_orbit":       { "phrase": "Earth from low orbit, blue marble, swirl of cloud, terminator across one edge" },
+    "planet_jupiter_storm":     { "phrase": "Jupiter's banded storm cloud, the Great Red Spot at lower right" },
+    "moon_terminator":          { "phrase": "the Moon at half-phase, sharp terminator line across cratered surface" },
+    "saturn_rings_edge":        { "phrase": "Saturn at quarter-phase, rings tilted to a sharp angle, ochre body" },
+    "named_planet_horizon":     { "phrase": "a low planetary horizon under a saturated atmospheric gradient — generic stand-in for any named world" },
+
+    "$$ section_satellite_earth": "—— satellite earth-surface features ——",
+    "river_delta_dendritic":    { "phrase": "a dendritic river delta seen from satellite altitude, tracery of channels fanning across an alluvial plain" },
+    "salt_flat_dendrites":      { "phrase": "salt-flat dendrites — branching white salt veins across an ochre playa" },
+    "dune_field_ripples":       { "phrase": "regular ridge-and-trough ripple patterns of a vast dune field from above" },
+    "glacier_terminus":         { "phrase": "a glacier terminus calving into a milk-blue lagoon, satellite altitude" },
+    "oxbow_meander_field":      { "phrase": "an oxbow meander field — old river loops in stages of abandonment across a floodplain" },
+    "agricultural_pivot_grid":  { "phrase": "an array of irrigation pivot circles tessellated across cultivated land" },
+
+    "$$ section_cosmic": "—— cosmic / deep-space ——",
+    "cosmic_dust_band":         { "phrase": "a faint band of nebular dust across deep space, occasional bright stars" },
+    "deep_field_starscape":     { "phrase": "a JWST-style deep-field starscape, scattered point sources against pure black" },
+    "lone_planet_silhouette":   { "phrase": "a single dark planetary silhouette against a deep cosmic field, faint atmospheric ring" },
+    "satellite_in_orbit":       { "phrase": "a small satellite passing across a star field, solar panels catching light" },
+
+    "$$ section_macro_vegetation": "—— macro vegetation / crop / leaf ——",
+    "wheat_head_macro":         { "phrase": "a single wheat head, individual grains in sharp focus, husk fibers visible" },
+    "rye_blade_insertion":      { "phrase": "the insertion point where a rye blade emerges from its sheath, dew on the joint" },
+    "leaf_underside_veins":     { "phrase": "the underside of a single leaf, vein network in raking light" },
+    "seedling_emerging":        { "phrase": "a sprouting seedling's first two leaves emerging from dark soil" },
+    "moss_on_bark":             { "phrase": "a moss colony on weathered bark, individual fronds in sharp focus" },
+    "clover_trifoliate":        { "phrase": "a clover trifoliate leaflet held in soft natural light, midrib and serration visible" },
+    "grass_blade_field_macro":  { "phrase": "a dense field of grass blades close in, individual edges catching directional light" },
+    "crop_canopy_dense":        { "phrase": "a dense crop canopy from inside the rows, blades and stems crossing the frame" },
+    "root_system_unearthed":    { "phrase": "a freshly unearthed root system, soil particles still clinging" },
+
+    "$$ section_macro_textile": "—— macro textile / technical fabric ——",
+    "ripstop_nylon_grid":       { "phrase": "ripstop nylon grid pattern at macro scale, thread reinforcement squares visible" },
+    "goretex_membrane_weave":   { "phrase": "gore-tex outer membrane weave at macro scale, side-lit to show fiber direction" },
+    "technical_knit_honeycomb": { "phrase": "a technical knit honeycomb structure at macro scale, individual loops resolved" },
+    "denim_twill_close":        { "phrase": "indigo denim twill at macro scale, weave diagonal clearly visible" },
+    "mylar_foil_microwrinkle":  { "phrase": "industrial mylar foil at macro scale, micro-wrinkle and reflective sheen" },
+    "weatherproof_shell_seam":  { "phrase": "the seam of a weatherproof technical shell, taped seam tape and stitch density visible" },
+    "polypropylene_fiber_bundle": { "phrase": "a bundle of polypropylene fibers at macro scale, individual filaments separated" },
+    "recycled_fleece_pile":     { "phrase": "recycled fleece pile at macro scale, fiber loops in soft side light" },
+
+    "$$ section_industrial_workers": "—— workers operating large equipment ——",
+    "tech_on_ladder_large_vessel": { "phrase": "a technician on a wheeled ladder leaning into a large stainless-steel cylindrical vessel, mid-gesture, factory floor" },
+    "operator_at_control_panel": { "phrase": "an operator at a wide industrial control panel, hands on controls, instruments lit, observed from behind" },
+    "hands_at_calibration_jig": { "phrase": "two hands working at a calibration jig, brushed aluminum parts being aligned, no face visible" },
+    "tech_under_overhead_machine": { "phrase": "a technician beneath an overhead industrial machine, looking up into its underside, hexagonal overhead lights" },
+    "two_techs_at_assembly_bay": { "phrase": "two technicians at an assembly bay, one passing a part to the other, mid-action, polished concrete floor" },
+    "tech_climbing_into_chamber": { "phrase": "a technician climbing into a large stainless-steel chamber, leg and arm visible, equipment dominates frame" },
+
+    "$$ section_design_sketches": "—— designer working sketches ——",
+    "sketch_polygon_perspective": { "phrase": "a loose blue-ballpoint perspective sketch of overlapping faceted polygons on warm-white sketchbook paper" },
+    "sketch_form_study":        { "phrase": "a working pen-on-paper form study of an industrial-design object, multiple construction lines, in-progress feel" },
+    "sketch_section_diagram":   { "phrase": "a hand-drawn section diagram of a piece of hardware, dimensions marked, blue ink on warm paper" },
+
+    "$$ section_overlays_and_marks": "—— overlays, brand marks, page-as-object ——",
+    "recast_logomark":          { "phrase": "the Recast Systems logomark — a circular orb of overlapping filled dots in burnt orange, marigold, cobalt blue, and sky cyan — centered on a saturated solid-color ground" },
+    "recast_systems_wordmark":  { "phrase": "the wordmark RECAST SYSTEMS set tight in a sans-serif, white on a saturated ground" },
+    "single_word_planet_name":  { "phrase": "a single bold sans-serif word — MARS, EARTH, MOON, JUPITER — set high in the frame above a poster landscape" },
+    "measurement_grid_atop_sky": { "phrase": "a faint white measurement grid (plus-sign tick marks at regular intervals) overlaid across a deep-blue sky and single cumulus cloud" },
+    "single_red_grid_cell":     { "phrase": "a regular grid of equal cells covering the frame, one cell filled with saturated red, all others reading the underlying field" },
+    "page_as_object":           { "phrase": "an editorial page or poster photographed flat against #FAFAFA, edges visible, slight shadow under the paper" }
+  }
+}
