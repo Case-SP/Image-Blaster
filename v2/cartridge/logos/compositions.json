@@ -41,6 +41,33 @@
       "lenses": ["clean vector finish, crisp edges, no texture"],
       "mood": "clean, geometric, modernist, controlled, finished, restrained",
       "style_mix": { "count": 3 }
+    },
+    "system-split-4x5": {
+      "category": "logo",
+      "aspect_ratio": "4:5",
+      "_aspect_note": "Target 4:5 portrait. Orchestrator honors aspect at RUN level only (no per-composition aspect; orchestrator.js ~141) — the UI sends aspect_ratio 4:5 for render runs (FLOWS, Task 2). This field documents intent + is forward-compatible if per-composition aspect lands.",
+      "skeleton": "a finished brand identity system board for {subject}, composed as a single vertical 4:5 sheet split into two stacked halves: the TOP half holds the primary brand MARK, centered with generous margin; the BOTTOM half holds the WORDMARK — the brand name set as finished, considered type — centered with generous margin, {palette}. {layout}. the mark and the wordmark are TWO DISTINCT elements that together read as ONE coherent identity — do NOT blend, merge, or overlap them, and do NOT bury the mark inside the lettering. carry the chosen mark forward FAITHFULLY: preserve its exact silhouette, geometry, proportion, and construction logic from the reference image — only the medium changes, from loose exploration to a clean finished system board. balanced, centered, deep even margins, no surrounding clutter, no real-world surfaces, no application mockups — this is the pure system board, in the visual register of: {style_mix}",
+      "slots": {
+        "palette": [
+          "set on a warm off-white ground",
+          "set on a soft neutral light-grey ground",
+          "set on a clean cream-paper ground",
+          "set on a deep ink-black ground (inverted — light mark and wordmark)",
+          "rendered in a single restrained brand hue on a warm off-white ground",
+          "rendered in solid black on a single saturated brand-color ground"
+        ],
+        "layout": [
+          "the two halves share one optical center line, divided by a generous band of empty space",
+          "the two halves are separated by a thin precise hairline rule running edge to edge — mark above, wordmark below",
+          "the halves are balanced by weight — a larger open mark above, a tighter, smaller-set wordmark below"
+        ]
+      },
+      "wildcard_skeletons": [],
+      "ref_sources": ["logo-only", "wordmark"],
+      "cameras": ["centered vertical 4:5 board, mark in the top half, wordmark in the bottom half, deep even margins"],
+      "lenses": ["clean finished identity-system rendering, crisp resolution"],
+      "mood": "finished, coherent, considered, balanced, period-true identity system",
+      "style_mix": { "count": 1 }
     }
   }
 }

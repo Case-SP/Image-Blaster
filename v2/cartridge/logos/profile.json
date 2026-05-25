@@ -4,7 +4,7 @@
   "classifier": "logo",
   "classifier_model": "anthropic/claude-sonnet-4.6",
   "default_aspect_ratio": "1:1",
-  "style_order": ["sketch"],
+  "style_order": ["sketch", "system-split-4x5"],
   "allowed_models": ["fal-ai/nano-banana-pro", "openai/gpt-image-2"],
   "play_ratio": 0.0,
   "ref_budget": 12,
@@ -14,7 +14,7 @@
       "treatment": "flat",
       "negatives": "no 3D bevels, no gradients, no fake glows, no drop shadows, no hand-drawn pen-stroke roughness — flat finished vector marks only"
     },
-    "render": {
+    "system-split-4x5": {
       "gpt_quality": "medium",
       "treatment": "from_brief",
       "positives_by_treatment": {
@@ -23,12 +23,13 @@
         "material-expressive": "expressive material treatment — molten metal, chrome, glass, or sculptural form as the brand demands"
       }
     },
-    "mockup": {
+    "hero-single-surface": {
       "gpt_quality": "high",
       "treatment": "realistic",
       "positives": "applied to a real-world surface with believable material and lighting"
     }
   },
+  "_stage_resolution_NOTE": "Keyed by COMPOSITION NAME, not stage archetype — the orchestrator looks up stage_resolution[shot.composition] (orchestrator.js ~392). `sketch` works because its composition is also named `sketch`; `render`/`mockup` archetypes were renamed to the real composition names `system-split-4x5` / `hero-single-surface` (2026-05-25, Task 1) so the treatment ceiling actually fires. If the aesthetic worktree renames those compositions, rename these keys AND the promote_prefixes keys to match.",
   "styles": {
     "mid-century":           "mid-century: geometric simplicity with playful organic flourishes, clean rounded sans-serif wordmarks, restrained palette, circular and rectilinear marks with optical-illusion negative space",
     "swiss-modern":          "swiss-modern: grid-based precision, geometric sans-serif wordmark in tight kerning, modular mark built from primary forms, asymmetric balance, ultra-restrained with no ornament",
