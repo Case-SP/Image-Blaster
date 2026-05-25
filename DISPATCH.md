@@ -20,6 +20,8 @@ Logos work runs as a four-window pipeline. Each window is a git worktree on its 
 
 **Flow:** planner drafts specs/todos → technical + aesthetic build in parallel → QA reviews both diffs against specs → merge to `main`. Expect merge conflicts in shared files: `orchestrator.js`, `render/fal.js`.
 
+**Viewing the UI — every worktree opens in Playwright.** Don't judge render/UI work from logs; open the running server in the Playwright MCP browser at its port and look. Technical → http://localhost:3002, aesthetic → http://localhost:3003, specs → :3004, qa → :3005. The Playwright MCP is one shared browser across all windows — give each window its own tab (`browser_tabs`) and never navigate another window's tab out from under it. QA in particular should screenshot rendered output, not infer pass/fail from the run listing.
+
 ### Worktree `technical` (`wt/technical`) — instrumentation & correctness
 
 1. **No-shows.** May 9–10 logos runs report `status: done` with `renderProgress {ok:4, failed:0, total:0}` but paint nothing in the grid. `total:0` is the tell. Trace why the tiles index returns empty for these runs — start at `GET /api/public/tiles?cartridge=logos` in `routes/public.js`, then the `images` rows + thumbnail bucket in `storage/supabase.js`, and the `runs.cartridge/stage` denorm columns.
