@@ -38,7 +38,7 @@ async function renderOne(prompt, options = {}) {
   // Tunable via REF_BUDGET env (1..16). Each ref costs ~1.5–2x prompt-tokens-
   // equivalent in vision-conditioning, so don't push this past ~10 without
   // re-benchmarking quality vs. latency.
-  const REF_BUDGET = Math.max(1, Math.min(16, parseInt(process.env.REF_BUDGET || '8', 10)));
+  const REF_BUDGET = Math.max(1, Math.min(16, parseInt(options.refBudget ?? process.env.REF_BUDGET ?? '8', 10)));
 
   // Per-model payload shaping. gpt-image-2's image_size only accepts fal's
   // named literals, not raw ratio strings — map our "W:H" aspectRatio to the

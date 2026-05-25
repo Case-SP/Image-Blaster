@@ -332,15 +332,30 @@ async function runBatch({ cartridgeName = 'product', titles, N = 10, critic = tr
           const styleMixCfg = compDef?.style_mix;
           const stylesDict = cartridge.profile?.styles;
           if (!isPlay && styleMixCfg?.count && stylesDict && Object.keys(stylesDict).length) {
-            const styleKeys = Object.keys(stylesDict);
-            const targetCount = Math.min(styleMixCfg.count, styleKeys.length);
-            const picks = [];
-            let s = shotSeed * 73 + 17;
-            while (picks.length < targetCount) {
-              s = (s * 9301 + 49297) % 233280;
-              const idx = s % styleKeys.length;
-              const key = styleKeys[idx];
-              if (!picks.includes(key)) picks.push(key);
+            // Approach 2 — brand-appropriate spread. The Register Router brief
+            // lives at objectContext[title.id] (Task 0 audit: the orchestrator's
+            // classifier context var is `objectContext`, NOT `classifierContext`
+            // as the spec snippet shows). When a brief is present, spread across
+            // the brand's register shortlist, rotating by shot index so
+            // consecutive sketches lead with a different primary while staying
+            // within the brand's set. Fall back to the original seeded-random
+            // pick (brand-agnostic) when no brief is available.
+            const brief = objectContext[title.id];
+            let picks;
+            if (brief?.registers?.length) {
+              const regs = brief.registers.filter(k => stylesDict[k]);
+              const rotated = regs.map((_, j) => regs[(j + i) % regs.length]);
+              picks = rotated.slice(0, Math.min(styleMixCfg.count, rotated.length));
+            } else {
+              const styleKeys = Object.keys(stylesDict);
+              const targetCount = Math.min(styleMixCfg.count, styleKeys.length);
+              picks = [];
+              let s = shotSeed * 73 + 17;
+              while (picks.length < targetCount) {
+                s = (s * 9301 + 49297) % 233280;
+                const key = styleKeys[s % styleKeys.length];
+                if (!picks.includes(key)) picks.push(key);
+              }
             }
             const proseList = picks.map(k => stylesDict[k]).join(' / ');
             shot.slot_overrides = shot.slot_overrides || {};
@@ -757,7 +772,7 @@ async function runBatch({ cartridgeName = 'product', titles, N = 10, critic = tr
       }
 
       const refCount = refs.length;
-      const refBudget = Math.max(1, Math.min(16, parseInt(process.env.REF_BUDGET || '8', 10)));
+      const refBudget = Math.max(1, Math.min(16, parseInt(cartridge.profile?.ref_budget ?? process.env.REF_BUDGET ?? '8', 10)));
       const refsAttached = Math.min(refCount, refBudget);
       try {
         const img = await renderOne(prompt, {
@@ -765,6 +780,7 @@ async function runBatch({ cartridgeName = 'product', titles, N = 10, critic = tr
           aspectRatio,
           quality,
           references: refs,
+          refBudget,
           stage: shot.composition,
           stageResolution: cartridge.profile?.stage_resolution || null
         });

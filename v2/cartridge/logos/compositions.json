@@ -2,7 +2,7 @@
   "compositions": {
     "sketch": {
       "category": "logo",
-      "skeleton": "a clean controlled grid of exploration marks for the brand {subject}, arranged as {grid}, {palette}. {mark_type}. each mark a flat vector-style finished geometric form rendered with crisp edges and no texture, all marks share a consistent geometric vocabulary so they read as ONE brand exploration (not separate unrelated brands), the grid shows REAL RANGE — not minor variations on the same shape — across at least 4 distinct geometric solutions for the same brand, generous even breathing room between marks, the grid is mathematically aligned and centered with deep margins on every side, no shading, no gradients, no hand-drawn pen-stroke roughness, NOT hand-sketched, NOT a working sketchbook page, NOT a watercolor or ink wash, NOT a font specimen unless the chosen register explicitly calls for letterforms — these are FINISHED clean modernist marks shown together as a controlled exploration grid, in the visual register of mid-century corporate identity catalogs and contemporary mark-system reference sheets",
+      "skeleton": "a clean controlled grid of exploration marks for the brand {subject}, arranged as {grid}, {palette}. {mark_type}. each mark a flat vector-style finished geometric form rendered with crisp edges and no texture, all marks share a consistent geometric vocabulary so they read as ONE brand exploration (not separate unrelated brands), the grid shows REAL RANGE — not minor variations on the same shape — across at least 4 distinct geometric solutions for the same brand, generous even breathing room between marks, the grid is mathematically aligned and centered with deep margins on every side, no shading, no gradients, no hand-drawn pen-stroke roughness, NOT hand-sketched, NOT a working sketchbook page, NOT a watercolor or ink wash, NOT a font specimen unless the chosen register explicitly calls for letterforms — these are FINISHED clean modernist marks shown together as a controlled exploration grid, spanning these registers across the grid while remaining recognizably ONE brand: {style_mix}",
       "slots": {
         "grid": [
           "a 2x2 grid of 4 marks centered on the page with deep equal margins on every side",
@@ -36,7 +36,8 @@
       "wildcard_skeletons": [],
       "cameras": ["centered, generous margins, mathematically aligned grid"],
       "lenses": ["clean vector finish, crisp edges, no texture"],
-      "mood": "clean, geometric, modernist, controlled, finished, restrained"
+      "mood": "clean, geometric, modernist, controlled, finished, restrained",
+      "style_mix": { "count": 3 }
     }
   }
 }
