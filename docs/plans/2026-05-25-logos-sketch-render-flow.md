@@ -2,7 +2,7 @@
 
 > **Scope (locked with user, 2026-05-25):** focus on **Sketch + Render only**. Stand up the funnel + UI for those two stages, then **refine both until they produce genuine aesthetic variability**. **Mockup is deferred to last** — not built here.
 >
-> **Executor:** the `aesthetic` worktree (`wt/render-v3`).
+> **Executor:** the `technical` worktree (`wt/technical`) — reassigned from `wt/render-v3` (2026-05-25). Note `wt/technical` also carries its original debugging mandate (no-shows, ref tracing, image override) per DISPATCH; sequence as you see fit.
 >
 > **For agentic workers:** implement task-by-task. Steps use checkbox (`- [ ]`) syntax. No test runner — every task's verification is a CLI smoke (`scripts/blast.js`) + **trace inspection** (`data/traces/*.json`) + an **eyeball of the rendered grid in Playwright** (per DISPATCH: open the server at its port in the Playwright MCP, own tab; don't judge from logs). Commit only after verification produces the expected evidence.
 >
