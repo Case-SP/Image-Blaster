@@ -18,7 +18,11 @@ Logos work runs as a four-window pipeline. Each window is a git worktree on its 
 | `qa` | `.worktrees/qa` | `wt/qa` | 3005 | **Reviewer.** Diffs `main..wt/technical` and `main..wt/render-v3` against the specs, flags issues pre-merge. code-review skill. Edits no code. |
 | (main) | repo root | `main` | — | Clean reference + merge target. |
 
-**Flow:** planner drafts specs/todos → technical + aesthetic build in parallel → QA reviews both diffs against specs → merge to `main`. Expect merge conflicts in shared files: `orchestrator.js`, `render/fal.js`.
+**Flow:** planner drafts specs/todos → technical + aesthetic build in parallel → QA reviews both diffs against specs → merge to `main`. Expect merge conflicts in shared files: `orchestrator.js`, `render/fal.js`, `factory/logoContext.js`, `cartridge/logos/{profile,compositions}.json`.
+
+**▶ Active spec (2026-05-25): logos generalized prompting + per-stage aesthetic ceiling** → `docs/plans/2026-05-25-logos-generalized-prompting.md` (REVISION 2, `50dc5ca`). Root cause is wiring, not the LLM: the 12-register *prose* in `profile.styles` never reaches the model. **Task 2 (wire the prose into the prompt) is load-bearing — do it first;** the model upgrade is Task 1b (secondary).
+
+> **⚠ Coordination — `logoContext.js` lives on two branches.** Task 1 (the register router) was implemented and committed on **`wt/specs`** (`5aeb8ce`, editing `factory/logoContext.js` + `cartridge/logos/learnings.md`) rather than `wt/technical`. The planner branch is meant to be markdown-only, so treat `5aeb8ce` as the exception. **Before `wt/technical` edits `logoContext.js`, cherry-pick / merge `5aeb8ce`** so the two branches don't fork the same file at merge time.
 
 **Viewing the UI — every worktree opens in Playwright.** Don't judge render/UI work from logs; open the running server in the Playwright MCP browser at its port and look. Technical → http://localhost:3002, aesthetic → http://localhost:3003, specs → :3004, qa → :3005. The Playwright MCP is one shared browser across all windows — give each window its own tab (`browser_tabs`) and never navigate another window's tab out from under it. QA in particular should screenshot rendered output, not infer pass/fail from the run listing.
 
