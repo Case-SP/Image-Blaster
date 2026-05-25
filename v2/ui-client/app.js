@@ -198,10 +198,24 @@
     const idx = CARTRIDGE_LIST.indexOf(cur);
     setCartridge(CARTRIDGE_LIST[(idx + 1) % CARTRIDGE_LIST.length]);
     refreshModelCycle();
-    // Re-scope grid + selection to the new cartridge.
+    // Re-scope grid + selection to the new cartridge. Three caches must reset
+    // together or tiles bleed/duplicate across cartridges:
+    //   1. flatTiles — holds the previous cartridge's tiles; flattenItems()
+    //      can't scope them out (tiles carry no `cartridge` field). Drop it and
+    //      refetch /tiles for the new cartridge, else the old cartridge's tiles
+    //      render (e.g. logos tiles in the product funnel).
+    //   2. tilesByKey — the tile-element cache (the intended GC-on-switch).
+    //   3. the funnel column DOM — the funnel only *hides* on switch, it keeps
+    //      its tile elements. They must be dropped in lockstep with tilesByKey;
+    //      otherwise the key-based reconcile re-creates elements while the stale
+    //      hidden ones survive, duplicating the funnel on each switch back.
+    // refreshRuns() then refetches + re-renders from a clean slate.
     selected.clear();
+    flatTiles = [];
+    tilesByKey.clear();
+    document.querySelectorAll('#funnel .funnel-col [data-body]').forEach(b => { b.innerHTML = ''; });
     renderStatus();
-    renderGrid();
+    refreshRuns();
     updateDownloadBubble();
   });
 
