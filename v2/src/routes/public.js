@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const { requireClient, requireSession } = require('../auth/middleware');
 const { runBatch } = require('../orchestrator');
-const { readTrace, listTraces, bus, EVENTS, summarizeRenderTimings } = require('../trace/store');
+const { readTrace, listTraces, bus, EVENTS } = require('../trace/store');
 const createStorage = require('../storage');
 const { SESSION_ALLOWED_MODELS } = require('../render/models');
 
@@ -50,42 +50,6 @@ router.use((req, res, next) => {
   });
   res.setHeader('X-Request-Started', String(t0));
   next();
-});
-
-// GET /api/public/healthz — single-shot system health probe.
-// Returns Supabase REST + storage latency, recent render p50/p95 by model,
-// and a hint when DB latency suggests a missing index.
-router.get('/healthz', async (req, res) => {
-  const out = { now: Date.now(), warnings: [] };
-  try {
-    const { sb } = require('../db/supabase');
-    const supa = sb();
-    // DB probe: smallest possible query against a table we know exists.
-    const dbStart = Date.now();
-    try {
-      await Promise.race([
-        supa.from('runs').select('id', { head: true, count: 'estimated' }).limit(1),
-        new Promise((_, rej) => setTimeout(() => rej(new Error('db probe timeout')), 5000))
-      ]);
-      out.db_ms = Date.now() - dbStart;
-    } catch (e) { out.db_ms = -1; out.db_err = e.message; }
-    // Storage probe: list root of generations bucket with limit 1.
-    const stStart = Date.now();
-    try {
-      await Promise.race([
-        supa.storage.from('generations').list('', { limit: 1 }),
-        new Promise((_, rej) => setTimeout(() => rej(new Error('storage probe timeout')), 5000))
-      ]);
-      out.storage_ms = Date.now() - stStart;
-    } catch (e) { out.storage_ms = -1; out.storage_err = e.message; }
-  } catch (e) {
-    out.db_ms = -1; out.storage_ms = -1; out.error = e.message;
-  }
-  if (out.db_ms > 1000) {
-    out.warnings.push('DB listing latency high — run: CREATE INDEX IF NOT EXISTS idx_runs_client_started ON runs (client_id, started_at DESC);');
-  }
-  out.renders = summarizeRenderTimings();
-  res.json(out);
 });
 
 // GET /api/public/cartridges — list cartridge folder names. In open auth mode
@@ -147,7 +111,26 @@ function hasExperimentalAccess(req) {
 
 router.post('/runs', async (req, res) => {
   try {
-    const { titles = [], N: requestedN, model, models, aspect_ratio, quality, cartridge, stage = null, parents = null, use_parent_as_subject = false } = req.body;
+    const { titles = [], N: requestedN, model, models, aspect_ratio, quality, cartridge, stage = null, parents = null, use_parent_as_subject = false, reference_overrides = null } = req.body;
+    // Validate reference_overrides shape: { stage: [{ filename, dataUrl }] }
+    // Cap each stage at 16 refs and 5MB per ref to keep memory bounded.
+    const MAX_OVERRIDE_REFS = 16;
+    const MAX_OVERRIDE_BYTES = 5 * 1024 * 1024;
+    let cleanOverrides = null;
+    if (reference_overrides && typeof reference_overrides === 'object') {
+      cleanOverrides = {};
+      for (const [stg, arr] of Object.entries(reference_overrides)) {
+        if (!Array.isArray(arr) || !arr.length) continue;
+        const trimmed = arr.slice(0, MAX_OVERRIDE_REFS).filter(r => {
+          if (!r?.dataUrl || typeof r.dataUrl !== 'string') return false;
+          const m = r.dataUrl.match(/^data:image\/[^;]+;base64,(.+)$/);
+          if (!m) return false;
+          return m[1].length * 0.75 <= MAX_OVERRIDE_BYTES;
+        });
+        if (trimmed.length) cleanOverrides[stg] = trimmed;
+      }
+      if (!Object.keys(cleanOverrides).length) cleanOverrides = null;
+    }
     const hasParents = Array.isArray(parents) && parents.length > 0;
     if (!hasParents) {
       if (!Array.isArray(titles) || !titles.length) {
@@ -221,7 +204,8 @@ router.post('/runs', async (req, res) => {
       clientId: req.client.id,
       stage: stage || null,
       parents: hasParents ? parents : null,
-      useParentAsSubject: !!use_parent_as_subject
+      useParentAsSubject: !!use_parent_as_subject,
+      referenceOverrides: cleanOverrides
     }).catch(e => console.error('[runBatch]', e));
 
     res.json({
@@ -243,7 +227,10 @@ router.post('/runs', async (req, res) => {
 // runs(client_id, started_at desc) — without it, the listing takes 5–7s.
 // Until the index is added, this cache makes back-to-back reloads and
 // SSE-triggered refetches feel instant. Set RUNS_CACHE_TTL_MS=0 to disable.
-const ORPHAN_MAX_MS = parseInt(process.env.ORPHAN_MAX_MS || '900000', 10); // 15 min
+// 90s — a render that's been "running" for longer than this is dead.
+// (Nano-banana p50 is ~25s, p95 ~60s; gpt-image-2/edit similar.) Aggressive
+// auto-cleanup is the rule, not the exception.
+const ORPHAN_MAX_MS = parseInt(process.env.ORPHAN_MAX_MS || '90000', 10);
 const RUNS_CACHE_TTL_MS = parseInt(process.env.RUNS_CACHE_TTL_MS || '3000', 10); // 3s
 const runsCache = new Map(); // clientId → { t, data }
 const RUNS_DB_TIMEOUT_MS = parseInt(process.env.RUNS_DB_TIMEOUT_MS || '8000', 10);
@@ -454,6 +441,14 @@ router.get('/tiles', async (req, res) => {
     let allImages = [];
     for (const b of imageBatches) allImages = allImages.concat(b);
 
+    // Build the Supabase public-bucket URL prefix once. This points at the
+    // CDN — when set, the UI fetches tile thumbnails directly without
+    // round-tripping through Node.
+    const supaUrl = (process.env.SUPABASE_URL || '').replace(/\/+$/, '');
+    const thumbPrefix = supaUrl
+      ? `${supaUrl}/storage/v1/object/public/generations-thumbs`
+      : null;
+
     // Step 3: classify + shape into tiles, sorted newest-run first.
     const tiles = allImages.map(i => {
       const meta = runMeta.get(i.run_id);
@@ -465,6 +460,8 @@ router.get('/tiles', async (req, res) => {
       }
       const modelGuess = /-(nano|gpt2e|gpt2|flux)\.png$/.exec(i.filename);
       const model = modelGuess ? ({ nano: 'fal-ai/nano-banana-pro', gpt2e: 'openai/gpt-image-2/edit', gpt2: 'openai/gpt-image-2', flux: 'fal-ai/flux-pro/v1.1-ultra' }[modelGuess[1]]) : null;
+      const slugEnc = encodeURIComponent(i.slug);
+      const fileEnc = encodeURIComponent(i.filename);
       return {
         runId: i.run_id,
         slug: i.slug,
@@ -473,7 +470,8 @@ router.get('/tiles', async (req, res) => {
         model,
         title: i.slug.replace(/-/g, ' '),
         runStartedAt: meta?.started_at,
-        url: `/api/public/runs/${i.run_id}/images/${encodeURIComponent(i.slug)}/${encodeURIComponent(i.filename)}`
+        url: `/api/public/runs/${i.run_id}/images/${slugEnc}/${fileEnc}`,
+        thumbUrl: thumbPrefix ? `${thumbPrefix}/${i.run_id}/${slugEnc}/${fileEnc}.webp` : null
       };
     });
     tiles.sort((a, b) => (b.runStartedAt || '').localeCompare(a.runStartedAt || ''));
@@ -537,13 +535,31 @@ router.get('/runs/:id', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// Lightweight per-process cache: runId → ownerClientId. Replaces the old
+// per-image-request `readTrace` round-trip that was timing out under load.
+// 5 min TTL is fine — runs don't change ownership.
+const runOwnerCache = new Map(); // runId → { clientId, t }
+const RUN_OWNER_TTL_MS = 5 * 60 * 1000;
+async function ownerOfRun(runId) {
+  const hit = runOwnerCache.get(runId);
+  if (hit && Date.now() - hit.t < RUN_OWNER_TTL_MS) return hit.clientId;
+  const { sb } = require('../db/supabase');
+  const { data } = await sb().from('runs').select('client_id').eq('id', runId).maybeSingle();
+  const clientId = data?.client_id || null;
+  if (clientId) runOwnerCache.set(runId, { clientId, t: Date.now() });
+  return clientId;
+}
+
 // GET /api/public/runs/:id/images/:slug/:filename — single image, session-scoped.
 // Optional `?w=N` query param triggers an on-demand resize (when sharp is
 // available). Resized output is cached in-memory across requests.
 router.get('/runs/:id/images/:slug/:filename', async (req, res) => {
   try {
-    const trace = await readTrace(req.params.id, req.client.id);
-    if (!trace) return res.status(404).json({ error: 'not found' });
+    // Cheap ownership check (5-min cached). Replaces the heavy readTrace
+    // call that was timing out per request under load.
+    const owner = await ownerOfRun(req.params.id);
+    if (!owner) return res.status(404).json({ error: 'not found' });
+    if (owner !== req.client.id) return res.status(403).json({ error: 'forbidden' });
     // Parse ?w=N. Clamp to a small set of allowed widths so the cache key
     // space is bounded and clients can't spam unique sizes.
     const ALLOWED_W = [128, 256, 384, 512];
@@ -554,7 +570,7 @@ router.get('/runs/:id/images/:slug/:filename', async (req, res) => {
     }
 
     if (w && sharp) {
-      const cacheKey = `${trace.id}::${req.params.slug}::${req.params.filename}::${w}`;
+      const cacheKey = `${req.params.id}::${req.params.slug}::${req.params.filename}::${w}`;
       const cached = thumbCacheGet(cacheKey);
       if (cached) {
         res.set('Content-Type', 'image/webp');
@@ -562,23 +578,34 @@ router.get('/runs/:id/images/:slug/:filename', async (req, res) => {
         res.set('X-Thumb-Cache', 'hit');
         return res.send(cached);
       }
-      const src = await storage.readImage(trace.id, req.params.slug, req.params.filename);
-      if (!src) return res.status(404).json({ error: 'image not found' });
-      const out = await sharp(src).resize({ width: w }).webp({ quality: 80 }).toBuffer();
-      thumbCacheSet(cacheKey, out);
-      res.set('Content-Type', 'image/webp');
-      res.set('Cache-Control', 'private, max-age=86400');
-      res.set('X-Thumb-Cache', 'miss');
-      return res.send(out);
+      try {
+        const src = await storage.readImage(req.params.id, req.params.slug, req.params.filename);
+        if (!src) return res.status(404).json({ error: 'image not found' });
+        const out = await sharp(src).resize({ width: w }).webp({ quality: 80 }).toBuffer();
+        thumbCacheSet(cacheKey, out);
+        res.set('Content-Type', 'image/webp');
+        res.set('Cache-Control', 'private, max-age=86400');
+        res.set('X-Thumb-Cache', 'miss');
+        return res.send(out);
+      } catch (e) {
+        // Thumbnail path failed (storage read flaky, sharp choked on a
+        // weird PNG, etc.). Don't 500 — fall through to the raw image
+        // path below so the tile still appears. Log so we can debug.
+        console.warn('[thumb] resize failed, serving raw:', req.params.filename, '—', e.message);
+      }
     }
 
-    // Full-resolution fallback path (also taken when sharp isn't installed).
-    const buf = await storage.readImage(trace.id, req.params.slug, req.params.filename);
+    // Full-resolution fallback path (also taken when sharp isn't installed
+    // OR when the thumbnail path errored above).
+    const buf = await storage.readImage(req.params.id, req.params.slug, req.params.filename);
     if (!buf) return res.status(404).json({ error: 'image not found' });
     res.set('Content-Type', 'image/png');
     res.set('Cache-Control', 'private, max-age=3600');
     res.send(buf);
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) {
+    console.error('[image] route failed:', req.params.filename, '—', e.message);
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // GET /api/public/runs/:id/zip — streams the ZIP (first byte arrives immediately;
@@ -711,20 +738,41 @@ router.get('/events', (req, res) => {
   res.flushHeaders();
   res.write(': connected\n\n');
   const runFilter = req.query.run || null;
-  const clientTraceIds = new Set();
+  // Per-connection cache: runId → ownerClientId. Populated cheaply when
+  // `run.started` arrives (its payload carries trace.clientId, no DB hit).
+  // Subsequent events use the cache; we only fall back to a one-time
+  // ownerOfRun lookup if some other event arrives first (rare ordering edge).
+  const ownerByRun = new Map();
 
-  const send = async (event, data) => {
-    if (runFilter && data.id && data.id !== runFilter) return;
-    if (data.id && !clientTraceIds.has(data.id)) {
-      const t = await readTrace(data.id, req.client.id).catch(() => null);
-      if (!t) return;
-      clientTraceIds.add(data.id);
-    }
-    res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+  const send = (event, data) => {
+    try {
+      if (runFilter && data.id && data.id !== runFilter) return;
+      if (!data.id) {
+        res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+        return;
+      }
+      let owner = ownerByRun.get(data.id);
+      // run.started carries the full trace inline — extract clientId from it
+      // so we never have to hit the DB to authorize this run's events.
+      if (!owner && event === 'run.started' && data.trace?.clientId) {
+        owner = data.trace.clientId;
+        ownerByRun.set(data.id, owner);
+      }
+      if (!owner) {
+        // First-event-isn't-run.started edge case (or run from before this
+        // connection opened). Fire one async lookup; cache the result. The
+        // event is dropped if the run isn't ours, but later events for the
+        // same run get authorized via the cache.
+        ownerOfRun(data.id).then(o => { if (o) ownerByRun.set(data.id, o); }).catch(() => {});
+        return;
+      }
+      if (owner !== req.client.id) return;
+      res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+    } catch { /* connection probably closed */ }
   };
   const handlers = {};
   for (const [, v] of Object.entries(EVENTS)) {
-    handlers[v] = (data) => send(v, data).catch(() => {});
+    handlers[v] = (data) => send(v, data);
     bus.on(v, handlers[v]);
   }
   // 10s heartbeat as a real event (not a comment) — some HTTP/2 edges strip

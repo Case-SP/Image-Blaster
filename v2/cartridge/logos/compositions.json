@@ -1,0 +1,42 @@
+{
+  "compositions": {
+    "sketch": {
+      "category": "logo",
+      "skeleton": "a clean controlled grid of exploration marks for the brand {subject}, arranged as {grid}, {palette}. {mark_type}. each mark a flat vector-style finished geometric form rendered with crisp edges and no texture, all marks share a consistent geometric vocabulary so they read as ONE brand exploration (not separate unrelated brands), the grid shows REAL RANGE — not minor variations on the same shape — across at least 4 distinct geometric solutions for the same brand, generous even breathing room between marks, the grid is mathematically aligned and centered with deep margins on every side, no shading, no gradients, no hand-drawn pen-stroke roughness, NOT hand-sketched, NOT a working sketchbook page, NOT a watercolor or ink wash, NOT a font specimen unless the chosen register explicitly calls for letterforms — these are FINISHED clean modernist marks shown together as a controlled exploration grid, in the visual register of mid-century corporate identity catalogs and contemporary mark-system reference sheets",
+      "slots": {
+        "grid": [
+          "a 2x2 grid of 4 marks centered on the page with deep equal margins on every side",
+          "a 3x2 grid of 6 marks (three columns, two rows) centered with even spacing between every cell",
+          "a 2x3 grid of 6 marks (two columns, three rows) centered with even spacing between every cell",
+          "a horizontal row of 4 marks centered vertically with generous space above and below",
+          "a horizontal row of 6 marks evenly spaced across the page, vertically centered, generous space above and below",
+          "a 2x2 grid of 4 finished marks above, paired with a matching row of 4 thin-line construction diagrams below showing the geometric primitives each mark is built from"
+        ],
+        "palette": [
+          "rendered in solid black on a pure white ground",
+          "rendered in solid black on a warm off-white cream ground",
+          "rendered in ink black on a soft warm light-grey ground",
+          "rendered in deep charcoal on a soft cream ground",
+          "rendered in warm white on an ink-black ground (inverted)",
+          "rendered in cream-white on a soot-black ground (inverted)",
+          "rendered in warm white on a deep charcoal ground (inverted)"
+        ],
+        "mark_type": [
+          "the marks are ABSTRACT GEOMETRIC SYMBOLS built from primitive shapes — circles, semi-circles, triangles, squares, hexagons — joined or arranged into unique iconic forms; NO letterforms, NO recognizable type, NO monograms; each mark in the grid is a structurally distinct abstract symbol",
+          "the marks are COMPASS-AND-GRID abstract constructions built from a visible underlying circular grid, rotational or radial symmetry, evident geometric construction logic; think mid-century corporate identity marks like CBS eye or Chase octagon; NO letterforms, NO type",
+          "the marks are NEGATIVE-SPACE abstract silhouettes where the negative carries as much weight as the positive form — bold filled shapes with optical Gestalt figure-ground play; the marks are abstract symbols, NOT letterforms",
+          "the marks are ICONIC PICTOGRAPHIC abstractions of natural forms (mountain, wave, sun, star, leaf, flame, eye, arrow, droplet) reduced to clean geometric primitives; NO letterforms, NO type, NO realistic illustration",
+          "the marks are LINEAR MODULAR constructions built from straight bars, hairlines, and parallel strokes woven or stacked into abstract architectural symbols; NO letterforms, NO type",
+          "the marks are FLOWING ORGANIC abstract forms — soft curves, lobes, blobs, droplets, paramecium-like shapes joined into iconic abstract symbols; nature-derived but heavily reduced; NO letterforms, NO type",
+          "the marks are RADIAL/CIRCULAR abstract forms — rosettes, spokes, sunburst patterns, concentric ring constructions, mandala-derived geometry; NO letterforms, NO type",
+          "the marks are STACKED-PRIMITIVE chunky compositions — heavy filled circles, semi-circles, and rectangles stacked into iconic figures (think Memphis-design building blocks or Saul Bass abstract); NO letterforms",
+          "the marks are MODULAR TYPEFACE MONOGRAMS — single-letter or two-letter heavy display letterform construction with soft inverse cuts and tight kerning; this is the ONE register where letterforms ARE the subject"
+        ]
+      },
+      "wildcard_skeletons": [],
+      "cameras": ["centered, generous margins, mathematically aligned grid"],
+      "lenses": ["clean vector finish, crisp edges, no texture"],
+      "mood": "clean, geometric, modernist, controlled, finished, restrained"
+    }
+  }
+}

@@ -4,6 +4,26 @@
   const N_CYCLE = [1, 2, 3, 4, 5];
   const INVITE = new URLSearchParams(location.search).get('invite');
 
+  // ---------- Theme toggle (sun/moon) ----------
+  // Stored as 'theme' in localStorage; falls back to system preference, then
+  // light. Applied via data-theme on <html> so CSS variables flip in one place.
+  (function initTheme() {
+    let stored = null;
+    try { stored = localStorage.getItem('theme'); } catch {}
+    const systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const initial = stored || (systemDark ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', initial);
+    const btn = $('#theme-toggle');
+    if (btn) {
+      btn.addEventListener('click', () => {
+        const cur = document.documentElement.getAttribute('data-theme') || 'light';
+        const next = cur === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        try { localStorage.setItem('theme', next); } catch {}
+      });
+    }
+  })();
+
   async function json(url, opts = {}) {
     const r = await fetch(url, {
       credentials: 'same-origin',
@@ -125,7 +145,7 @@
   ];
   let MODEL_CYCLE = ALL_MODELS.filter(m => !m.experimental);
 
-  let CARTRIDGE_LIST = ['nolla'];
+  let CARTRIDGE_LIST = ['product'];
   let CARTRIDGE_PROFILES = {};   // name → profile slice from /api/public/cartridges
   let IS_EXPERIMENTAL = false;
   function currentCartridge() { return $('#cart-btn').textContent; }
@@ -227,7 +247,12 @@
   const ta = $('#titles');
   function autosize() {
     ta.style.height = 'auto';
-    ta.style.height = Math.min(200, ta.scrollHeight) + 'px';
+    const h = Math.min(200, ta.scrollHeight);
+    ta.style.height = h + 'px';
+    // Pill stays at 56px (matching the bubble buttons) for single-line input;
+    // expands only when the textarea wraps to multi-line.
+    const pill = ta.closest('.pill');
+    if (pill) pill.classList.toggle('expanded', h > 28);
   }
   ta.addEventListener('input', () => { autosize(); updateTotals(); });
 
@@ -243,6 +268,251 @@
     await fetch(`${API}/auth/logout`, { method: 'POST', credentials: 'same-origin' });
     location.reload();
   });
+
+  // ---------- Reference override tray ----------
+  // sessionRefs: per-stage list of dropped images. Persisted in IndexedDB so
+  // refresh doesn't wipe them (data URLs can exceed the 5 MB localStorage
+  // quota at 16 refs × 5 MB). Wired into POST /runs as `reference_overrides`.
+  const REF_STAGES = ['sketch', 'in-situ'];
+  const sessionRefs = { sketch: [], 'in-situ': [] };
+  let currentRefStage = 'sketch';
+  const REF_MAX_BYTES = 5 * 1024 * 1024;
+  const REF_MAX_PER_STAGE = 16;
+
+  // Tiny IndexedDB helper. Single store keyed by stage; value is the array.
+  const IDB_NAME = 'recast-refs';
+  const IDB_STORE = 'refs';
+  let idbPromise = null;
+  function openIdb() {
+    if (idbPromise) return idbPromise;
+    idbPromise = new Promise((resolve, reject) => {
+      const req = indexedDB.open(IDB_NAME, 1);
+      req.onupgradeneeded = () => req.result.createObjectStore(IDB_STORE);
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+    return idbPromise;
+  }
+  async function idbGetStage(stage) {
+    try {
+      const db = await openIdb();
+      return await new Promise((resolve, reject) => {
+        const tx = db.transaction(IDB_STORE, 'readonly');
+        const r = tx.objectStore(IDB_STORE).get(stage);
+        r.onsuccess = () => resolve(r.result || []);
+        r.onerror = () => reject(r.error);
+      });
+    } catch { return []; }
+  }
+  async function idbPutStage(stage, value) {
+    try {
+      const db = await openIdb();
+      await new Promise((resolve, reject) => {
+        const tx = db.transaction(IDB_STORE, 'readwrite');
+        tx.objectStore(IDB_STORE).put(value, stage);
+        tx.oncomplete = resolve;
+        tx.onerror = () => reject(tx.error);
+      });
+    } catch (e) { console.warn('idb put failed', e); }
+  }
+  async function persistRefs() {
+    for (const s of REF_STAGES) await idbPutStage(s, sessionRefs[s]);
+  }
+  async function hydrateRefs() {
+    for (const s of REF_STAGES) {
+      const arr = await idbGetStage(s);
+      if (Array.isArray(arr) && arr.length) {
+        sessionRefs[s].length = 0;
+        sessionRefs[s].push(...arr);
+      }
+    }
+    renderRefTray();
+  }
+
+  function readFileAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(r.result);
+      r.onerror = reject;
+      r.readAsDataURL(file);
+    });
+  }
+  async function addRefFiles(files) {
+    const list = sessionRefs[currentRefStage];
+    for (const f of files) {
+      if (list.length >= REF_MAX_PER_STAGE) break;
+      if (!f.type.startsWith('image/')) continue;
+      if (f.size > REF_MAX_BYTES) { console.warn('skip oversize ref', f.name, f.size); continue; }
+      try {
+        const dataUrl = await readFileAsDataUrl(f);
+        list.push({ filename: f.name, dataUrl });
+      } catch (e) { console.warn('ref read failed', f.name, e); }
+    }
+    renderRefTray();
+    persistRefs();
+  }
+  function removeRef(idx) {
+    sessionRefs[currentRefStage].splice(idx, 1);
+    renderRefTray();
+    persistRefs();
+  }
+  function clearRefs() {
+    sessionRefs[currentRefStage].length = 0;
+    renderRefTray();
+    persistRefs();
+  }
+  // Carry user-dropped refs through to the matching target stage. Sketch refs
+  // ride into product/sketch/in-situ runs targeting the sketch stage, and
+  // in-situ refs ride into product→in-situ promote runs. The orchestrator
+  // keys reference_overrides by TARGET stage. We send whichever stage(s)
+  // have refs; the orchestrator only consumes the one matching this run.
+  function buildRefOverrides(targetStage) {
+    if (!targetStage) return null;
+    // Direct match first: refs explicitly for this target stage.
+    if (sessionRefs[targetStage]?.length) {
+      return { [targetStage]: sessionRefs[targetStage] };
+    }
+    // Sketch refs are the design-direction refs — they ride through to
+    // ALL stages until cleared. (Was the prior behavior; we keep it.)
+    if (targetStage !== 'sketch' && sessionRefs.sketch?.length) {
+      return { [targetStage]: sessionRefs.sketch };
+    }
+    return null;
+  }
+  function thumbHtml(r, i) {
+    return `<div class="ref-thumb" data-idx="${i}" title="${escHtml(r.filename)}">
+      <img src="${r.dataUrl}" alt="">
+      <button type="button" class="ref-thumb-x" data-action="ref-remove" data-idx="${i}" aria-label="Remove">×</button>
+    </div>`;
+  }
+  function renderRefTray() {
+    // Mini bar (above the funnel). Summarizes both stages compactly.
+    const tray = $('#ref-tray');
+    const stageEl = $('#ref-tray-stage');
+    const clearBtn = $('#ref-tray-clear');
+    const miniThumbs = $('#ref-tray-thumbs-mini');
+    if (!tray) return;
+    const totals = REF_STAGES.map(s => ({ stage: s, n: sessionRefs[s].length }));
+    const totalN = totals.reduce((a, b) => a + b.n, 0);
+    const labelParts = totals.filter(t => t.n).map(t => `${t.n} ${t.stage === 'in-situ' ? 'in-situ' : 'sketch'}`);
+    stageEl.textContent = totalN ? `${labelParts.join(', ')} loaded · overriding cartridge` : 'override off';
+    tray.classList.toggle('active', totalN > 0);
+    clearBtn.hidden = totalN === 0;
+    if (miniThumbs) {
+      // Show a few thumbs from each non-empty stage, marked subtly.
+      const samples = REF_STAGES.flatMap(s => sessionRefs[s].slice(0, 4).map((r, i) => ({ ...r, _stage: s, _idx: i })));
+      miniThumbs.innerHTML = samples.slice(0, 8).map(r => thumbHtml(r, r._idx)).join('');
+    }
+    // Modal: tabs, drop zone, and grid all reflect the active tab.
+    if (!$('#ref-modal').hidden) {
+      // Tab counts
+      for (const s of REF_STAGES) {
+        const c = $(`[data-tab-count="${s}"]`);
+        if (c) c.textContent = sessionRefs[s].length ? `· ${sessionRefs[s].length}` : '';
+      }
+      // Tab active state
+      document.querySelectorAll('.ref-modal-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.stage === currentRefStage);
+      });
+      // Active list
+      const list = sessionRefs[currentRefStage];
+      const modalThumbs = $('#ref-modal-thumbs');
+      if (modalThumbs) {
+        modalThumbs.innerHTML = list.length
+          ? list.map(thumbHtml).join('')
+          : `<div class="ref-modal-empty">No ${currentRefStage} refs loaded yet — drop some above.</div>`;
+      }
+    }
+  }
+  function openRefModal() {
+    const modal = $('#ref-modal');
+    if (!modal) return;
+    modal.hidden = false;
+    document.body.style.overflow = 'hidden';
+    renderRefTray();
+  }
+  function closeRefModal() {
+    const modal = $('#ref-modal');
+    if (!modal) return;
+    modal.hidden = true;
+    document.body.style.overflow = '';
+  }
+  function initRefTray() {
+    const tray = $('#ref-tray');
+    const openBtn = $('#ref-tray-open');
+    const clearBtn = $('#ref-tray-clear');
+    const modal = $('#ref-modal');
+    const modalDrop = $('#ref-modal-drop');
+    const modalInput = $('#ref-modal-input');
+    const modalDone = $('#ref-modal-done');
+    const modalClear = $('#ref-modal-clear');
+
+    openBtn?.addEventListener('click', openRefModal);
+    clearBtn?.addEventListener('click', (e) => { e.stopPropagation(); clearRefs(); });
+    // Clicks on the mini-bar thumbs also open the modal so you can manage them.
+    tray?.addEventListener('click', (e) => {
+      if (e.target.closest('[data-action="ref-remove"]')) {
+        const idx = parseInt(e.target.closest('[data-action="ref-remove"]').dataset.idx, 10);
+        removeRef(idx);
+        return;
+      }
+      if (e.target.closest('.ref-tray-thumbs')) openRefModal();
+    });
+
+    modalDone?.addEventListener('click', closeRefModal);
+    modalClear?.addEventListener('click', clearRefs);
+
+    // Tab switch — change the active stage, re-render.
+    document.querySelectorAll('.ref-modal-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const s = tab.dataset.stage;
+        if (REF_STAGES.includes(s)) {
+          currentRefStage = s;
+          renderRefTray();
+        }
+      });
+    });
+    modal?.addEventListener('click', (e) => {
+      // Click outside the stage closes
+      if (!e.target.closest('.ref-modal-stage')) closeRefModal();
+      // Click on a thumb's × removes it
+      const x = e.target.closest('[data-action="ref-remove"]');
+      if (x) removeRef(parseInt(x.dataset.idx, 10));
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal && !modal.hidden) closeRefModal();
+    });
+
+    // Click drop zone → file picker.
+    modalDrop?.addEventListener('click', () => modalInput?.click());
+    modalInput?.addEventListener('change', (e) => {
+      addRefFiles(Array.from(e.target.files || []));
+      modalInput.value = '';
+    });
+
+    // Drag-and-drop scoped to the modal drop zone (instead of whole window).
+    modalDrop?.addEventListener('dragenter', (e) => {
+      e.preventDefault();
+      modalDrop.classList.add('dragging');
+    });
+    modalDrop?.addEventListener('dragleave', (e) => {
+      // Only un-style when leaving the drop zone itself, not its children.
+      if (e.target === modalDrop) modalDrop.classList.remove('dragging');
+    });
+    modalDrop?.addEventListener('dragover', (e) => { e.preventDefault(); });
+    modalDrop?.addEventListener('drop', (e) => {
+      e.preventDefault();
+      modalDrop.classList.remove('dragging');
+      addRefFiles(Array.from(e.dataTransfer?.files || []));
+    });
+    // Also accept drops anywhere on the modal backdrop while it's open.
+    modal?.addEventListener('dragover', (e) => { e.preventDefault(); });
+    modal?.addEventListener('drop', (e) => {
+      if (e.target.closest('.ref-modal-drop')) return; // already handled
+      e.preventDefault();
+      addRefFiles(Array.from(e.dataTransfer?.files || []));
+    });
+  }
 
   async function submitGenerate() {
     const titles = ta.value.trim().split('\n').map(x => x.trim()).filter(Boolean);
@@ -266,6 +536,8 @@
       // stages happen via promotion; the orchestrator restricts the cycle to
       // the requested stage.
       if (cartridge === 'product') body = { ...body, stage: 'sketch' };
+      const ov = buildRefOverrides(body.stage || 'sketch');
+      if (ov) body = { ...body, reference_overrides: ov };
       await json(`${API}/public/runs`, { method: 'POST', body: JSON.stringify(body) });
       ta.value = '';
       autosize();
@@ -279,6 +551,8 @@
   // ---------- App boot ----------
   async function enterApp() {
     show('app');
+    initRefTray();
+    hydrateRefs();  // restore dropped refs from IndexedDB after a refresh
     try {
       const me = await json(`${API}/public/me`);
       const defN = Math.min(5, Math.max(1, parseInt(me.n_per_title, 10) || 3));
@@ -315,143 +589,45 @@
   // small query gets every image at once; no per-run trace fetching.
   let flatTiles = [];
 
-  // ---------- Tile-cache persistence ----------
-  // The /tiles endpoint takes 5-10s on cold cache because Supabase has no
-  // cartridge index — we work around it by serving the last-known tile set
-  // from localStorage on cold load (instant) and refreshing in the background.
-  // Capped at ~2 MB (well under the 5 MB localStorage quota): each entry is
-  // ~250 bytes × 2000 entries ≈ 500 KB, so we have plenty of headroom.
-  const TILE_CACHE_KEY = 'flatTiles.v1';
-  const TILE_CACHE_TTL_MS = 60 * 60 * 1000;  // 1 hour — old cache is fine to show briefly
-  function loadCachedTiles() {
-    try {
-      const raw = localStorage.getItem(TILE_CACHE_KEY);
-      if (!raw) return null;
-      const { t, cartridge, data } = JSON.parse(raw);
-      if (!Array.isArray(data) || (Date.now() - t) > TILE_CACHE_TTL_MS) return null;
-      return { cartridge, data };
-    } catch { return null; }
-  }
-  function saveCachedTiles(cartridge, data) {
-    try {
-      localStorage.setItem(TILE_CACHE_KEY, JSON.stringify({ t: Date.now(), cartridge, data }));
-    } catch { /* quota — ignore, cache is best-effort */ }
-  }
-
-  // ---------- Status footer (live health widget) ----------
-  // Declared early (before renderStatus) so renderStatus can safely call
-  // statusFoot.paint() during boot without hitting the const TDZ.
-  const statusFoot = {
-    sseState: 'connecting',
-    dbMs: null,
-    warning: null,
-    renderSummary: null,
-    set(key, v) { this[key] = v; this.paint(); },
-    paint() {
-      const root = document.getElementById('status-foot');
-      if (!root) return;
-      root.hidden = false;
-      const dot = root.querySelector('[data-key="sse"]');
-      if (dot) {
-        dot.classList.remove('ok', 'warn', 'err');
-        dot.classList.add(this.sseState === 'open' ? 'ok' : (this.sseState === 'connecting' ? 'warn' : 'err'));
-        dot.title = `SSE: ${this.sseState}`;
-      }
-      const dbEl = root.querySelector('[data-key="db"]');
-      if (dbEl) {
-        dbEl.textContent = this.dbMs == null ? 'DB —' : `DB ${this.dbMs}ms`;
-        dbEl.classList.toggle('slow', this.dbMs != null && this.dbMs > 1000);
-      }
-      const tilesEl = root.querySelector('[data-key="tiles"]');
-      if (tilesEl) tilesEl.textContent = `${flatTiles.length} tiles`;
-      const inflight = runsList.filter(r => r.status === 'running').length;
-      const ifEl = root.querySelector('[data-key="inflight"]');
-      if (ifEl) {
-        ifEl.textContent = `${inflight} in-flight`;
-        ifEl.classList.toggle('active', inflight > 0);
-      }
-      const rEl = root.querySelector('[data-key="renders"]');
-      if (rEl && this.renderSummary && this.renderSummary.count) {
-        const models = Object.entries(this.renderSummary.byModel || {});
-        const top = models.sort((a,b) => b[1].count - a[1].count)[0];
-        if (top) {
-          rEl.hidden = false;
-          rEl.textContent = `${top[0].split('/').pop()} p50 ${(top[1].p50/1000).toFixed(1)}s`;
-        }
-      }
-      const warnEl = root.querySelector('[data-key="warn"]');
-      if (warnEl) {
-        if (this.warning) { warnEl.hidden = false; warnEl.textContent = this.warning; }
-        else { warnEl.hidden = true; warnEl.textContent = ''; }
-      }
-    }
-  };
-  async function pollHealthz() {
-    try {
-      const t0 = performance.now();
-      const r = await fetch(`${API}/public/healthz`, { credentials: 'include' });
-      if (!r.ok) throw new Error(String(r.status));
-      const data = await r.json();
-      const rtt = Math.round(performance.now() - t0);
-      // Server returns -1 as a sentinel for probe failure; treat that as
-      // unknown and fall back to the round-trip wall time so the chip stays
-      // informative rather than misleading.
-      const serverDb = (typeof data.db_ms === 'number' && data.db_ms >= 0) ? data.db_ms : null;
-      statusFoot.dbMs = serverDb ?? rtt;
-      statusFoot.warning = (data.warnings && data.warnings[0]) || (data.db_err ? `db: ${data.db_err}` : null);
-      statusFoot.renderSummary = data.renders || null;
-    } catch {
-      statusFoot.dbMs = null;
-      statusFoot.warning = 'healthz offline';
-    }
-    statusFoot.paint();
-  }
-  setInterval(pollHealthz, 30000);
-  setInterval(() => statusFoot.paint(), 2000);
-
-  async function refreshRuns(initial = false) {
+  async function refreshRuns() {
     let runs;
     try { runs = await json(`${API}/public/runs`); }
     catch { runs = null; }
     if (Array.isArray(runs) && (runs.length > 0 || runsList.length === 0)) {
       const merged = new Map(runsList.map(r => [r.id, r]));
-      for (const r of runs) merged.set(r.id, r);
+      for (const r of runs) {
+        const existing = merged.get(r.id);
+        // Preserve richer fields from SSE/local state when the /runs listing
+        // doesn't carry them. The listing dropped `input.titles` for speed —
+        // SSE provides them on `run.started`, and we need them so render.item
+        // can resolve titleId → slug for new tiles. Without this preservation,
+        // a refreshRuns() call after SSE loses the titles and subsequent
+        // render.item events silently drop their tiles.
+        if (existing?.input?.titles?.length && !r.input?.titles?.length) {
+          merged.set(r.id, { ...r, input: { ...r.input, titles: existing.input.titles } });
+        } else {
+          merged.set(r.id, r);
+        }
+      }
       runsList.length = 0;
       for (const r of merged.values()) runsList.push(r);
       runsList.sort((a, b) => (b.startedAt || '').localeCompare(a.startedAt || ''));
     }
-
-    // For the product cartridge, seed the funnel instantly from
-    // localStorage (last-known tile set), then kick off /tiles refresh in
-    // the background. The user starts working on cached data within
-    // milliseconds; the network refresh merges in when it lands. SSE keeps
-    // newly-arriving tiles live regardless.
-    if (currentCartridge() === 'product') {
-      if (initial) {
-        const cached = loadCachedTiles();
-        if (cached && cached.cartridge === 'product' && cached.data.length) {
-          flatTiles = cached.data;
+    // Flat tile fetch — works for any cartridge that has a /tiles index.
+    // Was hardcoded to 'product' which silently dropped logos and any future
+    // cartridge from the grid; the endpoint already takes a cartridge param.
+    const cart = currentCartridge();
+    if (cart) {
+      try {
+        const tiles = await json(`${API}/public/tiles?cartridge=${encodeURIComponent(cart)}&limit=2000`);
+        if (Array.isArray(tiles)) {
+          // SSE may have added tiles newer than the server cursor; preserve them.
+          const serverKeys = new Set(tiles.map(t => `${t.runId}::${t.slug}::${t.filename}`));
+          const sseExtras = flatTiles.filter(t => !serverKeys.has(`${t.runId}::${t.slug}::${t.filename}`));
+          flatTiles = [...sseExtras, ...tiles];
         }
-      }
-      // Background refresh — don't block this function.
-      (async () => {
-        try {
-          const tiles = await json(`${API}/public/tiles?cartridge=product&limit=2000`);
-          if (Array.isArray(tiles)) {
-            // Merge: prefer the server set as authoritative for slugs/urls,
-            // but keep any SSE-added tiles whose key isn't in the server set
-            // (they may be newer than the cached query window).
-            const serverKeys = new Set(tiles.map(t => `${t.runId}::${t.slug}::${t.filename}`));
-            const sseExtras = flatTiles.filter(t => !serverKeys.has(`${t.runId}::${t.slug}::${t.filename}`));
-            flatTiles = [...sseExtras, ...tiles];
-            saveCachedTiles('product', flatTiles);
-            renderStatus();
-            renderGrid();
-          }
-        } catch { /* leave cached tiles in place */ }
-      })();
+      } catch { /* keep current flatTiles */ }
     }
-
     renderStatus();
     renderGrid();
   }
@@ -462,90 +638,56 @@
     return runsList.filter(r => (r.cartridge || null) === cart);
   }
 
+  // One rule: chip exists ⟺ run is running, OR failed within the last 60 s
+  // (brief grace so you see "it failed" feedback). No dismiss button — chips
+  // are 100% server-state-driven. SSE flips them; nothing else.
+  const FAILED_GRACE_MS = 60 * 1000;
   function renderStatus() {
-    statusFoot.paint();
     const strip = $('#status-strip');
-    // Show all in-flight runs, plus failures within the last 30 min so swept
-    // orphans don't sit at the top of the UI permanently. Older failures are
-    // filtered out — they live in the run list but not in the status strip.
-    const FAILED_DISMISS_MS = 30 * 60 * 1000;
-    const cutoff = Date.now() - FAILED_DISMISS_MS;
+    const cutoff = Date.now() - FAILED_GRACE_MS;
     const active = runsForCurrentCartridge().filter(r => {
       if (r.status === 'running') return true;
       if (r.status === 'failed') {
-        const finishedAt = r.finishedAt || r.startedAt;
-        return finishedAt && new Date(finishedAt).getTime() > cutoff;
+        const at = r.finishedAt || r.startedAt;
+        return at && new Date(at).getTime() > cutoff;
       }
       return false;
     });
-    // Also offer a clear button when there are running/failed across ALL
-    // cartridges, not just the active one — bulk cleanup is a global action.
-    const allActive = runsList.filter(r => {
-      if (r.status === 'running') return true;
-      if (r.status === 'failed') {
-        const finishedAt = r.finishedAt || r.startedAt;
-        return finishedAt && new Date(finishedAt).getTime() > cutoff;
-      }
-      return false;
-    });
-    if (!active.length && !allActive.length) { strip.hidden = true; strip.innerHTML = ''; return; }
+    if (!active.length) { strip.hidden = true; strip.innerHTML = ''; return; }
     strip.hidden = false;
-    const STRIP_MAX = 4;
-    const visibleChips = active.slice(0, STRIP_MAX);
-    const hiddenCount = active.length - visibleChips.length;
-    const chipsHtml = visibleChips.map(r => {
+    strip.innerHTML = active.map(r => {
       const p = r.renderProgress || { ok: 0, failed: 0, total: 0 };
       const done = p.ok + p.failed;
       const cls = r.status === 'failed' ? 'failed' : '';
+      // Chip says WHAT (title) and WHERE (target stage), not just a count.
+      // First title is enough for the typical case (single-title submit).
+      const titles = r.input?.titles || [];
+      const titleStr = titles.length === 0 ? '' :
+        (titles.length === 1 ? titles[0].title : `${titles[0].title} +${titles.length - 1}`);
+      const stage = r.input?.stage || 'sketch';
+      const stageLabel = STAGE_LABEL[stage] || stage;
+      const where = titleStr ? `${titleStr} → ${stageLabel}` : stageLabel;
       const txt = r.status === 'failed'
-        ? `failed · ${p.ok}/${p.total}`
-        : `generating · ${done}/${p.total}`;
-      return `<div class="status-chip ${cls}"><span class="dot"></span>${txt}</div>`;
-    }).join('') + (hiddenCount > 0
-      ? `<div class="status-chip"><span class="dot"></span>+${hiddenCount} more in flight</div>`
-      : '');
-    // Visible chip count after applying the local dismiss filter.
-    const visibleActive = active.filter(r => !DISMISSED_RUN_IDS.has(r.id));
-    const dismissBtn = visibleActive.length
-      ? `<button type="button" class="status-clear" data-action="dismiss-chips" title="Hide these chips. Data stays in the database.">Dismiss</button>`
-      : '';
-    strip.innerHTML = visibleActive.map(r => {
-      const p = r.renderProgress || { ok: 0, failed: 0, total: 0 };
-      const done = p.ok + p.failed;
-      const cls = r.status === 'failed' ? 'failed' : '';
-      const txt = r.status === 'failed'
-        ? `failed · ${p.ok}/${p.total}`
-        : `generating · ${done}/${p.total}`;
-      return `<div class="status-chip ${cls}"><span class="dot"></span>${txt}</div>`;
-    }).join('') + dismissBtn;
-    if (!visibleActive.length) { strip.hidden = true; strip.innerHTML = ''; }
+        ? `${where} · failed ${p.ok}/${p.total}`
+        : `${where} · ${done}/${p.total}`;
+      return `<div class="status-chip ${cls}" title="${escHtml(where)}"><span class="dot"></span>${escHtml(txt)}</div>`;
+    }).join('');
   }
+  // Repaint every 10s so the failed-grace cutoff naturally drops chips.
+  setInterval(() => renderStatus(), 10000);
 
-  // Session-only dismiss. Chips auto-clear when run.finished/run.failed
-  // events patch the run's status — dismiss is just a force-clear override
-  // for chips that are stuck because the SSE event was missed (e.g.
-  // disconnected and the run completed during the gap). NOT persisted to
-  // localStorage; cleared on reload so we never end up with stale dismiss
-  // records hiding live work.
-  const DISMISSED_RUN_IDS = new Set();
-  document.addEventListener('click', (e) => {
-    if (!e.target.closest('[data-action="dismiss-chips"]')) return;
-    for (const r of runsList) {
-      if (r.status === 'failed' || r.status === 'running') DISMISSED_RUN_IDS.add(r.id);
-    }
-    renderStatus();
-  });
-
-  // For the product cartridge, prefer the flat tiles list (one DB query, no
-  // per-run trace JSON). For other cartridges or when the flat list isn't
-  // populated yet, fall back to iterating loaded traces.
+  // Prefer the flat tiles list (one DB query, no per-run trace JSON) whenever
+  // it has rows for the current cartridge. Falls back to iterating loaded
+  // traces when the list isn't populated yet (cold load, brand-new cartridge).
   function flattenItems() {
     const cart = currentCartridge();
-    if (cart === 'product' && flatTiles.length) {
-      // Start from the server-rendered flat list, overlay any SSE-streamed
-      // in-flight items that aren't yet in the flat list.
+    const flatForCart = flatTiles.filter(t => !cart || (t.cartridge ? t.cartridge === cart : true));
+    if (flatForCart.length) {
+      // Start from the server-rendered flat list (filtered to current
+      // cartridge), overlay any SSE-streamed in-flight items that aren't
+      // yet in the flat list.
       const seen = new Set();
-      const out = flatTiles.map(t => {
+      const out = flatForCart.map(t => {
         const k = `${t.runId}::${t.slug}::${t.filename}`;
         seen.add(k);
         return { ...t, prompt: '' };  // prompt loads lazily on lightbox open
@@ -647,12 +789,6 @@
   const PRODUCT_STAGES = ['sketch', 'product-shot', 'in-situ'];
   const STAGE_LABEL = { 'sketch': 'Sketch', 'product-shot': 'Product', 'in-situ': 'In-situ' };
   const NEXT_STAGE = { 'sketch': 'product-shot', 'product-shot': 'in-situ', 'in-situ': null };
-  const COLUMN_DEFAULT_LIMIT = 12;
-  const showAllByCol = new Set(); // stages where the column is expanded to show older items
-  const STAGE_NOTE_PLACEHOLDER = {
-    'product-shot': 'material + color note (e.g. "walnut, matte")',
-    'in-situ': 'in-situ scene note (e.g. "tatami room, shoji light")'
-  };
   const isProductCartridge = () => currentCartridge() === 'product';
 
   function renderGrid() {
@@ -702,7 +838,7 @@
               <polyline points="20 6 9 17 4 12"></polyline>
             </svg>
           </button>
-          <img loading="lazy" alt="${escHtml(it.title)}" src="${it.url}?w=384" onerror="this.closest('.tile')?.classList.add('img-broken'); this.removeAttribute('src');">
+          <img loading="lazy" alt="${escHtml(it.title)}" src="${it.thumbUrl || (it.url + '?w=384')}" onerror="if (this.src.endsWith('.webp')) { this.src = '${it.url}?w=384'; } else { this.closest('.tile')?.classList.add('img-broken'); this.removeAttribute('src'); }">
           <div class="tile-model">${escHtml(modelLabel(it.model))}</div>`;
         entry = { tile, item: it };
         tilesByKey.set(key, entry);
@@ -729,45 +865,6 @@
   }
 
   // ---------- Product-cartridge staged funnel ----------
-  // Per-stage skeleton DOM cache. Skeletons represent expected-but-not-yet-
-  // arrived renders for any in-flight run targeting that stage. They live
-  // at the top of the column body and are replaced by real tiles as
-  // render.item events arrive (i.e. flatTiles grows, skel count drops).
-  const skelByStage = new Map();
-  function makeSkeleton() {
-    const el = document.createElement('div');
-    el.className = 'tile skeleton';
-    el.innerHTML = '<div class="skel-shimmer"></div>';
-    return el;
-  }
-  function expectedSkelCountForStage(stage) {
-    let n = 0;
-    for (const r of runsList) {
-      if (r.status !== 'running') continue;
-      if (r.cartridge !== 'product') continue;
-      const target = r.input?.stage || 'sketch';
-      if (target !== stage) continue;
-      const titles = r.input?.titles?.length || 0;
-      const N = r.input?.N || 1;
-      const total = titles * N;
-      const done = (r.renderProgress?.ok || 0) + (r.renderProgress?.failed || 0);
-      n += Math.max(0, total - done);
-    }
-    return n;
-  }
-  function syncSkeletonsAt(stage, body, count) {
-    let arr = skelByStage.get(stage) || [];
-    while (arr.length < count) arr.push(makeSkeleton());
-    while (arr.length > count) {
-      const removed = arr.pop();
-      if (removed.parentNode) removed.remove();
-    }
-    skelByStage.set(stage, arr);
-    // Insert at top, preserving order.
-    for (let i = arr.length - 1; i >= 0; i--) {
-      if (body.firstChild !== arr[i]) body.insertBefore(arr[i], body.firstChild);
-    }
-  }
 
   function renderFunnel(items) {
     const funnel = $('#funnel');
@@ -800,28 +897,29 @@
       // foot expands the view in place.
       const allStageItems = [...byStage[stage]].sort((a, b) =>
         (b.runStartedAt || '').localeCompare(a.runStartedAt || ''));
-      const expanded = showAllByCol.has(stage);
-      const stageItems = expanded ? allStageItems : allStageItems.slice(0, COLUMN_DEFAULT_LIMIT);
-      const olderCount = allStageItems.length - stageItems.length;
+      const stageItems = allStageItems;
       const totalCount = allStageItems.length;
-      const skelCount = expectedSkelCountForStage(stage);
-      count.textContent = totalCount ? (expanded || olderCount === 0 ? `${totalCount}` : `${stageItems.length}/${totalCount}`) : (skelCount ? `${skelCount}…` : '');
+      // In-flight count for THIS stage: sum of (expected - done) across
+      // running runs whose target stage is this column. Tells the user
+      // "look here for the new images" without any animated DOM.
+      let inflight = 0;
+      for (const r of runsList) {
+        if (r.status !== 'running') continue;
+        if (r.cartridge !== 'product') continue;
+        if ((r.input?.stage || 'sketch') !== stage) continue;
+        const titles = r.input?.titles?.length || 0;
+        const N = r.input?.N || 1;
+        const done = (r.renderProgress?.ok || 0) + (r.renderProgress?.failed || 0);
+        inflight += Math.max(0, titles * N - done);
+      }
+      count.textContent = totalCount
+        ? (inflight ? `${totalCount} · +${inflight}…` : `${totalCount}`)
+        : (inflight ? `+${inflight}…` : '');
 
-      if (!totalCount && !skelCount) {
+      if (!totalCount && !inflight) {
         body.innerHTML = `<div class="funnel-empty">${stage === 'sketch' ? 'Type an object above and press ⏎.' : 'Promote selections from the previous stage.'}</div>`;
       } else if (!totalCount) {
-        // No real tiles yet — body is empty (or holds the previous empty
-        // placeholder). Wipe just the placeholder, then drop the skeletons in.
-        const placeholder = body.querySelector(':scope > .funnel-empty');
-        if (placeholder) placeholder.remove();
-        // Detach old skeletons so syncSkeletonsAt rebuilds cleanly.
-        const oldSkels = [...body.querySelectorAll(':scope > .skeleton')];
-        oldSkels.forEach(s => s.remove());
-        // Restore cache pointers (oldSkels still in the array but detached)
-        // — easier to just rebuild the array via syncSkeletonsAt(0) then sync
-        // up to skelCount.
-        skelByStage.set(stage, []);
-        syncSkeletonsAt(stage, body, skelCount);
+        body.innerHTML = `<div class="funnel-empty">Generating ${inflight} image${inflight === 1 ? '' : 's'}…</div>`;
       } else {
         // INCREMENTAL RECONCILE — never `innerHTML = ''`. Walk the desired
         // visible set in order and either insertBefore an existing tile (if
@@ -853,7 +951,7 @@
                 </svg>
               </button>
               <button type="button" class="tile-amplify" aria-label="Amplify" data-action="amplify" title="More like this">+</button>
-              <img loading="lazy" alt="${escHtml(it.title)}" src="${it.url}?w=384" onerror="this.closest('.tile')?.classList.add('img-broken'); this.removeAttribute('src');">
+              <img loading="lazy" alt="${escHtml(it.title)}" src="${it.thumbUrl || (it.url + '?w=384')}" onerror="if (this.src.endsWith('.webp')) { this.src = '${it.url}?w=384'; } else { this.closest('.tile')?.classList.add('img-broken'); this.removeAttribute('src'); }">
               <div class="tile-model">${escHtml(modelLabel(it.model))}</div>`;
             entry = { tile, item: it };
             tilesByKey.set(key, entry);
@@ -884,29 +982,18 @@
         }
         // Reconcile DOM in-place against the desired ordered list.
         const desiredSet = new Set(desiredKeys);
-        // Detach existing skeletons so the index walk doesn't trip over
-        // them; we'll re-attach at the top after the real tiles are placed.
-        const detachedSkels = [...body.querySelectorAll(':scope > .skeleton')];
-        detachedSkels.forEach(s => s.remove());
-        // 1. Remove tiles that are no longer desired (e.g. column collapse).
         for (const child of [...body.children]) {
           const k = child.dataset?.key;
           if (!k || !desiredSet.has(k) || !child.classList.contains('tile')) child.remove();
         }
-        // 2. Walk desired order; ensure each tile is at the correct index.
         for (let i = 0; i < desiredKeys.length; i++) {
-          const want = desiredKeys[i];
-          const want_node = tilesByKey.get(want)?.tile;
+          const want_node = tilesByKey.get(desiredKeys[i])?.tile;
           if (!want_node) continue;
           const cur = body.children[i];
           if (cur !== want_node) body.insertBefore(want_node, cur || null);
         }
-        // 3. Re-attach skeletons at the top, sized to the current expected.
-        skelByStage.set(stage, []);
-        syncSkeletonsAt(stage, body, skelCount);
       }
 
-      renderColumnFoot(col, stage, { totalCount, visibleCount: stageItems.length, olderCount });
       renderColumnAction(col, stage);
     }
     // No pruning of tilesByKey/selection — see note in renderGrid above.
@@ -924,26 +1011,9 @@
     return out;
   }
 
-  function renderColumnFoot(col, stage, info = {}) {
-    const foot = col.querySelector('[data-foot]');
-    const expanded = showAllByCol.has(stage);
-    const olderCount = info.olderCount || 0;
-    const totalCount = info.totalCount || 0;
-    if (expanded && totalCount > COLUMN_DEFAULT_LIMIT) {
-      foot.innerHTML = `<div class="row"><button type="button" data-action="show-recent" data-stage="${stage}">Show recent only</button></div>`;
-    } else if (olderCount > 0) {
-      foot.innerHTML = `<div class="row"><button type="button" data-action="show-older" data-stage="${stage}">Show ${olderCount} older</button></div>`;
-    } else {
-      foot.innerHTML = '';
-    }
-  }
-
-  // Action bar is empty by default — promote is one-click on the tile circle
-  // now (no multi-select staging step). Kept in DOM in case we surface a
-  // future hint or batch-action.
-  function renderColumnAction(col, _stage) {
+  function renderColumnAction(col) {
     const action = col.querySelector('[data-action]');
-    action.innerHTML = '';
+    if (action) action.innerHTML = '';
   }
 
   // Promote is on rails — single click fires immediately, no form. Variety
@@ -976,13 +1046,14 @@
       N,
       ...(modelIds.length > 1 ? { models: modelIds } : { model: modelIds[0] })
     };
+    const ov = buildRefOverrides(next);
+    if (ov) body.reference_overrides = ov;
     const pill = col.querySelector('.promote-pill');
     if (pill) { pill.disabled = true; pill.textContent = 'Sending…'; }
     try {
       await json(`${API}/public/runs`, { method: 'POST', body: JSON.stringify(body) });
       for (const p of parents) selected.delete(keyOf(p.runId, p.slug, p.filename));
-      renderColumnAction(col, stage);
-      renderColumnFoot(col, stage, []);
+      renderColumnAction(col);
       updateDownloadBubble();
       await refreshRuns();
     } catch (err) {
@@ -1068,6 +1139,8 @@
       N,
       ...(modelIds.length > 1 ? { models: modelIds } : { model: modelIds[0] })
     };
+    const ov = buildRefOverrides(next);
+    if (ov) body.reference_overrides = ov;
     entry.tile.classList.add('promoting');
     try {
       await json(`${API}/public/runs`, { method: 'POST', body: JSON.stringify(body) });
@@ -1088,6 +1161,11 @@
     const entry = tilesByKey.get(key);
     if (!entry) return;
     const stage = PRODUCT_STAGES.includes(entry.item.stage) ? entry.item.stage : 'sketch';
+    // Optional steering note — "more like this, but ___". Empty string or
+    // cancel = vanilla amplify (no extra direction).
+    const noteRaw = window.prompt('Amplify direction (optional):\n"more like this, but ___"\nLeave blank for a plain variant.');
+    if (noteRaw === null) return;  // user cancelled
+    const note = noteRaw.trim().slice(0, 240) || null;
     const isInSitu = stage === 'in-situ';
     const N = isInSitu ? 2 : currentN();
     const modelIds = promoteModelIds(stage);
@@ -1100,12 +1178,14 @@
         filename: entry.item.filename,
         title: entry.item.title,
         stage: stage,
-        note: null
+        note
       }],
       use_parent_as_subject: true,
       N,
       ...(modelIds.length > 1 ? { models: modelIds } : { model: modelIds[0] })
     };
+    const ov = buildRefOverrides(stage);
+    if (ov) body.reference_overrides = ov;
     const btn = entry.tile.querySelector('[data-action="amplify"]');
     if (btn) btn.disabled = true;
     try {
@@ -1126,18 +1206,6 @@
       e.stopPropagation();
       const tile = e.target.closest('.tile');
       if (tile) amplifyOne(tile.dataset.key);
-      return;
-    }
-    if (action === 'show-older') {
-      const stage = e.target.closest('[data-action="show-older"]').dataset.stage;
-      showAllByCol.add(stage);
-      renderGrid();
-      return;
-    }
-    if (action === 'show-recent') {
-      const stage = e.target.closest('[data-action="show-recent"]').dataset.stage;
-      showAllByCol.delete(stage);
-      renderGrid();
       return;
     }
     if (action === 'promote') {
@@ -1374,20 +1442,7 @@
 
   function openSSE() {
     const es = new EventSource(`${API}/public/events`);
-    statusFoot.set('sseState', 'connecting');
-    es.addEventListener('open', () => { statusFoot.set('sseState', 'open'); pollHealthz(); });
-    es.addEventListener('error', () => { statusFoot.set('sseState', es.readyState === 2 ? 'closed' : 'connecting'); });
 
-    // Debounce: at most one /runs+/tiles refresh per IDLE_REFRESH_MS, used as
-    // a background safety net for SSE drops. Live UX no longer depends on it.
-    const IDLE_REFRESH_MS = 30000;
-    let lastBackgroundRefresh = 0;
-    function scheduleBackgroundRefresh() {
-      const now = Date.now();
-      if (now - lastBackgroundRefresh < IDLE_REFRESH_MS) return;
-      lastBackgroundRefresh = now;
-      setTimeout(() => refreshRuns().catch(() => {}), 4000);
-    }
     es.addEventListener('run.started', (e) => {
       try {
         const data = JSON.parse(e.data || '{}');
@@ -1404,11 +1459,7 @@
           });
         }
         renderStatus();
-        // Re-render the funnel so skeleton tiles appear immediately for the
-        // run's target stage. Without this, skeletons wait until the first
-        // render.item arrives (which can be 20–60s on nano).
         renderGrid();
-        scheduleBackgroundRefresh();
       } catch {}
     });
 

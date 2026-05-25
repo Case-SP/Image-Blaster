@@ -1,16 +1,21 @@
 require('dotenv').config({ path: require('path').join(__dirname, '../../.env') });
 const { loadCartridge } = require('./factory/cartridge');
 const { buildShotList, buildRenderPrompts, buildShotListSystemPrompt, sanitizeShotMap } = require('./factory/shotList');
-const { critiqueShotList } = require('./factory/critic');
 const { promptVariance } = require('./factory/variance');
-const { rewriteForGpt2 } = require('./factory/gpt2Rewriter');
-const { runIntake } = require('./factory/intake');
+const { classifyByCartridge, prefixByCartridge } = require('./factory/classifyByCartridge');
+// critiqueShotList / runIntake / rewriteForGpt2 — used only by archived
+// non-product cartridges. The orchestrator already gates these behind
+// inputMode checks (object mode skips all three); these stubs catch any
+// future regression that tries to call them outside object mode.
+const critiqueShotList = () => { throw new Error('critic disabled (only product/object mode supported)'); };
+const runIntake = () => { throw new Error('intake disabled (only product/object mode supported)'); };
+const rewriteForGpt2 = () => { throw new Error('gpt2Rewriter disabled (only product/object mode supported)'); };
 const { renderOne, downloadImage } = require('./render/fal');
 const { createTrace } = require('./trace/store');
 const createStorage = require('./storage');
 const storage = createStorage();
 
-async function runBatch({ cartridgeName = 'nolla', titles, N = 10, critic = true, model, models, aspectRatio, quality, debug = true, clientId = null, onTraceCreated, stage = null, parents = null, useParentAsSubject = false }) {
+async function runBatch({ cartridgeName = 'product', titles, N = 10, critic = true, model, models, aspectRatio, quality, debug = true, clientId = null, onTraceCreated, stage = null, parents = null, useParentAsSubject = false, referenceOverrides = null }) {
   const cartridge = loadCartridge(cartridgeName);
 
   // Staged + lineage support (object mode only). When `parents` is set, each
@@ -36,11 +41,25 @@ async function runBatch({ cartridgeName = 'nolla', titles, N = 10, critic = true
     for (let i = 0; i < parents.length; i++) {
       const p = parents[i] || {};
       let originalTitle = p.title || null;
-      if (!originalTitle && p.runId) {
+      // Also pull the parent's resolved prompt for THIS specific filename so
+      // the product-shot prompt can include the original design intent.
+      // Doing this in the same readTrace call as the title lookup so we only
+      // hit Postgres once per parent.
+      let parentPrompt = null;
+      if (p.runId) {
         const ptrace = await readTrace(p.runId, clientId).catch(() => null);
         if (ptrace) {
-          const t = (ptrace.input?.titles || []).find(t => t.slug === p.slug);
-          if (t) originalTitle = t.title;
+          const ptitle = (ptrace.input?.titles || []).find(t => t.slug === p.slug);
+          if (ptitle) {
+            if (!originalTitle) originalTitle = ptitle.title;
+            const items = ptrace.stages?.renders?.items?.[ptitle.id] || [];
+            const item = items.find(it => it.filename === p.filename);
+            const promptIdx = (item && typeof item.promptIdx === 'number') ? item.promptIdx : null;
+            const prompts = ptrace.stages?.resolved?.prompts?.[ptitle.id] || [];
+            const promptObj = (promptIdx != null) ? prompts[promptIdx] : prompts[0];
+            const txt = promptObj?.prompt || promptObj?.text || null;
+            if (txt) parentPrompt = String(txt).trim().slice(0, 500);
+          }
         }
       }
       if (!originalTitle) originalTitle = p.slug || `parent-${i}`;
@@ -85,7 +104,7 @@ async function runBatch({ cartridgeName = 'nolla', titles, N = 10, critic = true
         slug: (p.slug || originalTitle).toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 50),
         category: 'general'
       });
-      parentByTitleId[id] = { runId: p.runId, slug: p.slug, filename: p.filename, parentStage: p.stage || null, parentTitle: originalTitle, note: p.note || null, overrides: ov, parentRefUrl: null };
+      parentByTitleId[id] = { runId: p.runId, slug: p.slug, filename: p.filename, parentStage: p.stage || null, parentTitle: originalTitle, parentPrompt, note: p.note || null, overrides: ov, parentRefUrl: null };
       overridesByTitleId[id] = {
         slot_overrides: {
           ...(backgroundPhrase ? { background: backgroundPhrase } : {}),
@@ -145,9 +164,47 @@ async function runBatch({ cartridgeName = 'nolla', titles, N = 10, critic = true
   }
   const needsRewrite = modelList.includes('openai/gpt-image-2');
 
+  // Object-context classification. One Haiku call per batch, classifies each
+  // title into a generalized spatial schema (mounting, scale, use-height,
+  // orientation, environments). The result is cached on trace.input so:
+  //   - In-situ prompts inject hard facts about how the object actually sits
+  //     in the world (no more wall-mounted lamps near the floor).
+  //   - Promote runs reuse the parent trace's cached context — no re-classify.
+  // Promote runs (parents present) reuse the parent's classification when
+  // available; we only classify fresh titles. Parents come pre-merged into
+  // `titles` above with synthetic `p-...` IDs, so we look up the cached
+  // context by the original parent slug from each parent's source trace.
+  let objectContext = {};
+  try {
+    if (Array.isArray(parents) && parents.length) {
+      // Promote: try parent traces first.
+      for (let i = 0; i < parents.length && i < titles.length; i++) {
+        const p = parents[i];
+        const tid = titles[i].id;
+        if (!p?.runId || !p?.slug) continue;
+        const ptrace = await readTrace(p.runId, clientId).catch(() => null);
+        const ptitle = ptrace?.input?.titles?.find(t => t.slug === p.slug);
+        const cached = ptrace?.input?.objectContext?.[ptitle?.id];
+        if (cached) objectContext[tid] = cached;
+      }
+      // Any promote title that didn't have a cached context, classify fresh.
+      const missing = titles.filter(t => !objectContext[t.id]);
+      if (missing.length) {
+        const fresh = await classifyByCartridge(cartridge, missing);
+        Object.assign(objectContext, fresh);
+      }
+    } else {
+      // Fresh input: classify all titles.
+      objectContext = await classifyByCartridge(cartridge, titles);
+    }
+  } catch (e) {
+    console.warn('[objectContext] classification failed (continuing):', e.message);
+    objectContext = {};
+  }
+
   const trace = createTrace({
     cartridge: cartridgeName,
-    input: { titles, N, options: { critic, model: modelList[0], models: modelList, aspectRatio, quality } },
+    input: { titles, N, stage: stage || null, objectContext, options: { critic, model: modelList[0], models: modelList, aspectRatio, quality } },
     clientId
   });
   if (typeof onTraceCreated === 'function') {
@@ -266,6 +323,31 @@ async function runBatch({ cartridgeName = 'nolla', titles, N = 10, critic = true
             }
             if (ov.lensOverride) shot.__lensOverride = ov.lensOverride;
           }
+          // Style mix — when a composition declares `style_mix: { count: N }`
+          // and the cartridge has a `styles` dict on profile, pick N distinct
+          // styles deterministically per shot and join the prose into a single
+          // string under slot_overrides.style_mix. Used by the logos sketch
+          // composition to explore multiple visual directions on one sheet.
+          // Skipped under play mode (wildcard skeletons don't reference style_mix).
+          const styleMixCfg = compDef?.style_mix;
+          const stylesDict = cartridge.profile?.styles;
+          if (!isPlay && styleMixCfg?.count && stylesDict && Object.keys(stylesDict).length) {
+            const styleKeys = Object.keys(stylesDict);
+            const targetCount = Math.min(styleMixCfg.count, styleKeys.length);
+            const picks = [];
+            let s = shotSeed * 73 + 17;
+            while (picks.length < targetCount) {
+              s = (s * 9301 + 49297) % 233280;
+              const idx = s % styleKeys.length;
+              const key = styleKeys[idx];
+              if (!picks.includes(key)) picks.push(key);
+            }
+            const proseList = picks.map(k => stylesDict[k]).join(' / ');
+            shot.slot_overrides = shot.slot_overrides || {};
+            if (!shot.slot_overrides.style_mix) shot.slot_overrides.style_mix = proseList;
+            shot.__stylesPicked = picks;
+          }
+
           // For in-situ specifically, override the setting slot with a
           // context-appropriate pick. Different shot indexes get different
           // pool members so 3 in-situ shots of "sink" don't all show the
@@ -545,10 +627,35 @@ async function runBatch({ cartridgeName = 'nolla', titles, N = 10, critic = true
     // before.
     const tagged = cartridge.references.filter(r => r.style);
     const styleTags = new Set(tagged.map(r => r.style));
+    // Normalize user-dropped reference overrides per stage. Shape:
+    //   referenceOverrides = { sketch: [{filename, dataUrl}], ... }
+    // When the user supplies refs for a stage, we COMPLETELY replace the
+    // cartridge refs for that stage — that's the point of "override". Other
+    // stages still use cartridge defaults. The structure supports any stage,
+    // so adding product-shot/in-situ overrides later is just a UI change.
+    const overridesByStage = {};
+    if (referenceOverrides && typeof referenceOverrides === 'object') {
+      for (const [stg, arr] of Object.entries(referenceOverrides)) {
+        if (!Array.isArray(arr) || !arr.length) continue;
+        overridesByStage[stg] = arr.map((r, i) => ({
+          filename: r.filename || `override-${i + 1}.png`,
+          style: stg,
+          url: r.dataUrl || r.url
+        })).filter(r => r.url);
+      }
+    }
     const refsForComposition = (compName) => {
+      if (overridesByStage[compName]?.length) return overridesByStage[compName];
       if (!styleTags.size) return cartridge.references;
-      const matchTag = styleTags.has(compName) ? compName : null;
-      const styleScoped = matchTag ? cartridge.references.filter(r => r.style === matchTag) : [];
+      // Compositions can declare ref_sources to pull from MULTIPLE style tags
+      // simultaneously (e.g. logos Stage 2 reads from logo-only/ + wordmark/).
+      // Untagged refs always remain as fallback. When ref_sources is absent,
+      // fall back to the single-tag match (today's behavior).
+      const compDef = cartridge.compositions[compName] || {};
+      const declaredSources = Array.isArray(compDef.ref_sources) ? compDef.ref_sources : null;
+      const styleScoped = declaredSources
+        ? cartridge.references.filter(r => r.style && declaredSources.includes(r.style))
+        : (styleTags.has(compName) ? cartridge.references.filter(r => r.style === compName) : []);
       const untagged = cartridge.references.filter(r => !r.style);
       return styleScoped.length ? [...styleScoped, ...untagged] : cartridge.references;
     };
@@ -565,6 +672,17 @@ async function runBatch({ cartridgeName = 'nolla', titles, N = 10, critic = true
       const stageTag = shot.composition;
       const parentRef = parentByTitleId?.[title.id] || null;
 
+      // Fresh-run classifier prefix injection. Promote runs handle this inside
+      // the parent-as-subject prefix block (see contextFacts below). For fresh
+      // input, prepend the classifier's stage-agnostic prefix once so brand
+      // attributes / object facts actually steer the prompt. No-op when the
+      // classifier returned nothing or there's no parent-as-subject conflict.
+      if (!parentRef?.parentRefUrl) {
+        const freshCtx = objectContext[title.id] || null;
+        const freshPrefix = freshCtx ? prefixByCartridge(cartridge, freshCtx) : '';
+        if (freshPrefix) prompt = `${freshPrefix} ${prompt}`;
+      }
+
       // Vision-conditioned promotion: when the request is a cross-stage
       // promote AND the model accepts an image input, prepend the parent
       // image as the first reference and prefix the prompt so the model
@@ -578,29 +696,62 @@ async function runBatch({ cartridgeName = 'nolla', titles, N = 10, critic = true
       // → text-only, may drift.
       const VISION_MODELS = new Set(['fal-ai/nano-banana-pro', 'fal-ai/flux-pro/kontext', 'openai/gpt-image-2/edit']);
       if (parentRef?.parentRefUrl && VISION_MODELS.has(m)) {
-        // CRITICAL: when parent-as-subject is on, REPLACE refs with parent
-        // only. Mixing in cartridge style refs causes subject dilution — if
-        // the cartridge in-situ refs include 7 chairs/tables and the parent
-        // is a lamp, nano averages them and renders a chair in a gallery.
-        // The parent must be the only image fal sees so the prompt's "use
-        // first reference as subject" instruction can dominate.
-        refs = [{ filename: 'parent.png', style: 'parent', url: parentRef.parentRefUrl }];
+        // Parent-as-subject is on. The parent image must be the FIRST
+        // reference (subject anchor). When the user supplied vibe refs for
+        // this stage (e.g. dropped sketch refs that should also steer the
+        // product render), append them after the parent — they shape look
+        // and material without competing for subject identity. Cartridge
+        // style refs are skipped to prevent subject dilution.
+        const stageOverrides = overridesByStage[shot.composition] || [];
+        refs = [
+          { filename: 'parent.png', style: 'parent', url: parentRef.parentRefUrl },
+          ...stageOverrides
+        ];
         const parentStage = parentRef.parentStage || null;
         const parentTitle = parentRef.parentTitle || 'the depicted object';
+        const parentPrompt = parentRef.parentPrompt || null;
         const isIterate = parentStage && parentStage === shot.composition;
+        // Quote-safe rendering: collapse internal quotes so we don't
+        // accidentally close the outer quote or trip the model's parser.
+        const intent = parentPrompt
+          ? ` The original design intent for that ${parentTitle} was: ${parentPrompt.replace(/["']/g, '').replace(/\s+/g, ' ').trim()}.`
+          : '';
+        // Object-context facts (mounting, scale, use-height, orientation,
+        // typical environments). Most useful for in-situ where the model
+        // otherwise floats objects at arbitrary heights. Empty string when
+        // classification didn't run or returned nothing.
+        const ctx = objectContext[title.id] || null;
+        const contextFacts = ctx
+          ? ' ' + prefixByCartridge(cartridge, ctx)
+          : '';
+        // Promote prefix lookup. Cartridges can declare prefixes in
+        // profile.promote_prefixes keyed by transition:
+        //   - "iterate"           same-stage amplify
+        //   - "{from}_to_{to}"    cross-stage promote (e.g. "sketch_to_product-shot")
+        // Falls back to the hardcoded product-cartridge prose for cartridges
+        // that don't declare them. {parentTitle} and {intent} are interpolated.
+        const transition = isIterate
+          ? 'iterate'
+          : `${parentStage || 'unknown'}_to_${shot.composition}`;
+        const prefixTemplates = cartridge.profile?.promote_prefixes || {};
+        const interp = (tpl) => tpl
+          .replace(/\{parentTitle\}/g, parentTitle)
+          .replace(/\{intent\}/g, intent);
+
         let prefix;
-        if (isIterate) {
-          // Same-stage amplify — "iterate on this" mode.
-          prefix = `CRITICAL: Iterate on the reference image, which depicts a ${parentTitle}. Use it as the starting point and produce a close variation of the same design — keep the silhouette, proportions, key features, and overall identity faithful to the reference. Vary only the framing, angle, light, surface treatment, or composition. The output must clearly belong to the same family as the reference. Apply the following direction to the variation:`;
+        if (prefixTemplates[transition]) {
+          prefix = interp(prefixTemplates[transition]);
+        } else if (isIterate) {
+          // Same-stage amplify — "iterate on this" mode (product fallback).
+          prefix = `CRITICAL: Iterate on the reference image, which depicts a ${parentTitle}. Use it as the starting point and produce a close variation of the same design — keep the silhouette, proportions, key features, and overall identity faithful to the reference. Vary only the framing, angle, light, surface treatment, or composition. The output must clearly belong to the same family as the reference.${intent} Apply the following direction to the variation:`;
         } else if (parentStage === 'sketch') {
-          // Cross-stage: sketch → product. The reference image is a hand-
-          // drawn design (often a multi-element process diagram). Combining
-          // visual + textual identity (the original prompt's object name)
-          // lets nano disambiguate which element of the sketch is the subject.
-          prefix = `CRITICAL: The reference image is a hand-drawn design sketch of a ${parentTitle}. Render that exact ${parentTitle} as a real product photograph — interpret the sketch as the design intent and faithfully preserve its silhouette, proportions, joinery, and every key feature. The output must be a photographic render of a real ${parentTitle}, NOT a copy of the line drawing, NOT an icon or illustration. If the sketch shows multiple variants or a process diagram, focus on the most resolved final form. Then place that ${parentTitle} in the following scene:`;
+          // Cross-stage: sketch → product (product fallback). The first
+          // reference is a hand-drawn design; the original sketch prompt
+          // (intent) tells the model what the sketch was meant to show.
+          prefix = `CRITICAL: The first reference image is a hand-drawn design sketch of a ${parentTitle}.${intent} Render that exact ${parentTitle} as a real product photograph — interpret the sketch as the design intent and faithfully preserve its silhouette, proportions, joinery, and every key feature. The output must be a photographic render of a real ${parentTitle}, NOT a copy of the line drawing, NOT an icon or illustration. If the sketch shows multiple variants or a process diagram, focus on the most resolved final form. Any additional reference images shown after the first are vibe cues — use them for material, surface, lighting, and palette guidance, NOT as alternate subjects. Then place that ${parentTitle} in the following scene:`;
         } else {
-          // Cross-stage: product → in-situ.
-          prefix = `CRITICAL: The reference image shows the EXACT ${parentTitle} to render. The object in the output image must be visually identical to the ${parentTitle} in the reference — same form, silhouette, proportions, construction, materials, finish, and color. Do not invent a new ${parentTitle}. Then place that exact ${parentTitle} in the following scene:`;
+          // Cross-stage: product → in-situ (product fallback).
+          prefix = `CRITICAL: The first reference image shows the EXACT ${parentTitle} to render. The object in the output image must be visually identical to the ${parentTitle} in the reference — same form, silhouette, proportions, construction, materials, finish, and color. Do not invent a new ${parentTitle}.${intent}${contextFacts} Any additional reference images shown after the first are vibe cues — use them for setting, atmosphere, and palette guidance, NOT as alternate subjects. Then place that exact ${parentTitle} in the following scene:`;
         }
         prompt = `${prefix} ${prompt}`;
       }
@@ -609,7 +760,14 @@ async function runBatch({ cartridgeName = 'nolla', titles, N = 10, critic = true
       const refBudget = Math.max(1, Math.min(16, parseInt(process.env.REF_BUDGET || '8', 10)));
       const refsAttached = Math.min(refCount, refBudget);
       try {
-        const img = await renderOne(prompt, { model: m, aspectRatio, quality, references: refs });
+        const img = await renderOne(prompt, {
+          model: m,
+          aspectRatio,
+          quality,
+          references: refs,
+          stage: shot.composition,
+          stageResolution: cartridge.profile?.stage_resolution || null
+        });
         const buf = await downloadImage(img.url);
         const metadata = { ...shot, prompt, model: img.model, generatedAt: new Date().toISOString(), runId: trace.id, refsAttached, refsAvailable: refCount, stage: stageTag, parent: parentRef };
         await storage.writeImage(trace.id, title.slug, filename, buf, metadata);

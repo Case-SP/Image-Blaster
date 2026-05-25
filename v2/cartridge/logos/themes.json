@@ -1,0 +1,10 @@
+{
+  "themes": {
+    "neutral": {
+      "name": "Neutral",
+      "background": "the ground and ink palette is set per-shot by the composition's palette slot, not the theme",
+      "color_grade": "no chroma, no grading effects — flat finish",
+      "mood": "clean, modernist, restrained"
+    }
+  }
+}

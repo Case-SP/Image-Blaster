@@ -1,0 +1,10 @@
+{
+  "subjects": {
+    "logo": {
+      "triggers": [],
+      "phrase_banks": {
+        "default": ["brand identity"]
+      }
+    }
+  }
+}

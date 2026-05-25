@@ -1,0 +1,39 @@
+{
+  "brand_name": "Logo System",
+  "input_mode": "object",
+  "classifier": "logo",
+  "default_aspect_ratio": "1:1",
+  "style_order": ["sketch"],
+  "allowed_models": ["fal-ai/nano-banana-pro", "openai/gpt-image-2"],
+  "play_ratio": 0.0,
+  "stage_resolution": {
+    "sketch": { "gpt_quality": "low" },
+    "render": { "gpt_quality": "medium" },
+    "mockup": { "gpt_quality": "high" }
+  },
+  "styles": {
+    "mid-century":           "mid-century: geometric simplicity with playful organic flourishes, clean rounded sans-serif wordmarks, restrained palette, circular and rectilinear marks with optical-illusion negative space",
+    "swiss-modern":          "swiss-modern: grid-based precision, geometric sans-serif wordmark in tight kerning, modular mark built from primary forms, asymmetric balance, ultra-restrained with no ornament",
+    "art-deco":              "art-deco: vertical emphasis, geometric ornamentation with concentric or stepped patterns, high-contrast display letterforms with sharp serifs or condensed sans, metallic-feeling weight",
+    "bauhaus":               "bauhaus: primary geometric shapes (circle, triangle, square) used as the mark, clean utilitarian sans wordmark, bold simple structure with no ornament, modular construction visible",
+    "post-modern":           "post-modern: playful-but-controlled mix of geometric and organic, layered or fragmented mark construction, eclectic letterform mixing serif and sans, deliberately offbeat proportions",
+    "contemporary-minimal":  "contemporary-minimal: extreme restraint, thin geometric letterforms, simple monoline marks, generous breathing room around every element, quiet confidence, little to no ornament",
+    "y2k":                   "y2k: chrome-feeling weight even in flat ink, rounded inflated forms, experimental letterform construction, embedded technological motif, futurist-but-friendly",
+    "utilitarian-industrial":"utilitarian-industrial: honest functional letterforms almost engineering-stencil, heavy uniform stroke weight, geometric mark with technical-drawing feel, no decoration",
+    "vernacular-handmade":   "vernacular-handmade: honest hand-lettered wordmark with visible pen-stroke variation, mark feels carved or hand-drawn rather than constructed, warm imperfection, folk craft sensibility",
+    "brutalist-poster":      "brutalist-poster: raw heavy slab construction, oversized letterforms cropping the frame, minimal mark or replaced by a typographic block, intentional rough edges",
+    "art-nouveau":           "art-nouveau: flowing organic curves in both mark and wordmark, whiplash lines, ornamental flourishes integrated into letterforms, nature-derived motifs abstracted",
+    "victorian-engraved":    "victorian-engraved: fine ornamental linework, high-contrast Didone-like serif wordmark, ornate cartouche-style frame around the mark, intricate but contained detail"
+  },
+  "promote_prefixes": {
+    "iterate": "CRITICAL: Iterate on the reference image, which depicts a {parentTitle} brand identity. Use it as the starting point and produce a close variation — keep the silhouette, weight, geometry, and overall identity faithful. Vary only the framing, register, or composition. The output must clearly belong to the same family as the reference.{intent} Apply the following direction:"
+  },
+  "_promote_prefixes_NOTE": "Cross-stage prefixes (e.g. sketch_to_system-split-4x5, system-split-4x5_to_hero-single-surface) get added in Phase 3/4 once the target compositions are named. Lookup key in orchestrator is `${parentStage}_to_${shot.composition}` — must match the actual composition names in compositions.json, not stage archetypes.",
+  "system_role": "You are a brand identity designer. Each input is a brand name plus a short descriptor. You produce considered, period-coherent identity assets — sketches first, then a clean mark-and-wordmark system, then mockups across surfaces. The brand stays consistent across all stages; only the medium changes.",
+  "objective": "Produce on-brand identity work — exploratory sketches, clean system sheets, and mockup applications — calibrated to the era, posture, and tone implied by the brand name and descriptor.",
+  "brand_dna": {
+    "visual_signature": "Considered, period-coherent, restrained. The mark is always the subject. No category clichés (no coffee beans for a roaster, no scales of justice for a law firm). Geometric construction and silhouette do the work — the possibility space includes abstract symbols, pictographic icons, radial constructions, modular forms, and (occasionally) letterform monograms. Default toward abstract / non-literal exploration; letterforms are ONE direction not THE direction.",
+    "mandatory_elements": "Honest geometric construction. Confident silhouettes. Period-true register: a mid-century mark looks mid-century, a Bauhaus mark looks Bauhaus. Each exploration grid shows a real range of solutions, not minor variations on the same letter.",
+    "forbidden": "No category-cliché iconography (beans for coffee, gears for engineering, leaves for wellness). No fantasy lighting. No 3D bevels, no gradients, no fake glows on Stage 2 system sheets — flat or near-flat treatment only. No invented copy beyond the brand name itself. No defaulting every mark to the brand's initials when the chosen register is not letterform-based."
+  }
+}

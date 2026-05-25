@@ -6,35 +6,6 @@ const storage = createStorage();
 const bus = new EventEmitter();
 bus.setMaxListeners(200);
 
-// Rolling timing window for /healthz. Each successful render item appends
-// { model, stage, elapsedMs }. We keep up to 200 entries (FIFO) so p50/p95
-// reflect recent activity without unbounded memory growth.
-const RENDER_TIMING_WINDOW = 200;
-const renderTimings = [];
-function recordRenderTiming(entry) {
-  if (!entry || typeof entry.elapsedMs !== 'number') return;
-  renderTimings.push({ model: entry.model, stage: entry.stage, ms: entry.elapsedMs, t: Date.now() });
-  if (renderTimings.length > RENDER_TIMING_WINDOW) renderTimings.shift();
-}
-function summarizeRenderTimings() {
-  if (!renderTimings.length) return { count: 0 };
-  const byModel = {};
-  for (const r of renderTimings) {
-    const k = r.model || 'unknown';
-    (byModel[k] = byModel[k] || []).push(r.ms);
-  }
-  const pct = (arr, p) => {
-    const sorted = [...arr].sort((a, b) => a - b);
-    const idx = Math.min(sorted.length - 1, Math.floor(sorted.length * p));
-    return sorted[idx];
-  };
-  const summary = { count: renderTimings.length, byModel: {} };
-  for (const [m, arr] of Object.entries(byModel)) {
-    summary.byModel[m] = { count: arr.length, p50: pct(arr, 0.5), p95: pct(arr, 0.95) };
-  }
-  return summary;
-}
-
 function newRunId() {
   const d = new Date();
   const pad = n => String(n).padStart(2, '0');
@@ -72,26 +43,11 @@ async function listTraces({ clientId } = {}) {
   return all.map(t => ({
     id: t.id, cartridge: t.cartridge, status: t.status,
     startedAt: t.startedAt, finishedAt: t.finishedAt,
-    titleCount: t.input?.titles?.length || 0,
-    N: t.input?.N,
-    // Slim summary of input so the UI can do skeleton math + slug lookups
-    // without us projecting the entire `trace->input` JSON (which is large
-    // and made the listing query exceed the 8s timeout).
-    input: t.input ? {
-      stage: t.input.stage || null,
-      N: t.input.N,
-      titles: Array.isArray(t.input.titles)
-        ? t.input.titles.map(x => ({ id: x.id, slug: x.slug, title: x.title }))
-        : []
-    } : null,
-    hitRate: computeHitRate(t),
-    renderProgress: computeRenderProgress(t),
-    stageStatus: {
-      shotList: t.stages?.shotList?.status,
-      critic:   t.stages?.critic?.status,
-      resolved: t.stages?.resolved?.status,
-      renders:  t.stages?.renders?.status
-    }
+    // Slim — UI gets full input via SSE `run.started` for live runs, and
+    // done runs don't need input in the listing. Pulling the JSON column
+    // here was the dominant cost in /runs and made it time out at 8s.
+    input: { stage: t.input?.stage || null, titles: [] },
+    renderProgress: computeRenderProgress(t)
   }));
 }
 
@@ -129,7 +85,17 @@ function createTrace({ cartridge, input, clientId = null }) {
   // reaches trace.finish(), leaving runs stuck in 'running' until the orphan
   // sweep catches them 15 minutes later.
   const PERSIST_TIMEOUT_MS = parseInt(process.env.PERSIST_TIMEOUT_MS || '10000', 10);
+  // Synthetic open-mode fallback client (set by ensureOpenModeClient when
+  // Supabase is unreachable at boot). Its id is the literal string
+  // 'open-mode-fallback' which is NOT a valid UUID — Postgres rejects every
+  // insert with `invalid input syntax for type uuid`. Skip persist entirely
+  // for this sentinel so the trace lives in-memory + reaches the UI via SSE,
+  // and the orchestrator keeps rendering. Subsequent runs (when Supabase is
+  // back) get a real client and persist normally.
+  const SYNTHETIC_CLIENT_ID = 'open-mode-fallback';
+  const isSynthetic = clientId === SYNTHETIC_CLIENT_ID;
   async function writeWithTimeout(snap) {
+    if (isSynthetic) return; // in-memory only; UI sees it via SSE
     return Promise.race([
       storage.writeTrace(snap, clientId),
       new Promise((_, reject) => setTimeout(() => reject(new Error(`persist timeout ${PERSIST_TIMEOUT_MS}ms`)), PERSIST_TIMEOUT_MS))
@@ -181,9 +147,6 @@ function createTrace({ cartridge, input, clientId = null }) {
         t.stages.renders.items[tid] = t.stages.renders.items[tid] || [];
         t.stages.renders.items[tid].push(item);
       });
-      // Feed the rolling /healthz window. Only ok renders count toward
-      // p50/p95 since failed retries skew the distribution.
-      if (item.status === 'ok') recordRenderTiming(item);
       bus.emit(EVENTS.RENDER_ITEM, { id: trace.id, titleId: tid, item });
     },
     setVerdict(tid, filename, verdict, reasons = []) {
@@ -201,4 +164,4 @@ function createTrace({ cartridge, input, clientId = null }) {
   };
 }
 
-module.exports = { bus, createTrace, readTrace, listTraces, computeHitRate, computeRenderProgress, EVENTS, summarizeRenderTimings };
+module.exports = { bus, createTrace, readTrace, listTraces, computeHitRate, computeRenderProgress, EVENTS };

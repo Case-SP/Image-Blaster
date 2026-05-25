@@ -21,7 +21,7 @@
           "the object fills about 75 percent of the frame, tight composition",
           "the object fills about 30 percent of the frame, small with lots of empty space",
           "macro detail framing — a single feature fills the frame, the rest cropped",
-          "the object centered with deep symmetrical breathing room, museum-plate proportion"
+          "the object centered with deep symmetrical breathing room, generous editorial-plate proportion"
         ],
         "background": [
           "seamless pure white sweep",
@@ -75,23 +75,19 @@
       "slots": {
         "setting": [
           "in a sun-lit modernist apartment with oak parquet and a plain plaster wall",
-          "in a small contemporary gallery with raw concrete floor and a warm plaster wall",
           "in a Japanese-style room with tatami and shoji-diffused daylight",
           "on a marble counter in a minimalist kitchen, no other objects in view",
           "on terracotta tile in a sunlit courtyard, potted plants softly framing the edges",
           "on stone in an outdoor garden setting, plants softly out of focus",
           "at the corner of a designer's drafting table with an Akari paper lamp soft in the background",
-          "on a low plinth in a darker exhibition gallery, brass and stone plinths around",
           "in a linen-curtain-filtered room with terracotta floor tile",
           "in a quiet hallway with wood-paneled wall and terrazzo floor",
           "on a powder-coated steel shelf in a daylit studio with a plain white wall behind",
           "in a curated minimalist living room with one or two soft design-magazine props softly in frame",
-          "on a low oak bench in a museum installation, wide empty white wall behind",
           "in a wabi-sabi tea room with mud-plaster walls and a single tokonoma alcove",
           "on a stone step in front of a brutalist concrete wall, late-afternoon shadow",
           "on a sun-bleached wooden deck overlooking soft water out of focus",
-          "in a sun-warmed alcove of a converted warehouse, single high window casting calm light",
-          "on a low travertine plinth in front of a dark linen curtain"
+          "in a sun-warmed alcove of a converted warehouse, single high window casting calm light"
         ],
         "figure_mode": [
           "no figure, the object alone in a quiet considered composition",
@@ -102,7 +98,6 @@
           "a figure walking past in the background, soft motion blur, the object the still focus in the foreground",
           "two partial figures in soft conversation in the deep background, the object the focus in the foreground",
           "a figure seated near the object but cropped at the shoulders, never the eyes, intimate domestic feel",
-          "the object on a museum-style plinth, observer's silhouette implied off-frame but never depicted",
           "no figure — purely architectural still-life with the object at the center",
           "no figure — the object as part of a calm multi-object still-life on a surface, two or three companion objects in soft composition (a glass, a small ceramic form, etc.)",
           "no figure — the object on a stack of design magazines or books, lived-in reading-corner energy",
@@ -120,10 +115,10 @@
         ],
         "atmosphere": [
           "soft afternoon daylight, natural color, calm exposure, no harsh highlights",
-          "north-facing daylight, even and cool, museum-quiet",
+          "north-facing daylight, even and cool, calm exposure",
           "warm late-afternoon raking light, long quiet shadows",
           "shoji-diffused daylight, soft and even, slightly warm",
-          "single skylight from above, deep ambient shadow surrounds the object, gallery quality",
+          "single skylight from above, deep ambient shadow surrounds the object",
           "early-evening interior, ambient room light warmed by a single practical lamp",
           "dappled-leaf shadow pattern across object and surrounding surface",
           "high-contrast morning light spilling from one window, deep shadow on the opposite side",
@@ -133,7 +128,7 @@
           "soft pre-dawn cool light, almost monochromatic",
           "vertical-stripe light through slatted blinds, warm afternoon stripes laid across a neutral wall",
           "single Akari paper lamp glow softening the room from one side, the rest in calm daylight",
-          "warm hero spotlight on the object, cool ambient gradient across the gallery wall behind",
+          "warm hero spotlight on the object, cool ambient gradient across the wall behind",
           "even pale daylight from a tall window, faint shadow on a plaster wall — magazine-spread tone",
           "soft b&w-leaning daylight, slight motion in the figure, the object held still and architectural"
         ],
@@ -156,7 +151,7 @@
           "soft sage-and-cream palette — pale green floor, warm cream walls, oak warmth",
           "grey-green-and-walnut palette — dark walnut surface, soft grey-green wall, calm still-life tone",
           "pale-mint and warm-cream domestic palette, gentle and slightly nostalgic",
-          "warm-to-cool gallery gradient — cool wall fading to warm hero light on the object",
+          "warm-to-cool gradient — cool wall fading to warm hero light on the object",
           "soft slat-blind backlight tonal — vertical light stripes warming a neutral interior"
         ]
       },

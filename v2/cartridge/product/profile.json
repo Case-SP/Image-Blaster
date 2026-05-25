@@ -165,7 +165,6 @@
     "lounge":  ["chair","sofa","loveseat","armchair","ottoman","coffee table","side table","lamp","pendant","sconce","cushion","pillow","throw","rug","credenza","record player","stool","table"],
     "office":  ["desk","chair","task chair","monitor","keyboard","mouse","stapler","pencil cup","filing","tape dispenser","calendar","drafting","lamp"],
     "bedroom": ["bed","headboard","nightstand","dresser","wardrobe","clothes hanger","jewelry box","lamp","alarm clock"],
-    "gallery": ["sculpture","plinth","pedestal","art object","display case","monolith","lamp","pendant"],
     "outdoor":["bench","planter","fountain","lantern","outdoor chair","outdoor table","deck chair","hammock","garden tool","watering can","umbrella"],
     "workshop":["tool","wrench","hammer","clamp","drill","plane","chisel","vise","anvil","jig","saw","screwdriver"],
     "studio":  ["camera","lens","tripod","easel","cutting mat","drafting","sketchbook","ruler","compass"],
@@ -185,7 +184,7 @@
       "in a sun-lit modernist bathroom with terracotta tile floor and a shoji-style screen, soft north light",
       "in a wabi-sabi tea-house bathroom with mud-plaster walls and a bare wooden vanity, single small window",
       "in a luxury minimalist bathroom with travertine slab walls and brushed-brass fixtures, late-afternoon raking light",
-      "in a minimal Italian bathroom with Carrara marble and a single tall window, museum-quiet",
+      "in a minimal Italian bathroom with Carrara marble and a single tall window, calm even daylight",
       "in a small concrete-walled spa-style bath with a soft skylight and warm cedar floor"
     ],
     "lounge": [
@@ -222,15 +221,6 @@
       "in a Scandinavian bedroom with pale plaster walls and natural daylight from a single window",
       "on a soft linen-covered bench at the foot of a bed in a wabi-sabi room"
     ],
-    "gallery": [
-      "on a low plinth in a darker exhibition gallery, brass and stone plinths around, dramatic single skylight from above",
-      "on a low oak bench in a museum installation with a wide empty white wall behind",
-      "on a low travertine plinth in front of a dark linen curtain, gallery-style lighting",
-      "on a powder-coated steel pedestal in a bright contemporary gallery with raw concrete floor",
-      "in a corner of a quiet gallery space with mud-plaster walls and a single ceiling light",
-      "on a clean white plinth against a soft pale-grey gradient wall, single warm hero spotlight on the object, deep shadow falloff, museum-installation hero mode",
-      "on a white pedestal with a second pedestal alongside, soft warm-to-cool light gradient across the wall behind, gallery-display proportion"
-    ],
     "outdoor": [
       "on terracotta tile in a sunlit courtyard, potted plants softly framing the edges, dappled-leaf shadow pattern",
       "on stone in an outdoor garden setting, plants softly out of focus",
@@ -243,7 +233,7 @@
       "on a steel work table in a daylit metal shop, single overhead skylight, hand tools partly visible",
       "on an oiled-wood workbench in a quiet woodworking shop, soft window light from above",
       "on a polished concrete floor in an industrial workshop with a corten-steel wall behind",
-      "on a wooden plinth in a daylit ceramicist's studio with shelves of unfired pieces softly behind"
+      "on a worn wooden table in a daylit ceramicist's studio with shelves of unfired pieces softly behind"
     ],
     "studio": [
       "in a daylit photographer's studio with a paper-sweep softly visible at the edge",
@@ -311,8 +301,6 @@
       "in a calm room with a soft sage-painted floor and warm cream walls, oak table and a single Akari paper lamp soft in the background",
       "in a wood-veneer-panelled hallway with terrazzo floor, b&w-leaning tonal restraint",
       "on a dark-walnut console table against a soft grey-green plaster wall, calm still-life composition",
-      "on a low plinth in a darker exhibition gallery, brass and stone plinths around, dramatic single skylight",
-      "on a clean white plinth against a soft pale-grey gradient wall, single warm hero spotlight, museum-installation mode",
       "on terracotta tile in a sunlit courtyard, potted plants softly framing the edges",
       "on an oak shelf in a converted warehouse alcove, single high window"
     ]

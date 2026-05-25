@@ -94,23 +94,16 @@ async function listRunsByClient(clientId) {
   // each stage's `status` field as a string, plus `cartridge` and the
   // small `input` summary. titleCount is computed server-side from
   // input.titles array length after parsing.
-  // SLIM: project scalar fields + only the JSON sub-paths the UI actually
-  // reads. `trace->input` (full) used to be projected here — that JSON
-  // column is large enough to push the query past the 8s timeout. Instead
-  // pull just `titles`, `stage`, `N` and reassemble the slim shape below.
+  // SLIM: scalars + cartridge column (now a real indexed column post-migration).
+  // We do NOT pull any `trace->...` JSON sub-paths here — projecting JSON
+  // across 50 rows was the killer (input.titles arrays could be 50KB+ each).
+  // Live runs get their full input via the SSE `run.started` event;
+  // done runs don't need input in the listing.
   const { data, error } = await sb()
     .from('runs')
     .select([
       'id', 'client_id', 'status', 'started_at', 'finished_at',
-      'ok_count', 'failed_count',
-      'cartridge:trace->>cartridge',
-      'input_stage:trace->input->>stage',
-      'input_n:trace->input->>N',
-      'input_titles:trace->input->titles',
-      'shot_list_status:trace->stages->shotList->>status',
-      'critic_status:trace->stages->critic->>status',
-      'resolved_status:trace->stages->resolved->>status',
-      'renders_status:trace->stages->renders->>status'
+      'ok_count', 'failed_count', 'cartridge', 'stage'
     ].join(','))
     .eq('client_id', clientId)
     .order('started_at', { ascending: false })
@@ -124,16 +117,15 @@ async function listRunsByClient(clientId) {
       status: row.status,
       startedAt: row.started_at,
       finishedAt: row.finished_at,
-      input: {
-        stage: row.input_stage || null,
-        N: row.input_n != null ? Number(row.input_n) : null,
-        titles: Array.isArray(row.input_titles) ? row.input_titles : []
-      },
+      // Stage is the run's intended target stage (sketch/product-shot/in-situ).
+      // Input.titles is intentionally absent — fetched via SSE for live runs,
+      // not needed for done runs in the listing.
+      input: { stage: row.stage || null, titles: [] },
       stages: {
-        shotList: { status: row.shot_list_status },
-        critic:   { status: row.critic_status },
-        resolved: { status: row.resolved_status },
-        renders:  { status: row.renders_status }
+        shotList: { status: row.status === 'done' ? 'done' : 'pending' },
+        critic:   { status: row.status === 'done' ? 'done' : 'pending' },
+        resolved: { status: row.status === 'done' ? 'done' : 'pending' },
+        renders:  { status: row.status === 'done' ? 'done' : 'pending' }
       },
       verdicts: {},
       __counts: { ok: row.ok_count || 0, failed: row.failed_count || 0 }

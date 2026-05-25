@@ -58,6 +58,18 @@
         </button>
       </header>
 
+      <!-- Reference override status bar. Click the "+" to open a modal where
+           you can drop images that steer the next sketch run. Persistent for
+           the session; cleared on hard refresh. -->
+      <div class="ref-tray" id="ref-tray">
+        <div class="ref-tray-row">
+          <div class="ref-tray-label">Sketch refs · <span id="ref-tray-stage">override off</span></div>
+          <div class="ref-tray-thumbs" id="ref-tray-thumbs-mini"></div>
+          <button type="button" class="ref-tray-add" id="ref-tray-open" title="Add reference images">+</button>
+          <button type="button" class="ref-tray-clear" id="ref-tray-clear" title="Clear all" hidden>clear</button>
+        </div>
+      </div>
+
       <div class="status-strip" id="status-strip" hidden></div>
       <p class="totals" id="totals"></p>
 
@@ -90,13 +102,28 @@
     </section>
   </main>
 
-  <div id="status-foot" class="status-foot" hidden>
-    <span class="sf-dot" data-key="sse" title="SSE state"></span>
-    <span class="sf-text" data-key="db">DB —</span>
-    <span class="sf-text" data-key="tiles">— tiles</span>
-    <span class="sf-text" data-key="inflight">0 in-flight</span>
-    <span class="sf-text" data-key="renders" hidden></span>
-    <span class="sf-warn" data-key="warn" hidden></span>
+
+  <!-- Reference override modal (drag images in here) -->
+  <div id="ref-modal" class="ref-modal" hidden>
+    <div class="ref-modal-stage">
+      <div class="ref-modal-head">
+        <div class="ref-modal-title">Reference overrides</div>
+        <div class="ref-modal-sub">Drop images to steer the next run for this stage. Replaces the cartridge defaults until you clear them.</div>
+      </div>
+      <div class="ref-modal-tabs" role="tablist">
+        <button type="button" class="ref-modal-tab active" data-stage="sketch" role="tab">Sketch <span class="ref-tab-count" data-tab-count="sketch"></span></button>
+        <button type="button" class="ref-modal-tab" data-stage="in-situ" role="tab">In-situ <span class="ref-tab-count" data-tab-count="in-situ"></span></button>
+      </div>
+      <div class="ref-modal-drop" id="ref-modal-drop">
+        <div class="ref-modal-drop-text">Drop images here<br><span>or click to browse</span></div>
+        <input type="file" id="ref-modal-input" accept="image/*" multiple hidden>
+      </div>
+      <div class="ref-modal-thumbs" id="ref-modal-thumbs"></div>
+      <div class="ref-modal-actions">
+        <button type="button" class="ref-modal-clear" id="ref-modal-clear">Clear this stage</button>
+        <button type="button" class="ref-modal-done" id="ref-modal-done">Done</button>
+      </div>
+    </div>
   </div>
 
   <!-- Lightbox -->
@@ -117,6 +144,26 @@
       </div>
     </div>
   </div>
+
+  <!-- Night-mode toggle. Tiny sun/moon in the bottom-right corner; click to flip
+       theme. Preference persists in localStorage. The non-active icon hides via
+       CSS so only one shape shows at a time. -->
+  <button type="button" id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+    <svg class="theme-icon theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4"></circle>
+      <line x1="12" y1="2" x2="12" y2="4"></line>
+      <line x1="12" y1="20" x2="12" y2="22"></line>
+      <line x1="4.93" y1="4.93" x2="6.34" y2="6.34"></line>
+      <line x1="17.66" y1="17.66" x2="19.07" y2="19.07"></line>
+      <line x1="2" y1="12" x2="4" y2="12"></line>
+      <line x1="20" y1="12" x2="22" y2="12"></line>
+      <line x1="4.93" y1="19.07" x2="6.34" y2="17.66"></line>
+      <line x1="17.66" y1="6.34" x2="19.07" y2="4.93"></line>
+    </svg>
+    <svg class="theme-icon theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+    </svg>
+  </button>
 
   <script src="app.js"></script>
 </body>

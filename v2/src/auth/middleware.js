@@ -26,7 +26,12 @@ async function resolveClientByApiKey(key) {
 // resolves to a shared "public" client. Reversible by unsetting the env var.
 const OPEN_MODE = process.env.AUTH_MODE === 'open';
 const PUBLIC_EMAIL = 'public@image-blaster.local';
-const OPEN_MODE_CLIENT_TIMEOUT_MS = parseInt(process.env.OPEN_MODE_CLIENT_TIMEOUT_MS || '3000', 10);
+// Cold-start of the Supabase JS client + first auth+query against a freshly-
+// connected pooler can take 2–6s in practice (DNS + TLS + Cloudflare cold +
+// Supabase pool warm-up). 3s was just barely enough on a good day; bumped to
+// 10s so latent edge-of-window cold-starts don't fire the synthetic fallback
+// (which can't persist traces). Env var still overrides per-deploy.
+const OPEN_MODE_CLIENT_TIMEOUT_MS = parseInt(process.env.OPEN_MODE_CLIENT_TIMEOUT_MS || '10000', 10);
 let openModeClient = null;       // resolved value cache
 let openModeClientPromise = null; // in-flight promise (only set while a fetch is mid-flight)
 
@@ -45,7 +50,7 @@ async function ensureOpenModeClient() {
       const { data: inserted, error } = await sb().from('clients').insert([{
         token: crypto.randomBytes(24).toString('base64url'),
         name: 'public',
-        cartridge: process.env.OPEN_MODE_CARTRIDGE || 'nolla',
+        cartridge: process.env.OPEN_MODE_CARTRIDGE || 'product',
         n_per_title: parseInt(process.env.OPEN_MODE_N || '3', 10),
         monthly_image_quota: parseInt(process.env.OPEN_MODE_QUOTA || '5000', 10),
         email: PUBLIC_EMAIL,
@@ -71,7 +76,7 @@ async function ensureOpenModeClient() {
         id: 'open-mode-fallback',
         email: PUBLIC_EMAIL,
         name: 'public-fallback',
-        cartridge: process.env.OPEN_MODE_CARTRIDGE || 'nolla',
+        cartridge: process.env.OPEN_MODE_CARTRIDGE || 'product',
         n_per_title: parseInt(process.env.OPEN_MODE_N || '3', 10),
         monthly_image_quota: parseInt(process.env.OPEN_MODE_QUOTA || '5000', 10),
         active: true,

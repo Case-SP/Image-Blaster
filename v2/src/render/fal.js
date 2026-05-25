@@ -23,6 +23,14 @@ async function renderOne(prompt, options = {}) {
   const aspectRatio = options.aspectRatio || '3:4'; // closest fal-supported aspect to A4 portrait (1:1.414); gpt-2 maps via GPT2_SIZE → portrait_4_3 (1024×1408 ≈ 0.727, vs A4 0.707)
   const quality = options.quality || 'medium'; // gpt-image-2 only — 'low' | 'medium' | 'high'. 'medium' is ~2x faster than 'high' and visually equivalent for contact-sheet usage; UI/API can override per-run.
   const references = options.references || [];
+  const stage = options.stage || null;
+  const stageResolution = options.stageResolution || null;
+  // gpt-image-2 quality ladder: cartridge declares per-stage quality; per-call
+  // override (options.quality) still wins. nano-banana-pro and flux-pro/v1.1-
+  // ultra don't expose a meaningful resolution knob today (nano is fixed, ultra
+  // is fixed at ~2MP), so the stage policy only steers gpt-image-2. When those
+  // models add a low-cost variant we'll thread it here too.
+  const stageQuality = stage && stageResolution?.[stage]?.gpt_quality;
   const supportsRefs = ['fal-ai/nano-banana-pro', 'fal-ai/flux-pro/kontext', 'openai/gpt-image-2/edit'].includes(model);
   // Per-call ref budget. Was hard-coded to 4, which froze the brand to ref-01..04
   // alphabetical and silently ignored every style ref added after the original
@@ -51,7 +59,7 @@ async function renderOne(prompt, options = {}) {
     payload = {
       prompt,
       image_size: GPT2_SIZE[aspectRatio] || 'auto',
-      quality,
+      quality: stageQuality || quality,
       num_images: 1,
       output_format: 'png'
     };

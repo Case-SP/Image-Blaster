@@ -22,6 +22,9 @@ data/
 # Claude Code local settings
 .claude/
 
+# Git worktrees (local, not source)
+.worktrees/
+
 # Temp / OS
 .DS_Store
 /tmp

@@ -1,6 +1,28 @@
 const { sb, upsertRun, getRun, listRunsByClient, recordImage, listImagesByRun } = require('../db/supabase');
 
 const BUCKET = 'generations';
+const THUMBS_BUCKET = 'generations-thumbs';
+const THUMB_WIDTH = 384;
+
+let sharp = null;
+try { sharp = require('sharp'); } catch { /* thumbs disabled — UI falls back to ?w= route */ }
+
+// Pre-bake a 384-wide WebP thumb next to the original PNG, in a public bucket.
+// The UI loads tile thumbnails directly from the Supabase CDN, never through
+// Node. Best-effort: a thumb failure never breaks the original PNG write.
+async function writeThumb(runId, slug, filename, buffer) {
+  if (!sharp) return;
+  try {
+    const thumb = await sharp(buffer).resize({ width: THUMB_WIDTH }).webp({ quality: 78 }).toBuffer();
+    const path = `${runId}/${slug}/${filename}.webp`;
+    const { error } = await sb().storage.from(THUMBS_BUCKET).upload(path, thumb, {
+      contentType: 'image/webp', upsert: true
+    });
+    if (error) console.warn('[thumb] upload failed:', filename, error.message);
+  } catch (e) {
+    console.warn('[thumb] resize failed:', filename, e.message);
+  }
+}
 
 async function writeImage(runId, slug, filename, buffer, metadata) {
   const storagePath = `${runId}/${slug}/${filename}`;
@@ -9,6 +31,11 @@ async function writeImage(runId, slug, filename, buffer, metadata) {
   });
   if (error) throw error;
   await recordImage({ runId, slug, filename, storagePath });
+  // Pre-bake the thumb in parallel-but-fire-and-forget. We don't await it for
+  // the orchestrator so the render flow stays fast; the next /tiles call
+  // picks up the public URL whether or not the thumb has landed yet (UI
+  // falls back to the auth-protected ?w=384 route until the thumb exists).
+  writeThumb(runId, slug, filename, buffer).catch(() => {});
   if (metadata) {
     const metaPath = `${runId}/${slug}/${filename}.json`;
     await sb().storage.from(BUCKET).upload(metaPath, Buffer.from(JSON.stringify(metadata, null, 2)), {

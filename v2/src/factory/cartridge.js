@@ -29,9 +29,11 @@ function loadCartridge(name) {
   const intakePrompt = readTextOr(path.join(dir, 'intake.md'));     // optional intake-mode system prompt (when profile.input_mode === 'intake')
 
   const refsDir = path.join(dir, 'references');
-  // Cap kept generous (64) so manual add/remove via scripts/refs.js stays
-  // flexible without surprise truncation as the brand grows. Only REF_BUDGET
-  // (default 8) actually reach fal per render anyway — see render/fal.js.
+  // Cap kept generous (256) so multi-bucket cartridges (e.g. logos has 5
+  // bucketed style tags) and large reference dumps don't silently drop later
+  // folders due to alphabetical truncation. Only REF_BUDGET (default 8)
+  // actually reach fal per render anyway — see render/fal.js. The cap is a
+  // safety, not a function.
   // Subfolders are treated as style buckets — e.g. references/product-shot/*.png
   // get tagged with style='product-shot'. The orchestrator can filter by style
   // for cartridges where a composition has dedicated reference imagery.
@@ -54,7 +56,7 @@ function loadCartridge(name) {
         references.push(loadRef(full, entry, null));
       }
     }
-    references = references.slice(0, 64);
+    references = references.slice(0, 256);
   }
 
   const catDir = path.join(dir, 'categories');
