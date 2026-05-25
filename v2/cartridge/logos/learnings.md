@@ -85,3 +85,25 @@ The classifier now emits an aesthetic brief per title (Task 1, done):
 - To set a composition's ceiling: `profile.stage_resolution[<stage>].treatment` (`flat` | `dimensional` | `material-expressive`); `render_treatment` from the brief upgrades it at render time. Sketch is pinned `flat`.
 
 Task 1 verification (one Haiku call, no render): Versace → `[post-modern, art-deco, brutalist-poster]` / one-saturated-field / material-expressive; Acme Law Offices → `[swiss-modern, contemporary-minimal, victorian-engraved]` / mono / flat; Warp → `[y2k, brutalist-poster, contemporary-minimal]` / mono / flat. Brand-appropriate and distinct.
+
+## 9. Tasks 2–5 landed — wiring outcomes, verifications, and deviations (REVISION 2)
+
+Spec reprioritized (REVISION 2): the verified root cause is that the register prose never reached the model, so **Task 2 was the load-bearing fix** and was done first (Task 1 router was its prerequisite).
+
+**Verified end-to-end (real `nano-banana-pro` renders on :3004):**
+- **Task 2** — register prose now reaches the prompt. The brand's brief registers fill `{style_mix}` (e.g. Warp → `post-modern / y2k / brutalist-poster` prose in the resolved sketch prompt; `{style_mix}` substituted, not literal). Ref-budget gap closed: `refsAvailable 16 → refsAttached 12`.
+- **Task 3** — palette tracks `palette_policy`: New Museum + Iron Bank (mono brief) → mono palette; Versace (one-saturated-field) → "solid black on a single saturated brand-color ground". Sketch stays flat.
+- **Task 4** — per-stage ceiling: Versace (`render_treatment=material-expressive`) **sketch** prompt still carries `no 3D bevels … flat finished vector marks only` and leaks no render-stage material prose — ceiling is per-STAGE, not per-brand. Render-stage proof deferred until the render composition exists (mechanism inherited).
+- **Task 5** — cross-stage promote-prefix keys present; orchestrator builds `${parentStage}_to_${shot.composition}` and falls back to `iterate`.
+
+**Deviations from the spec snippets (all grounded, flagged here):**
+1. **Accessor:** spec snippets read `classifierContext[title.id]`; the real var is **`objectContext[title.id]`** (Task 0). Used throughout Tasks 2–4.
+2. **Ref-budget (Task 2 Step 5):** chose a **per-cartridge `profile.ref_budget=12`** (threaded orchestrator → `fal.js` `opts.refBudget`, env fallback) over the spec's global `REF_BUDGET=12` env bump — global would change `product` runs, which the plan forbids. Product unaffected (no `ref_budget` → env default 8).
+3. **Cross-stage keys (Task 5):** keyed to the **documented composition names** `system-split-4x5` (render) and `hero-single-surface` (mockup) from `_promote_prefixes_NOTE`, not the spec's placeholder `render`/`mockup` (which would never match the real composition names).
+
+### ⚠️ Action required from the aesthetic worktree (wt/render-v3)
+- When you create the render/mockup compositions, confirm their names. If they are **not** `system-split-4x5` / `hero-single-surface`, RENAME the matching keys in `profile.json.promote_prefixes` or cross-stage carry-through silently falls back to `iterate`.
+- `mark_bias` is emitted on the brief but **not yet consumed** — wire it into `sketch.slots.mark_type` selection (your tuning surface).
+- Register prose wording + exact palette/color values are yours to dial by eye; the mechanism is in place.
+
+**Secondary (Task 1b, NOT done):** making the router model a cartridge setting (`classifier_model`, default Sonnet 4.6) is still pending — it's the demoted, post-Task-2 improvement.
