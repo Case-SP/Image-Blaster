@@ -6,9 +6,19 @@ Cold start: `DISPATCH.md` (here) → `v2/cartridge/product/PLAN.md` (design inte
 
 ---
 
-## Active worktree triage — logos protocol (2026-05-24)
+## Worktree roles — logos protocol (2026-05-25)
 
-Logos work split across two git worktrees, run from separate tmux windows on separate server ports.
+Logos work runs as a four-window pipeline. Each window is a git worktree on its own branch + port; all share one `.git` and one Supabase backend. Cold-start any window by reading this file to learn its role.
+
+| Window | Path | Branch | Port | Role |
+|---|---|---|---|---|
+| `specs` | `.worktrees/specs` | `wt/specs` | 3004 | **Planner.** Writes specs (`docs/`) + todo lists the implementers execute. brainstorming → writing-plans. Markdown only, merges clean. Runs *first*. |
+| `technical` | `.worktrees/technical` | `wt/technical` | 3002 | **Implementer** — instrumentation & correctness (below). |
+| `aesthetic` | `.worktrees/aesthetic` | `wt/render-v3` | 3003 | **Implementer** — Stage 2 render, dialed in (below). |
+| `qa` | `.worktrees/qa` | `wt/qa` | 3005 | **Reviewer.** Diffs `main..wt/technical` and `main..wt/render-v3` against the specs, flags issues pre-merge. code-review skill. Edits no code. |
+| (main) | repo root | `main` | — | Clean reference + merge target. |
+
+**Flow:** planner drafts specs/todos → technical + aesthetic build in parallel → QA reviews both diffs against specs → merge to `main`. Expect merge conflicts in shared files: `orchestrator.js`, `render/fal.js`.
 
 ### Worktree `technical` (`wt/technical`) — instrumentation & correctness
 
