@@ -106,4 +106,10 @@ Spec reprioritized (REVISION 2): the verified root cause is that the register pr
 - `mark_bias` is emitted on the brief but **not yet consumed** — wire it into `sketch.slots.mark_type` selection (your tuning surface).
 - Register prose wording + exact palette/color values are yours to dial by eye; the mechanism is in place.
 
-**Secondary (Task 1b, NOT done):** making the router model a cartridge setting (`classifier_model`, default Sonnet 4.6) is still pending — it's the demoted, post-Task-2 improvement.
+### Task 1b — router model is a cartridge setting (DONE, 2026-05-25)
+The router model is now `profile.classifier_model` (logos = `anthropic/claude-sonnet-4.6`), threaded through `classifyByCartridge` → `classifyLogos`/`classifyObjects` (both already accept `{ model }`, defaulting to `anthropic/claude-haiku-4.5`). Cartridges without the key fall back to Haiku — `product` is unaffected.
+
+- **OpenRouter slug reality:** request slug `anthropic/claude-sonnet-4.6` is valid; OpenRouter **serves** the dated snapshot `anthropic/claude-4.6-sonnet-20260217` (note the reordered tokens — don't pin the dated form in config, the canonical `anthropic/claude-sonnet-4.6` is the stable alias).
+- **Trace recording:** `trace.input.options.classifier_model` records the resolved model (added at `orchestrator.js`, the `createTrace` input.options). Verified on run `20260525-085211-4dmk` = `"anthropic/claude-sonnet-4.6"`.
+- **⚠️ Stale verification idiom:** the spec's `data/traces/*.json` grep no longer applies — `fs.js` storage was deleted; traces persist to Supabase. Inspect a trace via `GET /api/public/runs/:id` (full trace, client-scoped) instead.
+- **Routing quality (Sonnet, 4 brands):** Versace → `material-expressive`; Acme Law & Iron Bank → `mono`/`flat`; Warp music label → bold (`one-saturated-field`/varied registers). Shortlists are brand-apt and visibly distinct — Sonnet discriminates treatment ceiling and palette policy correctly, not just "different from Haiku."

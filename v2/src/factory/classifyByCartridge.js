@@ -17,11 +17,15 @@ const CLASSIFIERS = {
 function classifyByCartridge(cartridge, titles) {
   const name = cartridge?.profile?.classifier || 'object';
   const c = CLASSIFIERS[name];
+  // Per-cartridge classifier model override. Undefined for cartridges that
+  // don't set it (e.g. product) → both classifiers fall back to their Haiku
+  // default. Logos sets `classifier_model: anthropic/claude-sonnet-4.6`.
+  const opts = { model: cartridge?.profile?.classifier_model };
   if (!c) {
     console.warn(`[classifyByCartridge] unknown classifier "${name}" — falling back to object`);
-    return CLASSIFIERS.object.classify(titles);
+    return CLASSIFIERS.object.classify(titles, opts);
   }
-  return c.classify(titles);
+  return c.classify(titles, opts);
 }
 
 function prefixByCartridge(cartridge, ctx) {

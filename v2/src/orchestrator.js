@@ -204,7 +204,7 @@ async function runBatch({ cartridgeName = 'product', titles, N = 10, critic = tr
 
   const trace = createTrace({
     cartridge: cartridgeName,
-    input: { titles, N, stage: stage || null, objectContext, options: { critic, model: modelList[0], models: modelList, aspectRatio, quality } },
+    input: { titles, N, stage: stage || null, objectContext, options: { critic, model: modelList[0], models: modelList, aspectRatio, quality, classifier_model: cartridge?.profile?.classifier_model || null } },
     clientId
   });
   if (typeof onTraceCreated === 'function') {
