@@ -1,5 +1,14 @@
 # Logos — Generalized Prompting + Per-Stage Aesthetic Ceiling — Implementation Plan
 
+> # 🔄 REVISION 2 — UPDATED 2026-05-25 (root-cause revision)
+> **If you read or started from an earlier copy of this spec, STOP and RE-READ — the priority order changed.**
+> - A data-flow trace found the **root cause** (see the "Root cause" section): the register *prose* never reaches the image model. **Wiring, not model intelligence, is the bottleneck.**
+> - **Task 2 is now LOAD-BEARING — do it FIRST.** It wires the register prose into the prompt; nothing else moves the needle until it lands.
+> - The model upgrade is **demoted to Task 1b (secondary)** — its output is inert until Task 2 reads it.
+> - **Already committed Task 1 (the register router — commit `5aeb8ce`)?** Good — Task 1 is a *prerequisite* for Task 2, so that work is not wasted. **Do Task 2 NEXT — not Task 1b.**
+>
+> **Revision history:** R1 `dd9f122` (model-first ordering — superseded) → R2 `55d4f18`/this (root-cause reprioritization).
+
 > **For agentic workers (the `technical` worktree):** Implement task-by-task. Steps use checkbox (`- [ ]`) syntax. This project has **no test runner** — every task's verification is a CLI smoke (`scripts/blast.js`) + **trace inspection** (`data/traces/*.json`) + an eyeball of the rendered grid. Commit only after the verification produces the expected evidence.
 >
 > **⛔ DO NOT WRITE CODE UNTIL TASK 0 IS DONE.** Task 0 is a mandatory audit of the *live* code. This plan was written by the planner from a point-in-time read; the `aesthetic` worktree (`wt/render-v3`) is editing shared files in parallel. If reality diverges from any "Current state" claim below, **stop and report the divergence to the planner before changing code** — do not silently adapt and push.
