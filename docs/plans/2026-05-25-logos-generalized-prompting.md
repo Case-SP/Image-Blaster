@@ -8,7 +8,9 @@
 
 **Architecture:** Extend the existing `logoContext.js` Haiku classifier into a **Register Router** that emits an *aesthetic brief* (a brand-appropriate register shortlist + palette policy + render-treatment ceiling). Feed that brief into the *already-present-but-inert* `style_mix` injection path in `orchestrator.js` (replacing its brand-agnostic random picker), give the sketch skeleton a `{style_mix}` sink and a color-capable palette, and convert the global flat-only negatives into a **stage-scoped** ceiling. No new pipeline; no DB changes.
 
-**Tech Stack:** Node.js (CommonJS), Express, Supabase JS, OpenRouter Haiku (`anthropic/claude-haiku-4.5`) for classification, fal.ai for renders. Verification via `scripts/blast.js` + `data/traces/*.json`.
+**Tech Stack:** Node.js (CommonJS), Express, Supabase JS, OpenRouter for classification (model becomes a cartridge setting — default `anthropic/claude-sonnet-4.6`; see Task 1b), fal.ai for renders. Verification via `scripts/blast.js` + `data/traces/*.json`.
+
+> **Execution order matters:** Do **Task 2 first** (it's the load-bearing fix per Root cause), then Task 3/4/5, then Task 1/1b. Task 1's better router output is inert until Task 2 wires the prose into the prompt — sequencing this way also lets you prove the wiring fix *before* spending on a bigger model.
 
 **Reference docs (read before starting):**
 - Prior cartridge plan (format + verification idiom to mirror): `docs/plans/2026-05-07-logos-cartridge-phase-1-2.md`
@@ -27,6 +29,23 @@ The user's diversity bar is "five references in five different aesthetic *worlds
 3. **Register selection, even if fired, is brand-agnostic.** The `style_mix` block picks registers by seeded RNG — it ignores the brand. That's "Approach 3" (random). We want **Approach 2**: a brand-appropriate shortlist chosen by the router.
 4. **Palette is monochrome-only.** `compositions.json` → `sketch.slots.palette` is all black/white/inverted. No brand color, so UNIQLO-red / New-Museum-pink can't happen.
 5. **The flat-only guardrail is global.** `suffix.md` negatives (`no 3D bevels, no gradients, no fake glows…`) apply to every stage via the cartridge suffix. The user wants flat at **Sketch** but dimensional/material allowed at **Render**.
+
+### Root cause — verified by end-to-end data-flow trace (2026-05-25)
+
+A boundary-by-boundary trace of a fresh sketch render (`nano-banana-pro`) shows **the model never sees the register prose**, and this — not model intelligence — is why output is samey:
+
+| Boundary | Behavior (file:line) |
+|---|---|
+| Classifier `logoContext.js` | emits a single `era` word (1 of 9) — the only register signal it produces |
+| Shot list `orchestrator.js:332` | `style_mix` block gated on `compDef.style_mix`; sketch declares none → **never fires** |
+| Assembly `grammar.js:27–31,37` | slots filled **only for placeholders present in the skeleton**; no `{style_mix}` → any `slot_overrides.style_mix` is **silently dropped**. Skeleton hardcodes *"…mid-century corporate identity catalogs…"* for **every** brand. |
+| Fresh prefix `orchestrator.js:682` | brand register reaches the prompt only as `"Era: <era>."` — a one-word label, not the rich `profile.styles` prose |
+| Payload `fal.js:82` | refs attach correctly (`image_urls`), but `REF_BUDGET=8` caps the 16 sketch refs to the first 8 alphabetically |
+
+**Conclusion:**
+- The richest art-direction asset (`profile.styles` prose) is **disconnected** at two points (no `style_mix.count`, no `{style_mix}` placeholder) and elsewhere **collapsed to a one-word `era`**. The hardcoded skeleton register anchor then homogenizes every brand toward "mid-century catalog."
+- **The model is NOT the bottleneck.** A perfect router's register choice is discarded at the assembly boundary. **Task 2 (wire the prose) is the load-bearing fix and must land first.** The model upgrade (Task 1b) is a real but *secondary* improvement — it sharpens a decision that is worthless until Task 2 reads it.
+- Secondary finding: half the curated sketch refs never reach the model (8/16 budget cap) — address in Task 2 Step 6.
 
 **Locked product decisions (from planner ↔ user):**
 - **Approach 2 — shortlist spread.** Router picks 2–4 brand-appropriate registers; the sketch grid spreads across them; primary register carries forward to later stages.
@@ -210,7 +229,42 @@ git commit -m "feat(logos): register router — classifier emits aesthetic brief
 
 ---
 
+## Task 1b (SECONDARY — do after Task 2 proves out) — make the router model a cartridge setting, default Sonnet
+
+> **Why secondary:** per Root cause, the router's output is inert until Task 2 wires the prose into the prompt. Land Task 2 first, confirm register prose reaches the model, *then* do this — so you can judge whether the bigger model actually improves routing rather than guessing. The user chose **Sonnet 4.6**.
+
+**Files:** Modify `v2/src/factory/logoContext.js`, `v2/cartridge/logos/profile.json`, and the classifier dispatch in `v2/src/factory/classifyByCartridge.js` (confirm in Task 0).
+
+- [ ] **Step 1: Add a cartridge profile setting.** In `v2/cartridge/logos/profile.json`, add a top-level key:
+
+```json
+"classifier_model": "anthropic/claude-sonnet-4.6"
+```
+
+> Confirm the exact OpenRouter slug before committing — list models or check the dashboard. If `anthropic/claude-sonnet-4.6` 404s, use the current Sonnet 4.x slug OpenRouter exposes and record it in `learnings.md`.
+
+- [ ] **Step 2: Thread it through.** In `classifyByCartridge.js`, pass `cartridge.profile?.classifier_model` into `classifyLogos(titles, { model })`. In `logoContext.js`, the existing default param stays as the fallback (`anthropic/claude-haiku-4.5`) so other callers are unaffected.
+
+- [ ] **Step 3: Verify the model actually changed.**
+
+Run (dev server up):
+```bash
+node scripts/blast.js --cartridge logos --count 1 --titles-prefix "Warp independent electronic music label"
+latest=$(ls -t data/traces/*.json | head -1); grep -o '"classifier_model":"[^"]*"\|claude-sonnet' "$latest" | head
+```
+Expected: the trace records the Sonnet model for the classify stage (add the model to the classify trace stage if not already recorded). Compare the `registers` shortlist for 3–4 varied brands against Haiku's picks from Task 1 Step 5 — confirm the shortlists are more apt, not just different.
+
+- [ ] **Step 4: Commit.**
+
+```bash
+git add v2/src/factory/logoContext.js v2/src/factory/classifyByCartridge.js v2/cartridge/logos/profile.json
+git commit -m "feat(logos): router model is a cartridge setting (default Sonnet 4.6)"
+```
+
+---
+
 ## Task 2 — Wire the brief into the sketch register spread (replace the random picker)
+### ⭐ LOAD-BEARING — this is the actual root-cause fix; do this task first.
 
 **Files:** Modify `v2/src/orchestrator.js` (the `style_mix` block ~326–349), `v2/cartridge/logos/compositions.json` (sketch), `v2/cartridge/logos/profile.json`.
 
@@ -269,7 +323,13 @@ latest=$(ls -t data/traces/*.json | head -1); grep -o '"style_mix":"[^"]*"' "$la
 ```
 Expected: `style_mix` slot contains the **joined prose** of the brand's registers (e.g. mid-century + y2k + brutalist-poster prose), and that prose appears inside the resolved per-shot prompt string (count ≥ 1). Open the rendered grid (UI at `http://localhost:3002/` or `data/`/output) — the marks should show visibly **different worlds**, still reading as one brand.
 
-- [ ] **Step 5: Commit.**
+- [ ] **Step 5: Close the ref-budget coverage gap (secondary finding).** `data/.../references/sketch/` holds 16 refs but `REF_BUDGET=8` (`fal.js:41`) sends only `01–08` alphabetically — half are dead weight. Pick ONE:
+  - (a) Curate `references/sketch/` down to the 8 strongest, OR
+  - (b) Set `REF_BUDGET=12` for logos runs (env) and re-benchmark latency/quality.
+
+Verify: after the change, the trace's `refsAvailable` vs `refsAttached` (recorded at `orchestrator.js:772`) should show all intended refs reach fal.
+
+- [ ] **Step 6: Commit.**
 
 ```bash
 git add v2/src/orchestrator.js v2/cartridge/logos/compositions.json
