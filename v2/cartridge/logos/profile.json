@@ -8,9 +8,25 @@
   "play_ratio": 0.0,
   "ref_budget": 12,
   "stage_resolution": {
-    "sketch": { "gpt_quality": "low" },
-    "render": { "gpt_quality": "medium" },
-    "mockup": { "gpt_quality": "high" }
+    "sketch": {
+      "gpt_quality": "low",
+      "treatment": "flat",
+      "negatives": "no 3D bevels, no gradients, no fake glows, no drop shadows, no hand-drawn pen-stroke roughness — flat finished vector marks only"
+    },
+    "render": {
+      "gpt_quality": "medium",
+      "treatment": "from_brief",
+      "positives_by_treatment": {
+        "flat": "flat finished vector treatment, crisp edges",
+        "dimensional": "subtle dimensional form, controlled studio rendering, restrained depth",
+        "material-expressive": "expressive material treatment — molten metal, chrome, glass, or sculptural form as the brand demands"
+      }
+    },
+    "mockup": {
+      "gpt_quality": "high",
+      "treatment": "realistic",
+      "positives": "applied to a real-world surface with believable material and lighting"
+    }
   },
   "styles": {
     "mid-century":           "mid-century: geometric simplicity with playful organic flourishes, clean rounded sans-serif wordmarks, restrained palette, circular and rectilinear marks with optical-illusion negative space",

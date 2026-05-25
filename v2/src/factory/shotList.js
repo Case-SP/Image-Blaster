@@ -301,7 +301,10 @@ function resolveShot(cartridge, shot, seed) {
   } else {
     built = buildPrompt({
       composition, subject, seed,
-      suffix: cartridge.suffix, themeSuffix, modelSpec, slotOverrides,
+      // Per-stage treatment ceiling: when the orchestrator set a stage-scoped
+      // suffix on the shot, it wins over the cartridge-level suffix.md (which
+      // stays the fallback, so product/demo are unaffected).
+      suffix: shot.__stageSuffix || cartridge.suffix, themeSuffix, modelSpec, slotOverrides,
       cameraOverride: shot.__cameraOverride || null,
       lensOverride: shot.__lensOverride || null
     });

@@ -382,6 +382,26 @@ async function runBatch({ cartridgeName = 'product', titles, N = 10, critic = tr
             }
           }
 
+          // Per-stage treatment ceiling — stage-scoped suffix. Only built when
+          // this stage's stage_resolution declares a ceiling (treatment /
+          // negatives / positives); otherwise __stageSuffix stays unset so the
+          // cartridge-level suffix.md remains the default (product unaffected).
+          // `from_brief` upgrades render by the brand's render_treatment; sketch
+          // is pinned flat. Accessor objectContext[title.id] per Task 0.
+          {
+            const sr = cartridge.profile?.stage_resolution?.[composition] || {};
+            if (sr.treatment || sr.negatives || sr.positives || sr.positives_by_treatment) {
+              let stageNegatives = sr.negatives || '';
+              let stagePositives = sr.positives || '';
+              if (sr.treatment === 'from_brief') {
+                const t = objectContext[title.id]?.render_treatment || 'flat';
+                stagePositives = sr.positives_by_treatment?.[t] || sr.positives_by_treatment?.flat || '';
+                if (t === 'flat') stageNegatives = 'no fake glows, no drop shadows';
+              }
+              shot.__stageSuffix = { positives: stagePositives, negatives: stageNegatives };
+            }
+          }
+
           // For in-situ specifically, override the setting slot with a
           // context-appropriate pick. Different shot indexes get different
           // pool members so 3 in-situ shots of "sink" don't all show the
