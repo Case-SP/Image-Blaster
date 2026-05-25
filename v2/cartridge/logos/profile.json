@@ -7,7 +7,7 @@
   "style_order": ["sketch", "system-split-4x5"],
   "allowed_models": ["fal-ai/nano-banana-pro", "openai/gpt-image-2"],
   "play_ratio": 0.0,
-  "ref_budget": 12,
+  "ref_budget": 16,
   "stage_resolution": {
     "sketch": {
       "gpt_quality": "low",
