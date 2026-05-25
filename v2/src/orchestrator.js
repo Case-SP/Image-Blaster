@@ -11,7 +11,7 @@ const critiqueShotList = () => { throw new Error('critic disabled (only product/
 const runIntake = () => { throw new Error('intake disabled (only product/object mode supported)'); };
 const rewriteForGpt2 = () => { throw new Error('gpt2Rewriter disabled (only product/object mode supported)'); };
 const { renderOne, downloadImage } = require('./render/fal');
-const { createTrace } = require('./trace/store');
+const { createTrace, readTrace } = require('./trace/store');
 const createStorage = require('./storage');
 const storage = createStorage();
 
@@ -379,6 +379,21 @@ async function runBatch({ cartridgeName = 'product', titles, N = 10, critic = tr
               const pickFrom = (pol === 'mono' || !colors.length) ? monos
                 : (pol === 'one-saturated-field' ? colors.filter(p => /saturated/.test(p)).concat(colors) : colors);
               if (pickFrom.length) shot.slot_overrides.palette = pickFrom[Math.abs(shotSeed) % pickFrom.length];
+            }
+          }
+
+          // Brand name for the wordmark. The classifier extracts the clean
+          // brand_name from the raw title ("Warp" from "warp ... 003"); feed it
+          // into any composition with a {brand_name} sink (logos render's
+          // wordmark) so the wordmark reads the brand, not the full input title
+          // (incl. descriptor + blast suffix). No-op for cartridges whose
+          // classifier returns no brand_name (e.g. product) or compositions
+          // without the placeholder.
+          {
+            const brandName = objectContext[title.id]?.brand_name;
+            if (brandName) {
+              shot.slot_overrides = shot.slot_overrides || {};
+              if (!shot.slot_overrides.brand_name) shot.slot_overrides.brand_name = brandName;
             }
           }
 
