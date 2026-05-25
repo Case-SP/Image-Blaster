@@ -155,6 +155,41 @@
     try { localStorage.setItem('cartridge', name); } catch {}
   }
 
+  // Per-cartridge funnel flow. The MECHANISM (column rendering, promote chain,
+  // SSE, refs) is shared; the FLOW DEFINITION is per-cartridge — you can't
+  // generalize a design process, only simplify it. Stage names == composition
+  // names (the orchestrator keys stage/ceiling/promote-prefix on them).
+  //   next:      stage -> next stage (null = terminal, circle becomes download)
+  //   refStages: which stages expose a cartridge-ref override tab
+  //   freshStage: where a fresh (non-promote) input lands
+  //   aspect:    per-stage aspect_ratio sent on the run (run-level; orch :141)
+  //   edit:      stages that promote parent-as-subject; optional model lock +
+  //              N override (e.g. product in-situ locks gpt-2-edit, N=2)
+  const FLOWS = {
+    product: {
+      stages: ['sketch', 'product-shot', 'in-situ'],
+      labels: { 'sketch': 'Sketch', 'product-shot': 'Product', 'in-situ': 'In-situ' },
+      next: { 'sketch': 'product-shot', 'product-shot': 'in-situ', 'in-situ': null },
+      refStages: ['sketch', 'in-situ'],
+      freshStage: 'sketch',
+      aspect: {},
+      edit: { 'in-situ': { models: ['openai/gpt-image-2/edit'], n: 2 } }
+    },
+    logos: {
+      stages: ['sketch', 'system-split-4x5'],
+      labels: { 'sketch': 'Sketch', 'system-split-4x5': 'Render' },
+      next: { 'sketch': 'system-split-4x5', 'system-split-4x5': null },
+      refStages: ['sketch'],
+      freshStage: 'sketch',
+      aspect: { 'sketch': '1:1', 'system-split-4x5': '4:5' },
+      // Render is parent-as-subject; gpt-image-2 auto-routes to /edit and
+      // flux is filtered SERVER-side, so keep the user's model choice.
+      edit: {}
+    }
+  };
+  function flow() { return FLOWS[currentCartridge()] || FLOWS.product; }
+  function hasFunnelFlow() { return !!FLOWS[currentCartridge()]; }
+
   // Per-cartridge model menu. Cartridge declares allowed_models in profile;
   // we filter ALL_MODELS so a cycle option only stays in if every one of its
   // ids is allowed. Experimental gate applies after.
@@ -214,6 +249,10 @@
     flatTiles = [];
     tilesByKey.clear();
     document.querySelectorAll('#funnel .funnel-col [data-body]').forEach(b => { b.innerHTML = ''; });
+    // Reset the active ref tab to the new flow's first ref stage (logos has no
+    // in-situ tab, so a stale currentRefStage would point at a hidden tab).
+    if (!refStages().includes(currentRefStage)) currentRefStage = refStages()[0] || 'sketch';
+    renderRefTray();
     renderStatus();
     refreshRuns();
     updateDownloadBubble();
@@ -287,8 +326,12 @@
   // sessionRefs: per-stage list of dropped images. Persisted in IndexedDB so
   // refresh doesn't wipe them (data URLs can exceed the 5 MB localStorage
   // quota at 16 refs × 5 MB). Wired into POST /runs as `reference_overrides`.
-  const REF_STAGES = ['sketch', 'in-situ'];
+  // Union of ref stages across all flows — used for IndexedDB persistence so
+  // switching cartridge never drops the other flow's refs. DISPLAY is scoped
+  // to the current flow via refStages().
+  const ALL_REF_STAGES = ['sketch', 'in-situ'];
   const sessionRefs = { sketch: [], 'in-situ': [] };
+  function refStages() { return flow().refStages; }
   let currentRefStage = 'sketch';
   const REF_MAX_BYTES = 5 * 1024 * 1024;
   const REF_MAX_PER_STAGE = 16;
@@ -330,10 +373,10 @@
     } catch (e) { console.warn('idb put failed', e); }
   }
   async function persistRefs() {
-    for (const s of REF_STAGES) await idbPutStage(s, sessionRefs[s]);
+    for (const s of ALL_REF_STAGES) await idbPutStage(s, sessionRefs[s]);
   }
   async function hydrateRefs() {
-    for (const s of REF_STAGES) {
+    for (const s of ALL_REF_STAGES) {
       const arr = await idbGetStage(s);
       if (Array.isArray(arr) && arr.length) {
         sessionRefs[s].length = 0;
@@ -406,26 +449,29 @@
     const clearBtn = $('#ref-tray-clear');
     const miniThumbs = $('#ref-tray-thumbs-mini');
     if (!tray) return;
-    const totals = REF_STAGES.map(s => ({ stage: s, n: sessionRefs[s].length }));
+    const totals = refStages().map(s => ({ stage: s, n: (sessionRefs[s] || []).length }));
     const totalN = totals.reduce((a, b) => a + b.n, 0);
-    const labelParts = totals.filter(t => t.n).map(t => `${t.n} ${t.stage === 'in-situ' ? 'in-situ' : 'sketch'}`);
+    const labelParts = totals.filter(t => t.n).map(t => `${t.n} ${(flow().labels[t.stage] || t.stage).toLowerCase()}`);
     stageEl.textContent = totalN ? `${labelParts.join(', ')} loaded · overriding cartridge` : 'override off';
     tray.classList.toggle('active', totalN > 0);
     clearBtn.hidden = totalN === 0;
     if (miniThumbs) {
       // Show a few thumbs from each non-empty stage, marked subtly.
-      const samples = REF_STAGES.flatMap(s => sessionRefs[s].slice(0, 4).map((r, i) => ({ ...r, _stage: s, _idx: i })));
+      const samples = refStages().flatMap(s => (sessionRefs[s] || []).slice(0, 4).map((r, i) => ({ ...r, _stage: s, _idx: i })));
       miniThumbs.innerHTML = samples.slice(0, 8).map(r => thumbHtml(r, r._idx)).join('');
     }
     // Modal: tabs, drop zone, and grid all reflect the active tab.
     if (!$('#ref-modal').hidden) {
       // Tab counts
-      for (const s of REF_STAGES) {
+      for (const s of refStages()) {
         const c = $(`[data-tab-count="${s}"]`);
-        if (c) c.textContent = sessionRefs[s].length ? `· ${sessionRefs[s].length}` : '';
+        if (c) c.textContent = (sessionRefs[s] || []).length ? `· ${sessionRefs[s].length}` : '';
       }
-      // Tab active state
+      // Tab active state + flow scoping: hide tabs not in this cartridge's flow
+      // (e.g. logos has no in-situ tab). Keeps the static HTML tabs but only
+      // shows the ones this flow declares as ref stages.
       document.querySelectorAll('.ref-modal-tab').forEach(tab => {
+        tab.hidden = !refStages().includes(tab.dataset.stage);
         tab.classList.toggle('active', tab.dataset.stage === currentRefStage);
       });
       // Active list
@@ -480,7 +526,7 @@
     document.querySelectorAll('.ref-modal-tab').forEach(tab => {
       tab.addEventListener('click', () => {
         const s = tab.dataset.stage;
-        if (REF_STAGES.includes(s)) {
+        if (refStages().includes(s)) {
           currentRefStage = s;
           renderRefTray();
         }
@@ -546,11 +592,16 @@
         ? { titles, N, models: modelIds }
         : { titles, N, model: modelIds[0] };
       let body = cartridge ? { ...base, cartridge } : base;
-      // Product cartridge starts every fresh input at the sketch stage. Later
-      // stages happen via promotion; the orchestrator restricts the cycle to
-      // the requested stage.
-      if (cartridge === 'product') body = { ...body, stage: 'sketch' };
-      const ov = buildRefOverrides(body.stage || 'sketch');
+      // Funnel cartridges start every fresh input at the flow's fresh stage
+      // (sketch). Later stages happen via promotion; the orchestrator restricts
+      // the cycle to the requested stage. Aspect is sent per-flow (sketch 1:1).
+      if (hasFunnelFlow()) {
+        const fresh = flow().freshStage;
+        body = { ...body, stage: fresh };
+        const asp = flow().aspect?.[fresh];
+        if (asp) body = { ...body, aspect_ratio: asp };
+      }
+      const ov = buildRefOverrides(body.stage || flow().freshStage);
       if (ov) body = { ...body, reference_overrides: ov };
       await json(`${API}/public/runs`, { method: 'POST', body: JSON.stringify(body) });
       ta.value = '';
@@ -679,7 +730,7 @@
       const titleStr = titles.length === 0 ? '' :
         (titles.length === 1 ? titles[0].title : `${titles[0].title} +${titles.length - 1}`);
       const stage = r.input?.stage || 'sketch';
-      const stageLabel = STAGE_LABEL[stage] || stage;
+      const stageLabel = (FLOWS[r.cartridge]?.labels?.[stage]) || stage;
       const where = titleStr ? `${titleStr} → ${stageLabel}` : stageLabel;
       const txt = r.status === 'failed'
         ? `${where} · failed ${p.ok}/${p.total}`
@@ -800,10 +851,22 @@
       .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
-  const PRODUCT_STAGES = ['sketch', 'product-shot', 'in-situ'];
-  const STAGE_LABEL = { 'sketch': 'Sketch', 'product-shot': 'Product', 'in-situ': 'In-situ' };
-  const NEXT_STAGE = { 'sketch': 'product-shot', 'product-shot': 'in-situ', 'in-situ': null };
-  const isProductCartridge = () => currentCartridge() === 'product';
+  // Stage constants are now per-cartridge (see FLOWS / flow()). Funnel columns
+  // are generated from flow().stages so adding a stage to a flow is a data
+  // change, not a DOM edit.
+  function ensureFunnelColumns() {
+    const funnel = $('#funnel');
+    const stages = flow().stages;
+    const existing = [...funnel.querySelectorAll('.funnel-col')].map(c => c.dataset.stage);
+    if (existing.length === stages.length && existing.every((s, i) => s === stages[i])) return;
+    funnel.innerHTML = stages.map(s => `
+      <div class="funnel-col" data-stage="${escHtml(s)}">
+        <div class="funnel-head"><span class="funnel-name">${escHtml(flow().labels[s] || s)}</span><span class="funnel-count" data-count></span></div>
+        <div class="funnel-action" data-action></div>
+        <div class="funnel-body" data-body></div>
+        <div class="funnel-foot" data-foot></div>
+      </div>`).join('');
+  }
 
   function renderGrid() {
     const grid = $('#grid');
@@ -811,8 +874,8 @@
     const funnel = $('#funnel');
     const items = flattenItems();
 
-    // Hide/show grid vs funnel by cartridge
-    if (isProductCartridge()) {
+    // Hide/show grid vs funnel by cartridge — funnel cartridges have a FLOWS def
+    if (hasFunnelFlow()) {
       grid.hidden = true;
       empty.hidden = true;
       funnel.hidden = false;
@@ -882,13 +945,17 @@
 
   function renderFunnel(items) {
     const funnel = $('#funnel');
+    ensureFunnelColumns();
     const presentKeys = new Set();
+    const stages = flow().stages;
+    const fresh = flow().freshStage;
 
-    // Group by stage. Items with unknown/missing stage land under 'sketch' so
-    // legacy renders stay visible somewhere.
-    const byStage = { 'sketch': [], 'product-shot': [], 'in-situ': [] };
+    // Group by stage. Items with unknown/missing stage land under the fresh
+    // stage so legacy renders stay visible somewhere.
+    const byStage = {};
+    for (const s of stages) byStage[s] = [];
     for (const it of items) {
-      const s = PRODUCT_STAGES.includes(it.stage) ? it.stage : 'sketch';
+      const s = stages.includes(it.stage) ? it.stage : fresh;
       byStage[s].push(it);
     }
 
@@ -902,7 +969,7 @@
       childrenCount.set(k, (childrenCount.get(k) || 0) + 1);
     }
 
-    for (const stage of PRODUCT_STAGES) {
+    for (const stage of stages) {
       const col = funnel.querySelector(`.funnel-col[data-stage="${stage}"]`);
       const body = col.querySelector('[data-body]');
       const count = col.querySelector('[data-count]');
@@ -919,8 +986,8 @@
       let inflight = 0;
       for (const r of runsList) {
         if (r.status !== 'running') continue;
-        if (r.cartridge !== 'product') continue;
-        if ((r.input?.stage || 'sketch') !== stage) continue;
+        if (r.cartridge !== currentCartridge()) continue;
+        if ((r.input?.stage || fresh) !== stage) continue;
         const titles = r.input?.titles?.length || 0;
         const N = r.input?.N || 1;
         const done = (r.renderProgress?.ok || 0) + (r.renderProgress?.failed || 0);
@@ -948,8 +1015,8 @@
           presentKeys.add(key);
           let entry = tilesByKey.get(key);
           if (!entry) {
-            const next = NEXT_STAGE[stage];
-            const circleTip = next ? `Promote to ${STAGE_LABEL[next]}` : 'Select for download';
+            const next = flow().next[stage];
+            const circleTip = next ? `Promote to ${flow().labels[next] || next}` : 'Select for download';
             const tile = document.createElement('div');
             tile.className = 'tile';
             tile.dataset.key = key;
@@ -1019,7 +1086,7 @@
     for (const k of selected) {
       const entry = tilesByKey.get(k);
       if (!entry) continue;
-      const s = PRODUCT_STAGES.includes(entry.item.stage) ? entry.item.stage : 'sketch';
+      const s = flow().stages.includes(entry.item.stage) ? entry.item.stage : flow().freshStage;
       if (s === stage) out.push(entry);
     }
     return out;
@@ -1036,7 +1103,7 @@
   // automatically. Onboarding-level palette + reference upload is queued.
 
   async function sendPromote(col, stage) {
-    const next = NEXT_STAGE[stage];
+    const next = flow().next[stage];
     if (!next) return;
     const sel = selectedInStage(stage);
     if (!sel.length) return;
@@ -1049,8 +1116,7 @@
       note: null
     }));
     const useParentAsSubject = true;
-    const isInSitu = next === 'in-situ';
-    const N = isInSitu ? 2 : currentN();
+    const N = flow().edit?.[next]?.n || currentN();
     const modelIds = promoteModelIds(next);
     const body = {
       cartridge: currentCartridge(),
@@ -1060,6 +1126,7 @@
       N,
       ...(modelIds.length > 1 ? { models: modelIds } : { model: modelIds[0] })
     };
+    if (flow().aspect?.[next]) body.aspect_ratio = flow().aspect[next];
     const ov = buildRefOverrides(next);
     if (ov) body.reference_overrides = ov;
     const pill = col.querySelector('.promote-pill');
@@ -1087,8 +1154,7 @@
       sel = items.map(it => ({ item: it }));
     }
     if (!sel.length) return;
-    const isInSitu = stage === 'in-situ';
-    const N = isInSitu ? 2 : currentN();
+    const N = flow().edit?.[stage]?.n || currentN();
     // Same per-stage model routing as promote (kontext locked for in-situ,
     // user-models + kontext for product, user-models for sketch).
     const modelIds = promoteModelIds(stage);
@@ -1108,6 +1174,7 @@
       N,
       ...(modelIds.length > 1 ? { models: modelIds } : { model: modelIds[0] })
     };
+    if (flow().aspect?.[stage]) body.aspect_ratio = flow().aspect[stage];
     try {
       await json(`${API}/public/runs`, { method: 'POST', body: JSON.stringify(body) });
       await refreshRuns();
@@ -1124,19 +1191,20 @@
   //                  gpt-2-edit when parent is attached.
   //   sketch (amplify only) → user models (no parent on sketches).
   function promoteModelIds(nextStage) {
-    const GPT2E = 'openai/gpt-image-2/edit';
-    if (nextStage === 'in-situ') return [GPT2E];
-    return currentModelIds();
+    // Flow may lock specific models for a stage (product in-situ → gpt-2-edit
+    // only). Otherwise use the user's models — the server auto-routes gpt-2 →
+    // gpt-2-edit and filters no-image models when a parent is attached.
+    const lock = flow().edit?.[nextStage]?.models;
+    return (lock && lock.length) ? lock : currentModelIds();
   }
 
   async function promoteOne(key) {
     const entry = tilesByKey.get(key);
     if (!entry) return;
-    const stage = PRODUCT_STAGES.includes(entry.item.stage) ? entry.item.stage : 'sketch';
-    const next = NEXT_STAGE[stage];
+    const stage = flow().stages.includes(entry.item.stage) ? entry.item.stage : flow().freshStage;
+    const next = flow().next[stage];
     if (!next) return;
-    const isInSitu = next === 'in-situ';
-    const N = isInSitu ? 2 : currentN();
+    const N = flow().edit?.[next]?.n || currentN();
     const modelIds = promoteModelIds(next);
     const body = {
       cartridge: currentCartridge(),
@@ -1153,6 +1221,7 @@
       N,
       ...(modelIds.length > 1 ? { models: modelIds } : { model: modelIds[0] })
     };
+    if (flow().aspect?.[next]) body.aspect_ratio = flow().aspect[next];
     const ov = buildRefOverrides(next);
     if (ov) body.reference_overrides = ov;
     entry.tile.classList.add('promoting');
@@ -1174,14 +1243,13 @@
     // this object in a new scene."
     const entry = tilesByKey.get(key);
     if (!entry) return;
-    const stage = PRODUCT_STAGES.includes(entry.item.stage) ? entry.item.stage : 'sketch';
+    const stage = flow().stages.includes(entry.item.stage) ? entry.item.stage : flow().freshStage;
     // Optional steering note — "more like this, but ___". Empty string or
     // cancel = vanilla amplify (no extra direction).
     const noteRaw = window.prompt('Amplify direction (optional):\n"more like this, but ___"\nLeave blank for a plain variant.');
     if (noteRaw === null) return;  // user cancelled
     const note = noteRaw.trim().slice(0, 240) || null;
-    const isInSitu = stage === 'in-situ';
-    const N = isInSitu ? 2 : currentN();
+    const N = flow().edit?.[stage]?.n || currentN();
     const modelIds = promoteModelIds(stage);
     const body = {
       cartridge: currentCartridge(),
@@ -1198,6 +1266,7 @@
       N,
       ...(modelIds.length > 1 ? { models: modelIds } : { model: modelIds[0] })
     };
+    if (flow().aspect?.[stage]) body.aspect_ratio = flow().aspect[stage];
     const ov = buildRefOverrides(stage);
     if (ov) body.reference_overrides = ov;
     const btn = entry.tile.querySelector('[data-action="amplify"]');
@@ -1249,10 +1318,10 @@
     const onToggle = e.target.closest('[data-action="select"]');
     if (onToggle) {
       e.stopPropagation();
-      const stage = PRODUCT_STAGES.includes(entry.item.stage) ? entry.item.stage : 'sketch';
-      // sketch + product → instant promote on circle click. in-situ has no
-      // next stage, so the circle reverts to download-multi-select.
-      if (NEXT_STAGE[stage]) {
+      const stage = flow().stages.includes(entry.item.stage) ? entry.item.stage : flow().freshStage;
+      // Non-terminal stages → instant promote on circle click. The terminal
+      // stage has no next, so the circle reverts to download-multi-select.
+      if (flow().next[stage]) {
         promoteOne(key);
       } else {
         toggleSelect(key);
