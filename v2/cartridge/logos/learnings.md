@@ -55,3 +55,33 @@ Once references land in `references/sketch/` and the user runs Phase 2 against r
 Today's product cartridge only injects the classifier prefix into prompts during cross-stage promote runs (and only into the in-situ prefix template). For Phase 2 to be a real test of whether the classifier shapes output, fresh-run prompts must also receive the prefix. Added that injection at orchestrator.js right after `let prompt = ...`, gated by `!parentRef?.parentRefUrl` so promote runs aren't double-prefixed.
 
 This now applies to product cartridge fresh runs too — the descriptive object facts ("The object is a wall lamp (wall-mounted articulated arm). It naturally occupies wall-vertical space at task height...") prepend to fresh sketch and product-shot prompts. Modest extra context, redundant but not harmful. Watch the next batch of product runs for any visible regression.
+
+## 8. Generalized prompting — Task 0 audit + Register Router contract (2026-05-25)
+
+Executing `docs/plans/2026-05-25-logos-generalized-prompting.md` on `wt/specs`. Task 0 (read-only audit) verdicts:
+
+| Diagnosis claim | Verdict |
+|---|---|
+| `profile.style_order` is `["sketch"]` only | confirmed |
+| `profile.styles` has 12 keys | confirmed — exact match to the router's `STYLE_KEYS` (mid-century…victorian-engraved) |
+| `sketch` composition has no `style_mix` and no `{style_mix}` placeholder | confirmed |
+| `sketch.slots.palette` is monochrome-only | confirmed |
+| flat-only suffix applied globally | confirmed — `grammar.js:54` (`buildPrompt`) + `shotList.js:298` (play path) |
+| classifier output accessor | **diverged from plan snippets** |
+
+**Divergence (resolved, not silently adapted):** the plan's Task 2–4 snippets read the brief from `classifierContext[title.id]`. There is no `classifierContext` in the code. The logos classifier (`logoContext.classifyLogos`, routed via `classifyByCartridge` since `profile.classifier: "logo"`) lands per-title output in **`objectContext[title.id]`**, persisted at `trace.input.objectContext`. All later tasks must use `objectContext[title.id]`. (The plan sanctioned this: "use the exact accessor confirmed in Task 0.") The `era` enum is 9 values; `registers` correctly draws from the full 12-key `styles` set.
+
+`{style_mix}` consumption path: `shot.slot_overrides.style_mix` → merged into the slot map at `shotList.js:285` → `buildPrompt` (`grammar.js`) fills the `{style_mix}` placeholder. `__stylesPicked` is trace metadata only.
+
+Collision check: `wt/render-v3` had no commits or working changes touching `logos/`, `orchestrator.js`, `grammar.js`, or `shotList.js` at audit time.
+
+### Register Router contract — for the `wt/render-v3` (aesthetic) worktree
+
+The classifier now emits an aesthetic brief per title (Task 1, done):
+
+- Available per-title at **`objectContext[title.id]`** with fields `{ registers[2-4], palette_policy, mark_bias, render_treatment }` (plus the existing prefix fields). All enum-validated in `logoContext.sanitize()`; never empty/invalid.
+- `registers`: 2–4 keys ∈ `profile.styles`, primary = `[0]`. `palette_policy ∈ {mono, muted-brand-color, one-saturated-field}`. `mark_bias ∈ {abstract, pictographic, letterform, system}` (emitted for you to bias `sketch.slots.mark_type`; not yet consumed). `render_treatment ∈ {flat, dimensional, material-expressive}`.
+- To give a composition register spread: add `style_mix: { count: N }` to its def + a `{style_mix}` placeholder in its skeleton; the router's registers flow in automatically.
+- To set a composition's ceiling: `profile.stage_resolution[<stage>].treatment` (`flat` | `dimensional` | `material-expressive`); `render_treatment` from the brief upgrades it at render time. Sketch is pinned `flat`.
+
+Task 1 verification (one Haiku call, no render): Versace → `[post-modern, art-deco, brutalist-poster]` / one-saturated-field / material-expressive; Acme Law Offices → `[swiss-modern, contemporary-minimal, victorian-engraved]` / mono / flat; Warp → `[y2k, brutalist-poster, contemporary-minimal]` / mono / flat. Brand-appropriate and distinct.
