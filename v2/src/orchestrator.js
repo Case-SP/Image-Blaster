@@ -757,9 +757,20 @@ async function runBatch({ cartridgeName = 'product', titles, N = 10, critic = tr
         // and material without competing for subject identity. Cartridge
         // style refs are skipped to prevent subject dilution.
         const stageOverrides = overridesByStage[shot.composition] || [];
+        // Cartridge style refs are normally skipped on promote to keep the
+        // parent the sole subject. EXCEPTION: a composition that declares
+        // `ref_sources` (e.g. logos render's logo-only + wordmark) uses those
+        // as STYLE-SYSTEM anchors, not subject competitors — append them after
+        // the parent so the finished-system look carries through. User
+        // overrides, when present, still replace them (override semantics).
+        const promoteCompDef = cartridge.compositions[shot.composition] || {};
+        const dualSourceRefs = (promoteCompDef.ref_sources && !stageOverrides.length)
+          ? cartridge.references.filter(r => r.style && promoteCompDef.ref_sources.includes(r.style))
+          : [];
         refs = [
           { filename: 'parent.png', style: 'parent', url: parentRef.parentRefUrl },
-          ...stageOverrides
+          ...stageOverrides,
+          ...dualSourceRefs
         ];
         const parentStage = parentRef.parentStage || null;
         const parentTitle = parentRef.parentTitle || 'the depicted object';
