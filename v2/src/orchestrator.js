@@ -363,6 +363,25 @@ async function runBatch({ cartridgeName = 'product', titles, N = 10, critic = tr
             shot.__stylesPicked = picks;
           }
 
+          // Palette policy — the Register Router's palette_policy decides whether
+          // the sketch grid stays mono or uses a brand color: mono brands never
+          // pick a color slot; color-policy brands prefer them. Sketch stays FLAT
+          // either way (the color slots are solid-fill, no gradient). Accessor is
+          // objectContext[title.id] per Task 0 (NOT classifierContext).
+          if (composition === 'sketch') {
+            const pol = objectContext[title.id]?.palette_policy || 'mono';
+            shot.slot_overrides = shot.slot_overrides || {};
+            if (!shot.slot_overrides.palette) {
+              const palettes = compDef.slots?.palette || [];
+              const isColor = p => /brand[- ]color|brand hue|saturated/.test(p);
+              const monos = palettes.filter(p => !isColor(p));
+              const colors = palettes.filter(isColor);
+              const pickFrom = (pol === 'mono' || !colors.length) ? monos
+                : (pol === 'one-saturated-field' ? colors.filter(p => /saturated/.test(p)).concat(colors) : colors);
+              if (pickFrom.length) shot.slot_overrides.palette = pickFrom[Math.abs(shotSeed) % pickFrom.length];
+            }
+          }
+
           // For in-situ specifically, override the setting slot with a
           // context-appropriate pick. Different shot indexes get different
           // pool members so 3 in-situ shots of "sink" don't all show the
