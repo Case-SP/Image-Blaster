@@ -187,6 +187,29 @@
       edit: {}
     }
   };
+  // Per-stage prompt-steer sets — keyed by stage id, surfaced in the ref modal
+  // as dropdown triggers. Picks are joined and appended to the run prompt.
+  const STEER_SETS = {
+    sketch: [
+      { id: 'spread',     label: 'Spread',     options: ['More variety across the grid', 'More consistent'] },
+      { id: 'form',       label: 'Form',        options: ['More geometric', 'More organic', 'Sharper', 'Rounder'] },
+      { id: 'complexity', label: 'Complexity',  options: ['Simpler', 'More minimal', 'More detailed'] },
+    ],
+    'system-split-4x5': [
+      { id: 'color',  label: 'Color',  options: ['Add brand color', 'Go mono', 'More saturated', 'Warmer'] },
+      { id: 'weight', label: 'Weight', options: ['Bolder', 'Quieter', 'More dynamic', 'Calmer'] },
+    ],
+    'in-situ': [
+      { id: 'color',  label: 'Color',  options: ['Add brand color', 'Go mono', 'More saturated', 'Warmer'] },
+      { id: 'weight', label: 'Weight', options: ['Bolder', 'Quieter', 'More dynamic', 'Calmer'] },
+    ],
+    'product-shot': [
+      { id: 'form',       label: 'Form',       options: ['More geometric', 'More organic', 'Sharper', 'Rounder'] },
+      { id: 'complexity', label: 'Complexity', options: ['Simpler', 'More minimal', 'More detailed'] },
+    ],
+  };
+  // Secondary "More" dropdown shown for every stage — era/register + custom steer.
+  const MORE_STEER = { id: 'more', label: 'More ▾', options: ['More retro', 'More modern', 'Different era'] };
   function flow() { return FLOWS[currentCartridge()] || FLOWS.product; }
   function hasFunnelFlow() { return !!FLOWS[currentCartridge()]; }
 
@@ -331,6 +354,13 @@
   // to the current flow via refStages().
   const ALL_REF_STAGES = ['sketch', 'in-situ'];
   const sessionRefs = { sketch: [], 'in-situ': [] };
+  // Per-stage steer picks. Keys: dropdown id → selected option; '__more_era'
+  // for the More dropdown; '__custom' for custom free-text steer.
+  const sessionSteers = {};
+  function stageSteerState(stage) {
+    if (!sessionSteers[stage]) sessionSteers[stage] = {};
+    return sessionSteers[stage];
+  }
   function refStages() { return flow().refStages; }
   let currentRefStage = 'sketch';
   const REF_MAX_BYTES = 5 * 1024 * 1024;
@@ -462,34 +492,141 @@
     }
     // Modal: tabs, drop zone, and grid all reflect the active tab.
     if (!$('#ref-modal').hidden) {
-      // Tab counts
-      for (const s of refStages()) {
-        const c = $(`[data-tab-count="${s}"]`);
-        if (c) c.textContent = (sessionRefs[s] || []).length ? `· ${sessionRefs[s].length}` : '';
-      }
-      // Tab active state + flow scoping: hide tabs not in this cartridge's flow
-      // (e.g. logos has no in-situ tab). Keeps the static HTML tabs but only
-      // shows the ones this flow declares as ref stages.
-      document.querySelectorAll('.ref-modal-tab').forEach(tab => {
-        tab.hidden = !refStages().includes(tab.dataset.stage);
-        tab.classList.toggle('active', tab.dataset.stage === currentRefStage);
-      });
-      // Active list
-      const list = sessionRefs[currentRefStage];
+      renderRefTabs();
+      // Dropzone + thumbs only apply to stages with image-ref support.
+      const isRefStage = refStages().includes(currentRefStage);
+      const dropEl = $('#ref-modal-drop');
+      if (dropEl) dropEl.hidden = !isRefStage;
+      const list = isRefStage ? (sessionRefs[currentRefStage] || []) : [];
       const modalThumbs = $('#ref-modal-thumbs');
       if (modalThumbs) {
-        modalThumbs.innerHTML = list.length
-          ? list.map(thumbHtml).join('')
-          : `<div class="ref-modal-empty">No ${currentRefStage} refs loaded yet — drop some above.</div>`;
+        modalThumbs.innerHTML = isRefStage
+          ? (list.length
+              ? list.map(thumbHtml).join('')
+              : `<div class="ref-modal-empty">No ${currentRefStage} refs loaded yet — drop some above.</div>`)
+          : '';
       }
     }
   }
+  // ---------- Steer dropdowns ----------
+  function steerTabStages() {
+    const f = flow();
+    const steerKeys = Object.keys(STEER_SETS);
+    return f.stages.filter(s => f.refStages.includes(s) || steerKeys.includes(s));
+  }
+
+  function renderRefTabs() {
+    const container = $('#ref-modal-tabs');
+    if (!container) return;
+    const f = flow();
+    const tabs = steerTabStages();
+    if (tabs.length && !tabs.includes(currentRefStage)) currentRefStage = tabs[0];
+    container.innerHTML = tabs.map(s => {
+      const label = f.labels?.[s] || s;
+      const n = (sessionRefs[s] || []).length;
+      const countHtml = `<span class="ref-tab-count" data-tab-count="${s}">${n ? `· ${n}` : ''}</span>`;
+      return `<button type="button" class="ref-modal-tab${s === currentRefStage ? ' active' : ''}" data-stage="${escHtml(s)}" role="tab">${escHtml(label)} ${countHtml}</button>`;
+    }).join('');
+  }
+
+  function renderSteerDropdowns(stage) {
+    const section = $('#steer-section');
+    const container = $('#steer-dropdowns');
+    if (!section || !container) return;
+    const sets = STEER_SETS[stage] || [];
+    if (!sets.length) { section.hidden = true; return; }
+    section.hidden = false;
+    const state = stageSteerState(stage);
+    const allSets = [...sets, MORE_STEER];
+    container.innerHTML = allSets.map(set => {
+      const isMore = set.id === 'more';
+      const pick = isMore ? (state.__more_era || null) : (state[set.id] || null);
+      const customPick = state.__custom || null;
+      const isActive = !!pick || (isMore && !!customPick);
+      const opts = set.options.map(o => {
+        const isSel = isMore ? o === state.__more_era : o === state[set.id];
+        return `<button class="steer-opt${isSel ? ' steer-opt--active' : ''}" data-value="${escHtml(o)}">${escHtml(o)}</button>`;
+      }).join('');
+      const customRow = isMore
+        ? `<button class="steer-opt steer-opt--custom" data-value="__custom__">+ Custom steer…</button>${customPick ? `<div class="steer-custom-tag">"${escHtml(customPick)}" <button class="steer-custom-clear">\xd7</button></div>` : ''}`
+        : '';
+      const pickSpan = pick ? `<span class="steer-trigger-pick">: ${escHtml(pick)}</span>` : (isMore && customPick ? `<span class="steer-trigger-pick">: custom</span>` : '');
+      return `<div class="steer-dd" data-steer-id="${escHtml(set.id)}"><button class="steer-trigger${isActive ? ' steer-trigger--active' : ''}" data-steer-id="${escHtml(set.id)}"><span class="steer-trigger-label">${escHtml(set.label)}</span>${pickSpan}</button><div class="steer-menu glass-surface" hidden>${opts}${customRow}</div></div>`;
+    }).join('');
+  }
+
+  function closeAllSteerMenus() {
+    document.querySelectorAll('.steer-menu').forEach(m => { m.hidden = true; });
+  }
+
+  function pickSteer(setId, value, stage) {
+    const state = stageSteerState(stage);
+    if (setId === 'more') {
+      if (state.__more_era === value) { delete state.__more_era; } else { state.__more_era = value; }
+    } else {
+      if (state[setId] === value) { delete state[setId]; } else { state[setId] = value; }
+    }
+    closeAllSteerMenus();
+    renderSteerDropdowns(stage);
+  }
+
+  function handleCustomSteer(stage) {
+    const state = stageSteerState(stage);
+    const current = state.__custom || '';
+    const input = window.prompt('Enter a custom steer phrase (blank to clear):', current);
+    if (input === null) return;
+    const trimmed = input.trim().slice(0, 200);
+    if (trimmed) { state.__custom = trimmed; } else { delete state.__custom; }
+    closeAllSteerMenus();
+    renderSteerDropdowns(stage);
+  }
+
+  function initSteerListeners() {
+    const section = $('#steer-section');
+    if (!section) return;
+    section.addEventListener('click', (e) => {
+      const trigger = e.target.closest('.steer-trigger');
+      if (trigger) {
+        e.stopPropagation();
+        const dd = trigger.closest('.steer-dd');
+        const menu = dd?.querySelector('.steer-menu');
+        if (!menu) return;
+        const wasOpen = !menu.hidden;
+        closeAllSteerMenus();
+        if (!wasOpen) menu.hidden = false;
+        return;
+      }
+      const opt = e.target.closest('.steer-opt');
+      if (opt) {
+        e.stopPropagation();
+        const value = opt.dataset.value;
+        const setId = opt.closest('.steer-dd')?.dataset.steerId;
+        if (!setId) return;
+        if (value === '__custom__') {
+          handleCustomSteer(currentRefStage);
+        } else {
+          pickSteer(setId, value, currentRefStage);
+        }
+        return;
+      }
+      const clearCustomBtn = e.target.closest('.steer-custom-clear');
+      if (clearCustomBtn) {
+        e.stopPropagation();
+        delete stageSteerState(currentRefStage).__custom;
+        renderSteerDropdowns(currentRefStage);
+      }
+    });
+    document.addEventListener('click', closeAllSteerMenus);
+  }
+
   function openRefModal() {
     const modal = $('#ref-modal');
     if (!modal) return;
     modal.hidden = false;
     document.body.style.overflow = 'hidden';
+    renderRefTabs();
     renderRefTray();
+    renderSteerDropdowns(currentRefStage);
   }
   function closeRefModal() {
     const modal = $('#ref-modal');
@@ -522,16 +659,19 @@
     modalDone?.addEventListener('click', closeRefModal);
     modalClear?.addEventListener('click', clearRefs);
 
-    // Tab switch — change the active stage, re-render.
-    document.querySelectorAll('.ref-modal-tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        const s = tab.dataset.stage;
-        if (refStages().includes(s)) {
-          currentRefStage = s;
-          renderRefTray();
-        }
-      });
+    // Tab switch — delegated on the dynamically rendered tab container so
+    // newly rendered tab buttons are handled without re-binding.
+    $('#ref-modal-tabs')?.addEventListener('click', (e) => {
+      const tab = e.target.closest('.ref-modal-tab');
+      if (!tab) return;
+      const s = tab.dataset.stage;
+      if (!s) return;
+      currentRefStage = s;
+      renderRefTabs();
+      renderRefTray();
+      renderSteerDropdowns(s);
     });
+    initSteerListeners();
     modal?.addEventListener('click', (e) => {
       // Click outside the stage closes
       if (!e.target.closest('.ref-modal-stage')) closeRefModal();
