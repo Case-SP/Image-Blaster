@@ -105,22 +105,26 @@
 
   <!-- Reference override modal (drag images in here) -->
   <div id="ref-modal" class="ref-modal" hidden>
-    <div class="ref-modal-stage">
+    <div class="ref-modal-stage glass-surface">
       <div class="ref-modal-head">
         <div class="ref-modal-title">Reference overrides</div>
         <div class="ref-modal-sub">Drop images to steer the next run for this stage. Replaces the cartridge defaults until you clear them.</div>
       </div>
-      <div class="ref-modal-tabs" role="tablist">
+      <div class="ref-modal-tabs" role="tablist" id="ref-modal-tabs">
         <button type="button" class="ref-modal-tab active" data-stage="sketch" role="tab">Sketch <span class="ref-tab-count" data-tab-count="sketch"></span></button>
         <button type="button" class="ref-modal-tab" data-stage="in-situ" role="tab">In-situ <span class="ref-tab-count" data-tab-count="in-situ"></span></button>
       </div>
-      <div class="ref-modal-drop" id="ref-modal-drop">
+      <div class="ref-modal-drop glass-surface" id="ref-modal-drop">
         <div class="ref-modal-drop-text">Drop images here<br><span>or click to browse</span></div>
         <input type="file" id="ref-modal-input" accept="image/*" multiple hidden>
       </div>
       <div class="ref-modal-thumbs" id="ref-modal-thumbs"></div>
+      <div class="steer-section" id="steer-section" hidden>
+        <div class="steer-label">Guide the prompt</div>
+        <div class="steer-dropdowns" id="steer-dropdowns"></div>
+      </div>
       <div class="ref-modal-actions">
-        <button type="button" class="ref-modal-clear" id="ref-modal-clear">Clear this stage</button>
+        <button type="button" class="ref-modal-clear glass-surface" id="ref-modal-clear">Clear this stage</button>
         <button type="button" class="ref-modal-done" id="ref-modal-done">Done</button>
       </div>
     </div>
