@@ -259,6 +259,20 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 }
 .bubble:active:not(:disabled) { transform: scale(0.96); }
 .bubble svg { width: 20px; height: 20px; }
+
+/* Shared liquid-glass surface token — used by ref modal card, dropzone, and controls */
+.glass-surface {
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.04),
+    0 8px 28px rgba(0, 0, 0, 0.08),
+    0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
 .bubble-cart {
   width: auto;
   min-width: 56px;
@@ -921,13 +935,18 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
   width: min(640px, 92vw);
   max-height: 86vh;
   overflow: auto;
-  background: #fafafa;
   border-radius: 18px;
-  box-shadow: 0 24px 60px rgba(0,0,0,0.25);
   padding: 1.6rem 1.6rem 1.2rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  /* glass-surface override: modal depth needs higher opacity + stronger shadow */
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.04),
+    0 24px 60px rgba(0, 0, 0, 0.2),
+    0 1px 4px rgba(0, 0, 0, 0.06);
 }
 .ref-modal-head .ref-modal-title {
   font-size: 1.05rem;
@@ -949,17 +968,28 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
   padding: 0.4rem 0.9rem;
   font-size: 12px;
   font-family: inherit;
-  border: 1px solid rgba(0,0,0,0.12);
-  background: #fff;
   border-radius: 999px;
   cursor: pointer;
   color: var(--text-muted);
-  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  transition: border-color 0.15s, color 0.15s, background 0.15s, box-shadow 0.15s;
+  /* glass pill treatment */
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.03),
+    0 2px 6px rgba(0, 0, 0, 0.06);
 }
 .ref-modal-tab.active {
   color: var(--text);
-  border-color: var(--text);
-  background: #fff;
+  background: rgba(255, 255, 255, 0.78);
+  border-color: rgba(255, 255, 255, 0.82);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.04),
+    0 4px 12px rgba(0, 0, 0, 0.1);
 }
 .ref-modal-tab .ref-tab-count {
   margin-left: 0.25rem;
@@ -967,16 +997,17 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
   font-variant-numeric: tabular-nums;
 }
 .ref-modal-drop {
-  border: 2px dashed rgba(0,0,0,0.18);
+  border: 2px dashed rgba(255, 255, 255, 0.55);
   border-radius: 14px;
   padding: 2.4rem 1rem;
   text-align: center;
-  background: #fff;
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
   font-size: 13px;
   color: var(--text-muted);
+  /* glass-surface override: dashed border replaces solid border */
+  background: rgba(255, 255, 255, 0.35);
 }
 .ref-modal-drop.dragging {
   border-color: var(--accent);
@@ -1019,13 +1050,209 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
   font-family: inherit;
   border-radius: 10px;
   cursor: pointer;
-  border: 1px solid rgba(0,0,0,0.12);
 }
-.ref-modal-clear { background: #fff; color: var(--text); }
-.ref-modal-clear:hover { border-color: var(--text); }
+.ref-modal-clear {
+  color: var(--text);
+  /* border, background, backdrop-filter from .glass-surface */
+}
+.ref-modal-clear:hover {
+  background: rgba(255, 255, 255, 0.72);
+  border-color: rgba(255, 255, 255, 0.8);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.04),
+    0 4px 12px rgba(0, 0, 0, 0.08);
+}
 .ref-modal-done {
-  background: var(--accent); color: #fff; border-color: var(--accent);
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #fff;
 }
 .ref-modal-done:hover { background: #005bbb; }
 
+/* ---------- Steer dropdowns — "Guide the prompt" section in ref modal ---------- */
+.steer-section {
+  padding-top: 0.15rem;
+}
+.steer-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.55rem;
+}
+.steer-dropdowns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-start;
+}
+.steer-dd {
+  position: relative;
+}
+.steer-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.35rem 0.85rem;
+  font-size: 12px;
+  font-family: inherit;
+  border-radius: 999px;
+  cursor: pointer;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  background: rgba(255, 255, 255, 0.45);
+  color: var(--text-muted);
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+.steer-trigger:hover {
+  background: rgba(255, 255, 255, 0.72);
+  border-color: rgba(0, 0, 0, 0.22);
+  color: var(--text);
+}
+.steer-trigger--active {
+  background: rgba(255, 255, 255, 0.72);
+  border-color: rgba(0, 0, 0, 0.22);
+  color: var(--text);
+}
+.steer-trigger-label { font-weight: 500; }
+.steer-trigger-pick {
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 11px;
+  margin-left: 1px;
+}
+.steer-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 188px;
+  border-radius: 12px;
+  padding: 0.4rem;
+  z-index: 910;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.steer-opt {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.45rem 0.75rem;
+  font-size: 12.5px;
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  border-radius: 8px;
+  transition: background 0.1s;
+}
+.steer-opt:hover { background: rgba(0, 0, 0, 0.06); }
+.steer-opt--active { background: rgba(0, 0, 0, 0.08); font-weight: 500; }
+.steer-opt--custom {
+  color: var(--accent);
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  margin-top: 2px;
+  padding-top: 0.55rem;
+}
+.steer-custom-tag {
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 0.25rem 0.75rem 0.1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.steer-custom-clear {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1;
+  padding: 0;
+}
+.steer-custom-clear:hover { color: var(--text); }
+
+/* ---------- Glass amplify modal (per-tile +) ---------- */
+.amp-modal {
+  position: fixed; inset: 0; z-index: 950;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.42);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+}
+.amp-card {
+  width: min(440px, 92vw); max-height: 86vh; overflow: auto;
+  border-radius: 20px; padding: 1.4rem;
+  display: flex; flex-direction: column; gap: 0.7rem;
+  /* border + blur from .glass-surface; bump opacity for modal depth */
+  background: rgba(255,255,255,0.82);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 24px 60px rgba(0,0,0,0.25);
+}
+.amp-title { font-size: 1.05rem; font-weight: 600; color: var(--text); }
+.amp-sub { font-size: 12px; color: var(--text-muted); line-height: 1.4; margin-top: -0.2rem; }
+.amp-group { display: flex; flex-direction: column; gap: 0.4rem; }
+.amp-group-label { font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); }
+.amp-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.amp-chip {
+  padding: 7px 13px; font-size: 12.5px; font-family: inherit; cursor: pointer;
+  border-radius: 999px; color: var(--text);
+  background: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.7);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 2px 6px rgba(0,0,0,0.08);
+  transition: background 0.12s, border-color 0.12s;
+}
+.amp-chip:hover { background: rgba(255,255,255,0.88); }
+.amp-chip--on {
+  background: var(--accent); color: #fff; border-color: var(--accent);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), 0 2px 8px rgba(0,0,0,0.15);
+}
+.amp-input {
+  width: 100%; box-sizing: border-box; margin-top: 0.2rem;
+  padding: 0.6rem 0.8rem; font-family: inherit; font-size: 14px;
+  border-radius: 12px; border: 1px solid rgba(0,0,0,0.14);
+  background: rgba(255,255,255,0.7); color: var(--text);
+}
+.amp-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,113,227,0.18); }
+.amp-actions { display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 0.3rem; }
+.amp-btn { padding: 0.5rem 1.2rem; font-size: 13px; font-family: inherit; border-radius: 12px; cursor: pointer; border: 1px solid transparent; }
+.amp-cancel { background: rgba(255,255,255,0.6); border-color: rgba(255,255,255,0.7); color: var(--text); box-shadow: inset 0 1px 0 rgba(255,255,255,0.9); }
+.amp-ok { background: var(--accent); color: #fff; }
+.amp-ok:hover { background: #005bbb; }
+
+/* ---------- Dark-mode glass: translucent dark instead of white ---------- */
+:root[data-theme="dark"] .glass-surface,
+:root[data-theme="dark"] .ref-modal-stage,
+:root[data-theme="dark"] .amp-card {
+  background: rgba(34,34,38,0.72);
+  border-color: rgba(255,255,255,0.10);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 24px 60px rgba(0,0,0,0.55);
+}
+:root[data-theme="dark"] .steer-menu { background: rgba(28,28,32,0.92); border-color: rgba(255,255,255,0.12); }
+/* Pills / chips / tabs / inputs: faint light film on the dark card */
+:root[data-theme="dark"] .ref-modal-tab,
+:root[data-theme="dark"] .steer-trigger,
+:root[data-theme="dark"] .amp-chip,
+:root[data-theme="dark"] .amp-cancel,
+:root[data-theme="dark"] .ref-modal-clear,
+:root[data-theme="dark"] .amp-input {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.14);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+  color: var(--text);
+}
+:root[data-theme="dark"] .amp-chip:hover,
+:root[data-theme="dark"] .ref-modal-tab:hover,
+:root[data-theme="dark"] .steer-trigger:hover { background: rgba(255,255,255,0.14); }
+:root[data-theme="dark"] .ref-modal-tab.active,
+:root[data-theme="dark"] .steer-trigger--active {
+  background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.26); color: var(--text);
+}
+:root[data-theme="dark"] .ref-modal-drop { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.18); }
+:root[data-theme="dark"] .steer-opt:hover { background: rgba(255,255,255,0.08); }
+:root[data-theme="dark"] .steer-opt--active { background: rgba(255,255,255,0.12); }
+:root[data-theme="dark"] .amp-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(47,138,239,0.25); }
+/* accent buttons (.amp-ok, .ref-modal-done) already use --accent — fine in both themes */
+:root[data-theme="dark"] .amp-chip--on { background: var(--accent); color: #fff; border-color: var(--accent); }
 
