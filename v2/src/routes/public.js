@@ -111,7 +111,7 @@ function hasExperimentalAccess(req) {
 
 router.post('/runs', async (req, res) => {
   try {
-    const { titles = [], N: requestedN, model, models, aspect_ratio, quality, cartridge, stage = null, parents = null, use_parent_as_subject = false, reference_overrides = null } = req.body;
+    const { titles = [], N: requestedN, model, models, aspect_ratio, quality, cartridge, stage = null, parents = null, use_parent_as_subject = false, reference_overrides = null, steer_note = null } = req.body;
     // Validate reference_overrides shape: { stage: [{ filename, dataUrl }] }
     // Cap each stage at 16 refs and 5MB per ref to keep memory bounded.
     const MAX_OVERRIDE_REFS = 16;
@@ -205,7 +205,8 @@ router.post('/runs', async (req, res) => {
       stage: stage || null,
       parents: hasParents ? parents : null,
       useParentAsSubject: !!use_parent_as_subject,
-      referenceOverrides: cleanOverrides
+      referenceOverrides: cleanOverrides,
+      steerNote: (typeof steer_note === 'string' && steer_note.trim()) ? steer_note.trim().slice(0, 400) : null
     }).catch(e => console.error('[runBatch]', e));
 
     res.json({

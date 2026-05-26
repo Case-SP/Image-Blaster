@@ -622,6 +622,24 @@
     document.addEventListener('click', closeAllSteerMenus);
   }
 
+  // Returns a joined steer clause string for the given stage, or null if none.
+  // Includes all active dropdown picks + __more_era + __custom.
+  function getSteerClause(stage) {
+    const state = sessionSteers[stage];
+    if (!state) return null;
+    const parts = [];
+    // Primary dropdown picks (all sets for this stage)
+    const sets = STEER_SETS[stage] || [];
+    for (const set of sets) {
+      if (state[set.id]) parts.push(state[set.id]);
+    }
+    // More dropdown era pick
+    if (state.__more_era) parts.push(state.__more_era);
+    // Custom free-text steer
+    if (state.__custom) parts.push(state.__custom);
+    return parts.length ? parts.join('; ') : null;
+  }
+
   function openRefModal() {
     const modal = $('#ref-modal');
     if (!modal) return;
@@ -746,6 +764,8 @@
       }
       const ov = buildRefOverrides(body.stage || flow().freshStage);
       if (ov) body = { ...body, reference_overrides: ov };
+      const steerClause = getSteerClause(body.stage || flow().freshStage);
+      if (steerClause) body = { ...body, steer_note: steerClause };
       await json(`${API}/public/runs`, { method: 'POST', body: JSON.stringify(body) });
       ta.value = '';
       autosize();
@@ -1391,7 +1411,10 @@
     // cancel = vanilla amplify (no extra direction).
     const noteRaw = window.prompt('Amplify direction (optional):\n"more like this, but ___"\nLeave blank for a plain variant.');
     if (noteRaw === null) return;  // user cancelled
-    const note = noteRaw.trim().slice(0, 240) || null;
+    const steerClause = getSteerClause(stage);
+    // Merge active steer clause with the user's amplify direction note.
+    const noteParts = [noteRaw.trim(), steerClause].filter(Boolean);
+    const note = noteParts.join('; ').slice(0, 240) || null;
     const N = flow().edit?.[stage]?.n || currentN();
     const modelIds = promoteModelIds(stage);
     const body = {

@@ -15,7 +15,7 @@ const { createTrace, readTrace } = require('./trace/store');
 const createStorage = require('./storage');
 const storage = createStorage();
 
-async function runBatch({ cartridgeName = 'product', titles, N = 10, critic = true, model, models, aspectRatio, quality, debug = true, clientId = null, onTraceCreated, stage = null, parents = null, useParentAsSubject = false, referenceOverrides = null }) {
+async function runBatch({ cartridgeName = 'product', titles, N = 10, critic = true, model, models, aspectRatio, quality, debug = true, clientId = null, onTraceCreated, stage = null, parents = null, useParentAsSubject = false, referenceOverrides = null, steerNote = null }) {
   const cartridge = loadCartridge(cartridgeName);
 
   // Staged + lineage support (object mode only). When `parents` is set, each
@@ -135,6 +135,12 @@ async function runBatch({ cartridgeName = 'product', titles, N = 10, critic = tr
         }
       }
     }
+  }
+  // Fresh runs (no parents): append steer clause to each title using the same
+  // comma-join fusion that parents[].note uses. Steers from the ref modal land
+  // here; amplify steers are already merged into parents[].note client-side.
+  if (steerNote && !Array.isArray(parents)) {
+    titles = titles.map(t => ({ ...t, title: `${t.title}, ${steerNote}` }));
   }
   // Cartridge can declare a default aspect ratio (e.g. '1:1' for product
   // catalog cartridges). Per-request aspectRatio still wins.
