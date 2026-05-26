@@ -640,6 +640,43 @@
     return parts.length ? parts.join('; ') : null;
   }
 
+  // Glass amplify modal — replaces the native prompt() fired by a tile's "+".
+  // Tap stage-appropriate steer chips and/or type your own direction.
+  // Resolves to a composed note string ('' for a plain variant), or null if cancelled.
+  function openAmplifyModal(stage) {
+    return new Promise((resolve) => {
+      const sets = [...(STEER_SETS[stage] || []), MORE_STEER];
+      const selected = new Set();
+      const groups = sets.map(set => {
+        const chips = set.options.map(o => `<button type="button" class="amp-chip" data-val="${escHtml(o)}">${escHtml(o)}</button>`).join('');
+        return `<div class="amp-group"><div class="amp-group-label">${escHtml(set.label.replace(' ▾',''))}</div><div class="amp-chips">${chips}</div></div>`;
+      }).join('');
+      const overlay = document.createElement('div');
+      overlay.className = 'amp-modal';
+      overlay.innerHTML = `<div class="amp-card glass-surface"><div class="amp-title">Amplify direction</div><div class="amp-sub">Tap any directions, and/or type your own. Empty = plain variant.</div>${groups}<input type="text" class="amp-input" placeholder="or type your own…" /><div class="amp-actions"><button type="button" class="amp-btn amp-cancel">Cancel</button><button type="button" class="amp-btn amp-ok">Amplify</button></div></div>`;
+      document.body.appendChild(overlay);
+      const input = overlay.querySelector('.amp-input');
+      setTimeout(() => input.focus(), 0);
+      const compose = () => { const parts = [...selected]; const t = input.value.trim(); if (t) parts.push(t); return parts.join('; '); };
+      const close = (val) => { overlay.remove(); resolve(val); };
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay || e.target.closest('.amp-cancel')) return close(null);
+        const chip = e.target.closest('.amp-chip');
+        if (chip) {
+          const v = chip.dataset.val;
+          if (selected.has(v)) { selected.delete(v); chip.classList.remove('amp-chip--on'); }
+          else { selected.add(v); chip.classList.add('amp-chip--on'); }
+          return;
+        }
+        if (e.target.closest('.amp-ok')) return close(compose());
+      });
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); close(compose()); }
+        else if (e.key === 'Escape') { e.preventDefault(); close(null); }
+      });
+    });
+  }
+
   function openRefModal() {
     const modal = $('#ref-modal');
     if (!modal) return;
@@ -1409,7 +1446,7 @@
     const stage = flow().stages.includes(entry.item.stage) ? entry.item.stage : flow().freshStage;
     // Optional steering note — "more like this, but ___". Empty string or
     // cancel = vanilla amplify (no extra direction).
-    const noteRaw = window.prompt('Amplify direction (optional):\n"more like this, but ___"\nLeave blank for a plain variant.');
+    const noteRaw = await openAmplifyModal(stage);
     if (noteRaw === null) return;  // user cancelled
     const steerClause = getSteerClause(stage);
     // Merge active steer clause with the user's amplify direction note.
