@@ -445,7 +445,10 @@
   }
   function clearRefs() {
     sessionRefs[currentRefStage].length = 0;
+    // Clear stage steers alongside refs ("Clear this stage" covers both).
+    sessionSteers[currentRefStage] = {};
     renderRefTray();
+    renderSteerDropdowns(currentRefStage);
     persistRefs();
   }
   // Carry user-dropped refs through to the matching target stage. Sketch refs
