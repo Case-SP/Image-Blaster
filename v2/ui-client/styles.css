@@ -1221,3 +1221,38 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 .amp-ok { background: var(--accent); color: #fff; }
 .amp-ok:hover { background: #005bbb; }
 
+/* ---------- Dark-mode glass: translucent dark instead of white ---------- */
+:root[data-theme="dark"] .glass-surface,
+:root[data-theme="dark"] .ref-modal-stage,
+:root[data-theme="dark"] .amp-card {
+  background: rgba(34,34,38,0.72);
+  border-color: rgba(255,255,255,0.10);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 24px 60px rgba(0,0,0,0.55);
+}
+:root[data-theme="dark"] .steer-menu { background: rgba(28,28,32,0.92); border-color: rgba(255,255,255,0.12); }
+/* Pills / chips / tabs / inputs: faint light film on the dark card */
+:root[data-theme="dark"] .ref-modal-tab,
+:root[data-theme="dark"] .steer-trigger,
+:root[data-theme="dark"] .amp-chip,
+:root[data-theme="dark"] .amp-cancel,
+:root[data-theme="dark"] .ref-modal-clear,
+:root[data-theme="dark"] .amp-input {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.14);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+  color: var(--text);
+}
+:root[data-theme="dark"] .amp-chip:hover,
+:root[data-theme="dark"] .ref-modal-tab:hover,
+:root[data-theme="dark"] .steer-trigger:hover { background: rgba(255,255,255,0.14); }
+:root[data-theme="dark"] .ref-modal-tab.active,
+:root[data-theme="dark"] .steer-trigger--active {
+  background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.26); color: var(--text);
+}
+:root[data-theme="dark"] .ref-modal-drop { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.18); }
+:root[data-theme="dark"] .steer-opt:hover { background: rgba(255,255,255,0.08); }
+:root[data-theme="dark"] .steer-opt--active { background: rgba(255,255,255,0.12); }
+:root[data-theme="dark"] .amp-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(47,138,239,0.25); }
+/* accent buttons (.amp-ok, .ref-modal-done) already use --accent — fine in both themes */
+:root[data-theme="dark"] .amp-chip--on { background: var(--accent); color: #fff; border-color: var(--accent); }
+
